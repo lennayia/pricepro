@@ -1,0 +1,83 @@
+import { Outlet, Link } from 'react-router-dom';
+import { Box, Container, Typography, AppBar, Toolbar, Button } from '@mui/material';
+
+const PublicLayout = () => {
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppBar
+        position="fixed"
+        sx={{
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          boxShadow: 1,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Toolbar disableGutters>
+            <Typography
+              variant="h6"
+              component={Link}
+              to="/pricepro"
+              sx={{
+                fontWeight: 700,
+                textDecoration: 'none',
+                background: 'linear-gradient(135deg, #6366F1 0%, #EC4899 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              PricePro
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+            <Button
+              component={Link}
+              to="/pricepro/prihlaseni"
+              color="inherit"
+              sx={{ mr: 1 }}
+            >
+              Přihlášení
+            </Button>
+            <Button
+              component={Link}
+              to="/pricepro/registrace"
+              variant="contained"
+              color="primary"
+            >
+              Začít zdarma
+            </Button>
+          </Toolbar>
+        </Container>
+      </AppBar>
+      <Toolbar />
+      <Outlet />
+      <Box
+        component="footer"
+        sx={{
+          py: 4,
+          mt: 'auto',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Typography variant="body2" color="text.secondary" align="center">
+            PricePro je součástí{' '}
+            <Typography
+              component="a"
+              href="https://vibecodingpro.cz"
+              variant="body2"
+              color="primary"
+              sx={{ textDecoration: 'none' }}
+            >
+              vibecodingpro.cz
+            </Typography>
+          </Typography>
+        </Container>
+      </Box>
+    </Box>
+  );
+};
+
+export default PublicLayout;

@@ -1,0 +1,186 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Stack,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import { useAuth } from '../../contexts/AuthContext';
+
+const RegisterPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Hesla se neshodují');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Heslo musí mít alespoň 6 znaků');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await signUp(email, password);
+      setSuccess(true);
+    } catch (err) {
+      if (err.message.includes('already registered')) {
+        setError('Tento email je již registrován');
+      } else {
+        setError('Nastala chyba při registraci. Zkuste to prosím znovu.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <Box
+        sx={{
+          minHeight: 'calc(100vh - 128px)',
+          display: 'flex',
+          alignItems: 'center',
+          py: 4,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Card>
+            <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+              <Stack spacing={3} alignItems="center" textAlign="center">
+                <Typography variant="h4">Ověř svůj email</Typography>
+                <Typography color="text.secondary">
+                  Na adresu <strong>{email}</strong> jsme ti poslali ověřovací
+                  odkaz. Klikni na něj pro dokončení registrace.
+                </Typography>
+                <Button
+                  component={Link}
+                  to="/pricepro/prihlaseni"
+                  variant="contained"
+                >
+                  Přejít na přihlášení
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        minHeight: 'calc(100vh - 128px)',
+        display: 'flex',
+        alignItems: 'center',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="sm">
+        <Card>
+          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+            <Stack spacing={3}>
+              <Box textAlign="center">
+                <Typography variant="h4" sx={{ mb: 1 }}>
+                  Vytvoř si účet
+                </Typography>
+                <Typography color="text.secondary">
+                  Zjisti svou reálnou hodinovku
+                </Typography>
+              </Box>
+
+              {error && <Alert severity="error">{error}</Alert>}
+
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={3}>
+                  <TextField
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    fullWidth
+                    autoComplete="email"
+                    disabled={loading}
+                  />
+                  <TextField
+                    label="Heslo"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    fullWidth
+                    autoComplete="new-password"
+                    disabled={loading}
+                    helperText="Minimálně 6 znaků"
+                  />
+                  <TextField
+                    label="Potvrzení hesla"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    fullWidth
+                    autoComplete="new-password"
+                    disabled={loading}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      'Zaregistrovat se'
+                    )}
+                  </Button>
+                </Stack>
+              </form>
+
+              <Box textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Už máš účet?{' '}
+                  <Typography
+                    component={Link}
+                    to="/pricepro/prihlaseni"
+                    variant="body2"
+                    color="primary"
+                    sx={{ textDecoration: 'none', fontWeight: 500 }}
+                  >
+                    Přihlas se
+                  </Typography>
+                </Typography>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
+  );
+};
+
+export default RegisterPage;
