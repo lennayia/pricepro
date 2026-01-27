@@ -11,19 +11,22 @@ import {
   Stack,
   Alert,
   CircularProgress,
+  Divider,
 } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
+import GoogleButton from '../../components/ui/GoogleButton';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
 
-  const from = location.state?.from?.pathname || '/pricepro/app';
+  const from = location.state?.from?.pathname || '/app';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,6 +44,19 @@ const LoginPage = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setGoogleLoading(true);
+
+    try {
+      await signInWithGoogle();
+      // OAuth redirect will happen automatically
+    } catch (err) {
+      setError('Nastala chyba při přihlašování přes Google. Zkuste to prosím znovu.');
+      setGoogleLoading(false);
     }
   };
 
@@ -67,6 +83,17 @@ const LoginPage = () => {
               </Box>
 
               {error && <Alert severity="error">{error}</Alert>}
+
+              <GoogleButton
+                onClick={handleGoogleSignIn}
+                loading={googleLoading}
+              />
+
+              <Divider>
+                <Typography variant="body2" color="text.secondary">
+                  nebo
+                </Typography>
+              </Divider>
 
               <form onSubmit={handleSubmit}>
                 <Stack spacing={3}>
@@ -111,7 +138,7 @@ const LoginPage = () => {
                   Nemáš účet?{' '}
                   <Typography
                     component={Link}
-                    to="/pricepro/registrace"
+                    to="/registrace"
                     variant="body2"
                     color="primary"
                     sx={{ textDecoration: 'none', fontWeight: 500 }}

@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/pricepro/prihlaseni" state={{ from: location }} replace />;
+    return <Navigate to="/prihlaseni" state={{ from: location }} replace />;
   }
 
   return children;

@@ -11,8 +11,10 @@ import {
   Stack,
   Alert,
   CircularProgress,
+  Divider,
 } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
+import GoogleButton from '../../components/ui/GoogleButton';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -21,8 +23,9 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,6 +57,19 @@ const RegisterPage = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setGoogleLoading(true);
+
+    try {
+      await signInWithGoogle();
+      // OAuth redirect will happen automatically
+    } catch (err) {
+      setError('Nastala chyba při registraci přes Google. Zkuste to prosím znovu.');
+      setGoogleLoading(false);
+    }
+  };
+
   if (success) {
     return (
       <Box
@@ -75,7 +91,7 @@ const RegisterPage = () => {
                 </Typography>
                 <Button
                   component={Link}
-                  to="/pricepro/prihlaseni"
+                  to="/prihlaseni"
                   variant="contained"
                 >
                   Přejít na přihlášení
@@ -111,6 +127,17 @@ const RegisterPage = () => {
               </Box>
 
               {error && <Alert severity="error">{error}</Alert>}
+
+              <GoogleButton
+                onClick={handleGoogleSignIn}
+                loading={googleLoading}
+              />
+
+              <Divider>
+                <Typography variant="body2" color="text.secondary">
+                  nebo
+                </Typography>
+              </Divider>
 
               <form onSubmit={handleSubmit}>
                 <Stack spacing={3}>
@@ -166,7 +193,7 @@ const RegisterPage = () => {
                   Už máš účet?{' '}
                   <Typography
                     component={Link}
-                    to="/pricepro/prihlaseni"
+                    to="/prihlaseni"
                     variant="body2"
                     color="primary"
                     sx={{ textDecoration: 'none', fontWeight: 500 }}
