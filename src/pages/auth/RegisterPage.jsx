@@ -12,9 +12,12 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
 import GoogleButton from '../../components/ui/GoogleButton';
+import PrimaryButton from '../../components/ui/PrimaryButton';
 
 const RegisterPage = () => {
   const [firstName, setFirstName] = useState('');
@@ -22,6 +25,7 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,20 +42,41 @@ const RegisterPage = () => {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError('Hesla se neshodují');
+    // Password validation
+    if (password.length < 8) {
+      setError('Heslo musí mít alespoň 8 znaků');
       return;
     }
 
-    if (password.length < 6) {
-      setError('Heslo musí mít alespoň 6 znaků');
+    if (!/[A-Z]/.test(password)) {
+      setError('Heslo musí obsahovat alespoň jedno velké písmeno');
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setError('Heslo musí obsahovat alespoň jedno malé písmeno');
+      return;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      setError('Heslo musí obsahovat alespoň jednu číslici');
+      return;
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      setError('Heslo musí obsahovat alespoň jeden speciální znak');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Hesla se neshodují');
       return;
     }
 
     setLoading(true);
 
     try {
-      await signUp(email, password, firstName, lastName);
+      await signUp(email, password, firstName, lastName, marketingConsent);
       setSuccess(true);
     } catch (err) {
       if (err.message.includes('already registered')) {
@@ -135,10 +160,12 @@ const RegisterPage = () => {
 
               {error && <Alert severity="error">{error}</Alert>}
 
-              <GoogleButton
-                onClick={handleGoogleSignIn}
-                loading={googleLoading}
-              />
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleButton
+                  onClick={handleGoogleSignIn}
+                  loading={googleLoading}
+                />
+              </Box>
 
               <Divider>
                 <Typography variant="body2" color="text.secondary">
@@ -187,7 +214,7 @@ const RegisterPage = () => {
                     fullWidth
                     autoComplete="new-password"
                     disabled={loading}
-                    helperText="Minimálně 6 znaků"
+                    helperText="Musí obsahovat alespoň 8 znaků: velké písmeno, malé písmeno, číslici a speciální znak"
                   />
                   <TextField
                     label="Potvrzení hesla"
@@ -199,36 +226,80 @@ const RegisterPage = () => {
                     autoComplete="new-password"
                     disabled={loading}
                   />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      'Zaregistrovat se'
-                    )}
-                  </Button>
+
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={marketingConsent}
+                        onChange={(e) => setMarketingConsent(e.target.checked)}
+                        disabled={loading}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2">
+                        Chci dostávat novinky a tipy emailem
+                      </Typography>
+                    }
+                  />
+
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <PrimaryButton
+                      type="submit"
+                      loading={loading}
+                    >
+                      Zaregistrovat se
+                    </PrimaryButton>
+                  </Box>
+
+                  <Typography variant="body2" color="text.secondary" textAlign="center">
+                    Registrací souhlasíte s{' '}
+                    <Typography
+                      component="a"
+                      href="https://www.vibecodingpro.cz/obchodni-podminky"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="body2"
+                      color="primary"
+                      sx={{ textDecoration: 'underline' }}
+                    >
+                      obchodními podmínkami
+                    </Typography>
+                    {' '}a{' '}
+                    <Typography
+                      component="a"
+                      href="https://www.vibecodingpro.cz/gdpr"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="body2"
+                      color="primary"
+                      sx={{ textDecoration: 'underline' }}
+                    >
+                      zásadami ochrany osobních údajů
+                    </Typography>
+                  </Typography>
                 </Stack>
               </form>
 
-              <Box textAlign="center">
+              <Divider>
                 <Typography variant="body2" color="text.secondary">
-                  Už máte účet?{' '}
-                  <Typography
-                    component={Link}
-                    to="/prihlaseni"
-                    variant="body2"
-                    color="primary"
-                    sx={{ textDecoration: 'none', fontWeight: 500 }}
-                  >
-                    Přihlaste se
-                  </Typography>
+                  nebo
                 </Typography>
-              </Box>
+              </Divider>
+
+              <Stack spacing={2} alignItems="center">
+                <Typography variant="body2" color="text.secondary">
+                  Už máte účet?
+                </Typography>
+                <Button
+                  component={Link}
+                  to="/prihlaseni"
+                  variant="outlined"
+                  size="large"
+                  sx={{ px: 4 }}
+                >
+                  Přihlaste se
+                </Button>
+              </Stack>
             </Stack>
           </CardContent>
         </Card>

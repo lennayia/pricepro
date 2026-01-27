@@ -5,12 +5,12 @@ import { motion } from 'framer-motion';
  * GoogleButton - Tlačítko pro přihlášení přes Google
  * S animací a Google ikonou
  */
-function GoogleButton({ onClick, loading = false, fullWidth = true, children = 'Pokračovat s Google' }) {
+function GoogleButton({ onClick, loading = false, fullWidth = false, children = 'Pokračovat s Google' }) {
   return (
     <motion.div
       whileHover={{ scale: loading ? 1 : 1.02 }}
       whileTap={{ scale: loading ? 1 : 0.98 }}
-      style={{ width: fullWidth ? '100%' : 'auto' }}
+      style={{ width: fullWidth ? '100%' : 'auto', display: fullWidth ? 'block' : 'inline-block' }}
     >
       <Button
         onClick={onClick}

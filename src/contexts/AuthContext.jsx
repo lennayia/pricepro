@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email, password, firstName, lastName) => {
+  const signUp = async (email, password, firstName, lastName, marketingConsent) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -43,6 +43,8 @@ export const AuthProvider = ({ children }) => {
           first_name: firstName,
           last_name: lastName,
           full_name: `${firstName} ${lastName}`,
+          terms_accepted: true,
+          marketing_consent: marketingConsent,
         },
       },
     });

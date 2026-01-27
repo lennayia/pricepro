@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
 import GoogleButton from '../../components/ui/GoogleButton';
+import PrimaryButton from '../../components/ui/PrimaryButton';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -84,10 +85,12 @@ const LoginPage = () => {
 
               {error && <Alert severity="error">{error}</Alert>}
 
-              <GoogleButton
-                onClick={handleGoogleSignIn}
-                loading={googleLoading}
-              />
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleButton
+                  onClick={handleGoogleSignIn}
+                  loading={googleLoading}
+                />
+              </Box>
 
               <Divider>
                 <Typography variant="body2" color="text.secondary">
@@ -117,36 +120,37 @@ const LoginPage = () => {
                     autoComplete="current-password"
                     disabled={loading}
                   />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      'Přihlásit se'
-                    )}
-                  </Button>
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <PrimaryButton
+                      type="submit"
+                      loading={loading}
+                    >
+                      Přihlásit se
+                    </PrimaryButton>
+                  </Box>
                 </Stack>
               </form>
 
-              <Box textAlign="center">
+              <Divider>
                 <Typography variant="body2" color="text.secondary">
-                  Nemáte účet?{' '}
-                  <Typography
-                    component={Link}
-                    to="/registrace"
-                    variant="body2"
-                    color="primary"
-                    sx={{ textDecoration: 'none', fontWeight: 500 }}
-                  >
-                    Zaregistrujte se
-                  </Typography>
+                  nebo
                 </Typography>
-              </Box>
+              </Divider>
+
+              <Stack spacing={2} alignItems="center">
+                <Typography variant="body2" color="text.secondary">
+                  Nemáte účet?
+                </Typography>
+                <Button
+                  component={Link}
+                  to="/registrace"
+                  variant="outlined"
+                  size="large"
+                  sx={{ px: 4 }}
+                >
+                  Zaregistrujte se
+                </Button>
+              </Stack>
             </Stack>
           </CardContent>
         </Card>

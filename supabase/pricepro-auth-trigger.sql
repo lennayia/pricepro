@@ -8,13 +8,15 @@
 CREATE OR REPLACE FUNCTION pricepro.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO pricepro.users (id, email, first_name, last_name, full_name)
+  INSERT INTO pricepro.users (id, email, first_name, last_name, full_name, terms_accepted, marketing_consent)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
     COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', '')
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
+    COALESCE((NEW.raw_user_meta_data->>'terms_accepted')::boolean, false),
+    COALESCE((NEW.raw_user_meta_data->>'marketing_consent')::boolean, false)
   );
   RETURN NEW;
 END;
