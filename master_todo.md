@@ -86,58 +86,58 @@
   - [x] HistoryPage
   - [x] RegisterPage, LoginPage
 
+### ✅ HOTOVO - Dashboard Page (KOMPLETNÍ)
+- [x] Přehled aktuálního týdne (Tracker)
+  - [x] Quick stats: vyplněné dny, celkové hodiny práce
+  - [x] Health Score widget s barevným kódováním
+  - [x] Progress bar zobrazující vyplněné dny
+  - [x] Quick link "Vyplnit dnešní den"
+- [x] Poslední kalkulace
+  - [x] Zobrazení doporučené hodinovky
+  - [x] Minimální a prémiová hodinovka
+  - [x] Quick link "Nová kalkulace"
+- [x] Quick actions cards
+  - [x] Link na Tracker času
+  - [x] Link na Kalkulačku
+  - [x] Link na Historii
+- [x] Tip card s doporučením workflow
+- [x] Empty states pro oba moduly
+- [x] Real-time data loading ze Supabase
+- [x] Loading states a error handling
+
+**Soubory**:
+- ✅ `src/pages/app/DashboardPage.jsx` (kompletní)
+
+### ✅ HOTOVO - History Page (KOMPLETNÍ)
+- [x] Seznam předchozích kalkulací
+  - [x] Datum vytvoření (Czech formát)
+  - [x] Doporučená hodinovka zvýrazněná
+  - [x] Minimální a prémiová hodinovka
+  - [x] Možnost zobrazit detail (Eye icon)
+  - [x] Možnost smazat (Trash icon)
+- [x] Řazení podle data (nejnovější první)
+- [x] Detail kalkulace v dialogu
+  - [x] 3 price cards (minimální, doporučená, prémiová)
+  - [x] Shrnutí (měsíční příjem, hodiny, koeficient)
+  - [x] Zobrazení všech vstupů
+- [x] Delete confirmation dialog
+  - [x] Preview kalkulace před smazáním
+  - [x] Loading state při mazání
+- [x] Empty state s CTA na kalkulačku
+- [x] Error handling s Alert
+- [x] Lucide ikony konzistentně
+- [x] Czech date/currency formatting
+
+**Soubory**:
+- ✅ `src/pages/app/HistoryPage.jsx` (kompletní - 438 řádků)
+
 ---
 
 ## 🚧 ZBÝVÁ DOKONČIT
 
 ### 🔄 Priority (v pořadí)
 
-#### 1️⃣ Dashboard Page
-**Stav**: Základní struktura existuje, potřebuje implementaci
-
-**Co chybí**:
-- [ ] Přehled aktuálního týdne (Tracker)
-  - [ ] Quick stats: vyplněné dny, celkové hodiny
-  - [ ] Health Score widget
-  - [ ] Quick link na Tracker
-- [ ] Poslední kalkulace
-  - [ ] Zobrazit doporučenou hodinovku
-  - [ ] Quick link na Calculator
-- [ ] Quick actions
-  - [ ] "Vyplnit dnešní den"
-  - [ ] "Nová kalkulace"
-  - [ ] "Zobrazit historii"
-
-**Soubory**:
-- `src/pages/app/DashboardPage.jsx` (upravit)
-- Použít existující services (timeEntries, calculatorResults)
-
----
-
-#### 2️⃣ History Page
-**Stav**: Základní struktura existuje, potřebuje implementaci
-
-**Co chybí**:
-- [ ] Seznam předchozích kalkulací
-  - [ ] Datum vytvoření
-  - [ ] Doporučená hodinovka
-  - [ ] Možnost zobrazit detail
-  - [ ] Možnost smazat
-- [ ] Filtrování/řazení
-  - [ ] Podle data (nejnovější první)
-  - [ ] Search?
-- [ ] Detail kalkulace
-  - [ ] Zobrazit všechny výsledky
-  - [ ] Zobrazit vstupy
-  - [ ] Porovnat s aktuální
-
-**Soubory**:
-- `src/pages/app/HistoryPage.jsx` (upravit)
-- Použít `services/calculatorResults.js`
-
----
-
-#### 3️⃣ Landing Page Redesign
+#### 1️⃣ Landing Page Redesign
 **Stav**: Existuje základní landing, potřebuje vylepšení
 
 **Co chybí**:
@@ -260,13 +260,13 @@
 
 ## 📈 Progress Overview
 
-**Dokončeno**: ~85%
+**Dokončeno**: ~90%
 - ✅ Core Foundation (100%)
 - ✅ Authentication (100%)
 - ✅ Time Tracker (100%)
 - ✅ Calculator (100%)
-- 🔄 Dashboard (30%)
-- 🔄 History (30%)
+- ✅ Dashboard (100%) ⭐
+- ✅ History (100%) ⭐
 - 🔄 Landing Page (50%)
 - ⏳ Testing (0%)
 - ⏳ Deployment (0%)
@@ -276,14 +276,14 @@
 ## 🎯 Další kroky
 
 **Immediate (dnes)**:
-1. Dashboard implementace (widgets, quick actions)
-2. History page implementace (seznam kalkulací, detail)
+1. ✅ ~~Dashboard implementace (widgets, quick actions)~~ HOTOVO
+2. ✅ ~~History page implementace (seznam kalkulací, detail)~~ HOTOVO
 3. Testing obou modulů (Tracker + Calculator)
 
 **Short-term (tento týden)**:
-4. Landing page redesign
-5. Polish & UX improvements
-6. Deployment na Vercel
+4. Landing page redesign (hero, features, how it works)
+5. Polish & UX improvements (animace, loading states)
+6. Deployment na Vercel (pricepro.vibecodingpro.cz)
 
 **Long-term (budoucí featury)**:
 - Export dat (CSV, PDF)
@@ -332,5 +332,7 @@ Všechny předchozí problémy (GRANT permissions, RLS policies, UPSERT) byly vy
 - ✅ Jednotný design systém (Lucide ikony, centralizované konstanty)
 - ✅ Supabase integrace pro oba moduly
 - ✅ Formální vykání konzistentně všude
+- ✅ **Dashboard s real-time daty a quick actions** ⭐
+- ✅ **History page s detailem a mazáním kalkulací** ⭐
 
-**Aplikace je funkční a připravená k nasazení!** 🚀
+**Aplikace je plně funkční a připravená k testování a nasazení!** 🚀
