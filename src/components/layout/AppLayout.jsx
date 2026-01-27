@@ -29,14 +29,15 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import ThemeToggle from '../ui/ThemeToggle';
 
 const DRAWER_WIDTH = 280;
 
 const menuItems = [
-  { text: 'Přehled', icon: <DashboardIcon />, path: '/pricepro/app' },
-  { text: 'Tracker času', icon: <TrackerIcon />, path: '/pricepro/app/tracker' },
-  { text: 'Kalkulačka', icon: <CalculatorIcon />, path: '/pricepro/app/kalkulacka' },
-  { text: 'Historie', icon: <HistoryIcon />, path: '/pricepro/app/historie' },
+  { text: 'Přehled', icon: <DashboardIcon />, path: '/app' },
+  { text: 'Tracker času', icon: <TrackerIcon />, path: '/app/tracker' },
+  { text: 'Kalkulačka', icon: <CalculatorIcon />, path: '/app/kalkulacka' },
+  { text: 'Historie', icon: <HistoryIcon />, path: '/app/historie' },
 ];
 
 const AppLayout = () => {
@@ -63,7 +64,7 @@ const AppLayout = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/pricepro');
+      navigate('/');
     } catch (error) {
       console.error('Chyba při odhlašování:', error);
     }
@@ -84,7 +85,10 @@ const AppLayout = () => {
           variant="h5"
           sx={{
             fontWeight: 700,
-            background: 'linear-gradient(135deg, #6366F1 0%, #EC4899 100%)',
+            background: (theme) =>
+              theme.palette.mode === 'dark'
+                ? '#0DDD0D'
+                : 'linear-gradient(135deg, #FFD700 0%, #CD7F32 50%, #A0522D 100%)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -158,7 +162,8 @@ const AppLayout = () => {
             <MenuIcon />
           </IconButton>
           <Box sx={{ flexGrow: 1 }} />
-          <IconButton onClick={handleMenuOpen} sx={{ p: 0.5 }}>
+          <ThemeToggle />
+          <IconButton onClick={handleMenuOpen} sx={{ p: 0.5, ml: 1 }}>
             <Avatar
               sx={{
                 bgcolor: 'primary.main',

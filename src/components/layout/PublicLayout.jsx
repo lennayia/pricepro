@@ -1,5 +1,6 @@
 import { Outlet, Link } from 'react-router-dom';
 import { Box, Container, Typography, AppBar, Toolbar, Button } from '@mui/material';
+import ThemeToggle from '../ui/ThemeToggle';
 
 const PublicLayout = () => {
   return (
@@ -17,11 +18,14 @@ const PublicLayout = () => {
             <Typography
               variant="h6"
               component={Link}
-              to="/pricepro"
+              to="/"
               sx={{
                 fontWeight: 700,
                 textDecoration: 'none',
-                background: 'linear-gradient(135deg, #6366F1 0%, #EC4899 100%)',
+                background: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? '#0DDD0D'
+                    : 'linear-gradient(135deg, #FFD700 0%, #CD7F32 50%, #A0522D 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -30,17 +34,18 @@ const PublicLayout = () => {
               PricePro
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
+            <ThemeToggle />
             <Button
               component={Link}
-              to="/pricepro/prihlaseni"
+              to="/prihlaseni"
               color="inherit"
-              sx={{ mr: 1 }}
+              sx={{ ml: 1, mr: 1 }}
             >
               Přihlášení
             </Button>
             <Button
               component={Link}
-              to="/pricepro/registrace"
+              to="/registrace"
               variant="contained"
               color="primary"
             >

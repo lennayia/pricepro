@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import theme from './theme';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 // Layouts
@@ -24,21 +23,20 @@ import HistoryPage from './pages/app/HistoryPage';
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
             <Route element={<PublicLayout />}>
-              <Route path="/pricepro" element={<LandingPage />} />
-              <Route path="/pricepro/prihlaseni" element={<LoginPage />} />
-              <Route path="/pricepro/registrace" element={<RegisterPage />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/prihlaseni" element={<LoginPage />} />
+              <Route path="/registrace" element={<RegisterPage />} />
             </Route>
 
             {/* Protected app routes */}
             <Route
-              path="/pricepro/app"
+              path="/app"
               element={
                 <ProtectedRoute>
                   <AppLayout />
@@ -61,8 +59,7 @@ function App() {
             </Route>
 
             {/* Redirects */}
-            <Route path="/" element={<Navigate to="/pricepro" replace />} />
-            <Route path="*" element={<Navigate to="/pricepro" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
