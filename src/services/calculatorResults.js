@@ -3,7 +3,7 @@
  * Handles CRUD operations for pricing calculator results in Supabase
  */
 
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from './supabase';
 
 /**
  * Save calculator result to database
