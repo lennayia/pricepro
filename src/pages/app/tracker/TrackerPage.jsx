@@ -38,8 +38,8 @@ const TrackerPage = () => {
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Tracker času</Typography>
         <Typography color="text.secondary">
-          Sleduj svůj čas po dobu 7 dní. Každý den zaznamenej, kolik hodin jsi
-          strávila různými činnostmi.
+          Sledujte svůj čas po dobu 7 dní. Každý den zaznamenejte, kolik hodin jste
+          strávili různými činnostmi.
         </Typography>
       </Stack>
 
@@ -48,7 +48,7 @@ const TrackerPage = () => {
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" sx={{ flex: 1 }}>
-              Tvůj pokrok
+              Váš pokrok
             </Typography>
             <Chip
               label={`${completedDays.length} / 7 dní`}
@@ -70,18 +70,18 @@ const TrackerPage = () => {
           />
           {completedDays.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Zatím nemáš žádné záznamy. Začni vyplňovat svůj první den.
+              Zatím nemáte žádné záznamy. Začněte vyplňovat svůj první den.
             </Typography>
           )}
           {completedDays.length > 0 && completedDays.length < 7 && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Super! Ještě {7 - completedDays.length} dní a budeš mít kompletní
+              Super! Ještě {7 - completedDays.length} dní a budete mít kompletní
               přehled.
             </Typography>
           )}
           {completedDays.length === 7 && (
             <Typography variant="body2" color="success.main" sx={{ mt: 2 }}>
-              Gratulujeme! Máš kompletní týden. Podívej se na výsledky.
+              Gratulujeme! Máte kompletní týden. Podívejte se na výsledky.
             </Typography>
           )}
         </CardContent>
@@ -107,7 +107,7 @@ const TrackerPage = () => {
               >
                 <CardActionArea
                   component={Link}
-                  to={`/pricepro/app/tracker/den/${day.day}`}
+                  to={`/app/tracker/den/${day.day}`}
                   sx={{ height: '100%' }}
                 >
                   <CardContent sx={{ textAlign: 'center', py: 3 }}>
@@ -137,7 +137,7 @@ const TrackerPage = () => {
       <Box sx={{ textAlign: 'center' }}>
         <Button
           component={Link}
-          to="/pricepro/app/tracker/vysledky"
+          to="/app/tracker/vysledky"
           variant="contained"
           size="large"
           startIcon={<ResultsIcon />}
@@ -151,7 +151,7 @@ const TrackerPage = () => {
             color="text.secondary"
             sx={{ mt: 1 }}
           >
-            Vyplň alespoň jeden den pro zobrazení výsledků
+            Vyplňte alespoň jeden den pro zobrazení výsledků
           </Typography>
         )}
       </Box>

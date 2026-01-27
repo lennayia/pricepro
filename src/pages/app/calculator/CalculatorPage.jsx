@@ -37,8 +37,8 @@ const experienceOptions = [
 ];
 
 const specializationOptions = [
-  { value: 'generalist', label: 'Generalistka (širší záběr)', coefficient: 1.0 },
-  { value: 'specialist', label: 'Specialistka (úzké zaměření)', coefficient: 1.3 },
+  { value: 'generalist', label: 'Generalista/Generalistka (širší záběr)', coefficient: 1.0 },
+  { value: 'specialist', label: 'Specialista/Specialistka (úzké zaměření)', coefficient: 1.3 },
 ];
 
 const portfolioOptions = [
@@ -132,7 +132,7 @@ const CalculatorPage = () => {
     try {
       // TODO: Save to Supabase
       await new Promise((resolve) => setTimeout(resolve, 500));
-      navigate('/pricepro/app/kalkulacka/vysledky', {
+      navigate('/app/kalkulacka/vysledky', {
         state: {
           minimumMonthly: getMinimumMonthly(),
           monthlyBillableHours: getMonthlyBillableHours(),
@@ -163,9 +163,9 @@ const CalculatorPage = () => {
 
   const renderStep1 = () => (
     <Stack spacing={3}>
-      <Typography variant="h6">Kolik MUSÍŠ vydělat?</Typography>
+      <Typography variant="h6">Kolik MUSÍTE vydělat?</Typography>
       <Typography color="text.secondary">
-        Zadej své měsíční náklady. Tyto údaje potřebujeme pro výpočet tvého životního minima.
+        Zadejte své měsíční náklady. Tyto údaje potřebujeme pro výpočet vašeho životního minima.
       </Typography>
 
       <TextField
@@ -206,7 +206,7 @@ const CalculatorPage = () => {
 
       <TextField
         label="Rezerva + spoření"
-        helperText="Kolik si chceš měsíčně odkládat"
+        helperText="Kolik si chcete měsíčně odkládat"
         type="number"
         value={savings}
         onChange={(e) => setSavings(e.target.value)}
@@ -217,13 +217,13 @@ const CalculatorPage = () => {
       />
 
       <Alert severity="info">
-        K tvým nákladům automaticky přičteme 15% na daně a odvody OSVČ.
+        K vašim nákladům automaticky přičteme 15% na daně a odvody OSVČ.
       </Alert>
 
       <Card sx={{ bgcolor: 'grey.100' }}>
         <CardContent>
           <Typography variant="body2" color="text.secondary">
-            Tvé minimální měsíční příjmy
+            Vaše minimální měsíční příjmy
           </Typography>
           <Typography variant="h4" color="primary">
             {getMinimumMonthly().toLocaleString('cs-CZ')} Kč
@@ -235,15 +235,15 @@ const CalculatorPage = () => {
 
   const renderStep2 = () => (
     <Stack spacing={3}>
-      <Typography variant="h6">Kolik hodin OPRAVDU fakturuješ?</Typography>
+      <Typography variant="h6">Kolik hodin OPRAVDU fakturujete?</Typography>
       <Typography color="text.secondary">
-        Zadej svůj skutečný pracovní čas. Ne kolik bys chtěla pracovat, ale kolik
-        reálně fakturuješ klientům.
+        Zadejte svůj skutečný pracovní čas. Ne kolik byste chtěli pracovat, ale kolik
+        reálně fakturujete klientům.
       </Typography>
 
       <TextField
         label="Celkový pracovní čas týdně"
-        helperText="Kolik hodin týdně pracuješ celkem (včetně administrativy apod.)"
+        helperText="Kolik hodin týdně pracujete celkem (včetně administrativy apod.)"
         type="number"
         value={weeklyHours}
         onChange={(e) => setWeeklyHours(e.target.value)}
@@ -255,7 +255,7 @@ const CalculatorPage = () => {
 
       <TextField
         label="Fakturovatelné hodiny týdně"
-        helperText="Kolik hodin týdně můžeš reálně fakturovat klientům"
+        helperText="Kolik hodin týdně můžete reálně fakturovat klientům"
         type="number"
         value={billableHours}
         onChange={(e) => setBillableHours(e.target.value)}
@@ -266,7 +266,7 @@ const CalculatorPage = () => {
       />
 
       <Alert severity="warning">
-        Většina podnikatelek přeceňuje své fakturovatelné hodiny. Buď k sobě upřímná!
+        Většina podnikatelek přeceňuje své fakturovatelné hodiny. Buďte k sobě upřímní!
       </Alert>
 
       <Card sx={{ bgcolor: 'grey.100' }}>
@@ -299,9 +299,9 @@ const CalculatorPage = () => {
 
   const renderStep3 = () => (
     <Stack spacing={3}>
-      <Typography variant="h6">Kolik DOOPRAVDY stojíš?</Typography>
+      <Typography variant="h6">Kolik DOOPRAVDY stojíte?</Typography>
       <Typography color="text.secondary">
-        Teď přidáme koeficienty, které odrážejí tvou tržní hodnotu.
+        Teď přidáme koeficienty, které odrážejí vaši tržní hodnotu.
       </Typography>
 
       <FormControl component="fieldset">
@@ -400,7 +400,7 @@ const CalculatorPage = () => {
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Cenová kalkulačka</Typography>
         <Typography color="text.secondary">
-          Zjisti svou minimální, doporučenou a prémiovou hodinovku.
+          Zjistěte svou minimální, doporučenou a prémiovou hodinovku.
         </Typography>
       </Stack>
 

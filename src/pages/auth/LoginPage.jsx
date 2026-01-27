@@ -75,10 +75,10 @@ const LoginPage = () => {
             <Stack spacing={3}>
               <Box textAlign="center">
                 <Typography variant="h4" sx={{ mb: 1 }}>
-                  Vítej zpět
+                  Vítejte zpět
                 </Typography>
                 <Typography color="text.secondary">
-                  Přihlas se ke svému účtu
+                  Přihlaste se ke svému účtu
                 </Typography>
               </Box>
 
@@ -135,7 +135,7 @@ const LoginPage = () => {
 
               <Box textAlign="center">
                 <Typography variant="body2" color="text.secondary">
-                  Nemáš účet?{' '}
+                  Nemáte účet?{' '}
                   <Typography
                     component={Link}
                     to="/registrace"
@@ -143,7 +143,7 @@ const LoginPage = () => {
                     color="primary"
                     sx={{ textDecoration: 'none', fontWeight: 500 }}
                   >
-                    Zaregistruj se
+                    Zaregistrujte se
                   </Typography>
                 </Typography>
               </Box>

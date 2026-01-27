@@ -84,10 +84,10 @@ const RegisterPage = () => {
           <Card>
             <CardContent sx={{ p: { xs: 3, md: 5 } }}>
               <Stack spacing={3} alignItems="center" textAlign="center">
-                <Typography variant="h4">Ověř svůj email</Typography>
+                <Typography variant="h4">Ověřte svůj email</Typography>
                 <Typography color="text.secondary">
-                  Na adresu <strong>{email}</strong> jsme ti poslali ověřovací
-                  odkaz. Klikni na něj pro dokončení registrace.
+                  Na adresu <strong>{email}</strong> jsme vám poslali ověřovací
+                  odkaz. Klikněte na něj pro dokončení registrace.
                 </Typography>
                 <Button
                   component={Link}
@@ -119,10 +119,10 @@ const RegisterPage = () => {
             <Stack spacing={3}>
               <Box textAlign="center">
                 <Typography variant="h4" sx={{ mb: 1 }}>
-                  Vytvoř si účet
+                  Vytvořte si účet
                 </Typography>
                 <Typography color="text.secondary">
-                  Zjisti svou reálnou hodinovku
+                  Zjistěte svou reálnou hodinovku
                 </Typography>
               </Box>
 
@@ -190,7 +190,7 @@ const RegisterPage = () => {
 
               <Box textAlign="center">
                 <Typography variant="body2" color="text.secondary">
-                  Už máš účet?{' '}
+                  Už máte účet?{' '}
                   <Typography
                     component={Link}
                     to="/prihlaseni"
@@ -198,7 +198,7 @@ const RegisterPage = () => {
                     color="primary"
                     sx={{ textDecoration: 'none', fontWeight: 500 }}
                   >
-                    Přihlas se
+                    Přihlaste se
                   </Typography>
                 </Typography>
               </Box>

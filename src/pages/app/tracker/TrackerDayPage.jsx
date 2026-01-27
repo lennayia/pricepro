@@ -99,7 +99,7 @@ const TrackerDayPage = () => {
           Neplatný den
         </Typography>
         <Button
-          onClick={() => navigate('/pricepro/app/tracker')}
+          onClick={() => navigate('/app/tracker')}
           sx={{ mt: 2 }}
         >
           Zpět na tracker
@@ -131,7 +131,7 @@ const TrackerDayPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500)); // Simulated delay
       setSuccess(true);
       setTimeout(() => {
-        navigate('/pricepro/app/tracker');
+        navigate('/app/tracker');
       }, 1500);
     } catch (err) {
       setError('Nepodařilo se uložit data. Zkuste to prosím znovu.');
@@ -146,7 +146,7 @@ const TrackerDayPage = () => {
     <Box>
       <Button
         startIcon={<BackIcon />}
-        onClick={() => navigate('/pricepro/app/tracker')}
+        onClick={() => navigate('/app/tracker')}
         sx={{ mb: 2 }}
       >
         Zpět na přehled
@@ -155,7 +155,7 @@ const TrackerDayPage = () => {
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Den {day} - {dayNames[day]}</Typography>
         <Typography color="text.secondary">
-          Zapiš, kolik hodin jsi dnes strávila jednotlivými činnostmi.
+          Zapište, kolik hodin jste dnes strávili jednotlivými činnostmi.
         </Typography>
       </Stack>
 
@@ -237,7 +237,7 @@ const TrackerDayPage = () => {
             </Box>
             {totalHours > 12 && (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                Páni, to je hodně! Doufám, že máš i čas na odpočinek.
+                Páni, to je hodně! Doufáme, že máte i čas na odpočinek.
               </Typography>
             )}
           </CardContent>
@@ -246,7 +246,7 @@ const TrackerDayPage = () => {
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
           <Button
             variant="outlined"
-            onClick={() => navigate('/pricepro/app/tracker')}
+            onClick={() => navigate('/app/tracker')}
             disabled={saving}
           >
             Zrušit

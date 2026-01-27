@@ -21,7 +21,7 @@ const HistoryPage = () => {
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Historie výpočtů</Typography>
         <Typography color="text.secondary">
-          Zde najdeš přehled svých předchozích výpočtů hodinovky.
+          Zde najdete přehled svých předchozích výpočtů hodinovky.
         </Typography>
       </Stack>
 
@@ -37,14 +37,14 @@ const HistoryPage = () => {
               sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }}
             />
             <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-              Zatím nemáš žádné výpočty
+              Zatím nemáte žádné výpočty
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              Až si spočítáš svou hodinovku, najdeš zde historii svých výpočtů.
+              Až si spočítáte svou hodinovku, najdete zde historii svých výpočtů.
             </Typography>
             <Button
               component={Link}
-              to="/pricepro/app/kalkulacka"
+              to="/app/kalkulacka"
               variant="contained"
               startIcon={<CalculatorIcon />}
             >

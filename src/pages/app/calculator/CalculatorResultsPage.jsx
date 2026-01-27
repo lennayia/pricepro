@@ -34,7 +34,7 @@ const CalculatorResultsPage = () => {
         </Typography>
         <Button
           component={Link}
-          to="/pricepro/app/kalkulacka"
+          to="/app/kalkulacka"
           variant="contained"
         >
           Přejít na kalkulačku
@@ -49,27 +49,27 @@ const CalculatorResultsPage = () => {
     value.toLocaleString('cs-CZ', { maximumFractionDigits: 0 });
 
   const arguments_for_higher_price = [
-    'Tvůj čas je omezený - nemůžeš pracovat víc hodin',
+    'Váš čas je omezený - nemůžete pracovat víc hodin',
     'Podceňování vede k vyhoření a frustraci',
-    'Klienti, kteří platí více, si tě více váží',
+    'Klienti, kteří platí více, si vás více váží',
     'Vyšší cena = méně klientů, ale lepší zakázky',
-    'Můžeš si dovolit investovat do sebe a svého byznysu',
+    'Můžete si dovolit investovat do sebe a svého byznysu',
   ];
 
   return (
     <Box>
       <Button
         startIcon={<BackIcon />}
-        onClick={() => navigate('/pricepro/app/kalkulacka')}
+        onClick={() => navigate('/app/kalkulacka')}
         sx={{ mb: 2 }}
       >
         Upravit zadání
       </Button>
 
       <Stack spacing={1} sx={{ mb: 4 }}>
-        <Typography variant="h4">Tvoje hodinovka</Typography>
+        <Typography variant="h4">Vaše hodinovka</Typography>
         <Typography color="text.secondary">
-          Na základě tvých údajů jsme vypočítali tři cenové hladiny.
+          Na základě vašich údajů jsme vypočítali tři cenové hladiny.
         </Typography>
       </Stack>
 
@@ -95,11 +95,11 @@ const CalculatorResultsPage = () => {
                 {formatCurrency(minimumHourly)} Kč
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Pod tuhle NIKDY nejdi
+                Pod tuhle NIKDY nejděte
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Typography variant="body2" color="text.secondary">
-                Tato cena ti pokryje pouze základní náklady. Nic ti nezbude na rozvoj ani nečekané výdaje.
+                Tato cena vám pokryje pouze základní náklady. Nic vám nezbude na rozvoj ani nečekané výdaje.
               </Typography>
             </CardContent>
           </Card>
@@ -127,11 +127,11 @@ const CalculatorResultsPage = () => {
                 {formatCurrency(recommendedHourly)} Kč
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Tvoje ideální hodinovka
+                Vaše ideální hodinovka
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Typography variant="body2" color="text.secondary">
-                Tato cena odráží tvou reálnou hodnotu na trhu včetně zkušeností a poptávky.
+                Tato cena odráží vaši reálnou hodnotu na trhu včetně zkušeností a poptávky.
               </Typography>
             </CardContent>
           </Card>
@@ -157,11 +157,11 @@ const CalculatorResultsPage = () => {
                 {formatCurrency(premiumHourly)} Kč
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Až budeš mít čekačku
+                Až budete mít čekačku
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Typography variant="body2" color="text.secondary">
-                Tuto cenu si můžeš říct, když máš plno a klienti na tebe čekají.
+                Tuto cenu si můžete říct, když máte plno a klienti na vás čekají.
               </Typography>
             </CardContent>
           </Card>
@@ -223,10 +223,10 @@ const CalculatorResultsPage = () => {
         <CardContent sx={{ py: 4, textAlign: 'center' }}>
           <TipIcon sx={{ fontSize: 48, mb: 2, opacity: 0.9 }} />
           <Typography variant="h5" sx={{ mb: 2 }}>
-            Víš, že spoustu toho času můžeš ušetřit?
+            Víte, že spoustu toho času můžete ušetřit?
           </Typography>
           <Typography sx={{ mb: 3, opacity: 0.9 }}>
-            Automatické odpovědi, fakturace, plánování obsahu... To všechno si můžeš vytvořit sama – bez programování.
+            Automatické odpovědi, fakturace, plánování obsahu... To všechno si můžete vytvořit sami – bez programování.
           </Typography>
           <Button
             variant="contained"
@@ -250,13 +250,13 @@ const CalculatorResultsPage = () => {
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
         <Button
           variant="outlined"
-          onClick={() => navigate('/pricepro/app/kalkulacka')}
+          onClick={() => navigate('/app/kalkulacka')}
         >
           Upravit zadání
         </Button>
         <Button
           variant="contained"
-          onClick={() => navigate('/pricepro/app')}
+          onClick={() => navigate('/app')}
         >
           Zpět na dashboard
         </Button>

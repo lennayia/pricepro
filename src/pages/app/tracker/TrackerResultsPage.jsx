@@ -101,7 +101,7 @@ const TrackerResultsPage = () => {
     <Box>
       <Button
         startIcon={<BackIcon />}
-        onClick={() => navigate('/pricepro/app/tracker')}
+        onClick={() => navigate('/app/tracker')}
         sx={{ mb: 2 }}
       >
         Zpět na tracker
@@ -110,7 +110,7 @@ const TrackerResultsPage = () => {
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Výsledky za týden</Typography>
         <Typography color="text.secondary">
-          Tady máš přehled, jak jsi strávila svůj čas za posledních 7 dní.
+          Tady máte přehled, jak jste strávili svůj čas za posledních 7 dní.
         </Typography>
       </Stack>
 
@@ -218,8 +218,8 @@ const TrackerResultsPage = () => {
             </Typography>
             <Typography>
               <strong>{biggestTimeSink.value.toFixed(1)} hodin týdně</strong>{' '}
-              trávíš činností "{categoryLabels[biggestTimeSink.key]}". To je{' '}
-              {((biggestTimeSink.value / totalHours) * 100).toFixed(0)}% tvého
+              trávíte činností "{categoryLabels[biggestTimeSink.key]}". To je{' '}
+              {((biggestTimeSink.value / totalHours) * 100).toFixed(0)}% vašeho
               času. Šlo by to automatizovat nebo delegovat?
             </Typography>
           </CardContent>
@@ -266,11 +266,11 @@ const TrackerResultsPage = () => {
       {/* CTA */}
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Máš přehled o svém čase. Teď zjisti svou hodinovku!
+          Máte přehled o svém čase. Teď zjistěte svou hodinovku!
         </Typography>
         <Button
           component={Link}
-          to="/pricepro/app/kalkulacka"
+          to="/app/kalkulacka"
           variant="contained"
           size="large"
           startIcon={<CalculatorIcon />}

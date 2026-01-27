@@ -20,19 +20,19 @@ const features = [
     icon: <TrackerIcon sx={{ fontSize: 48 }} />,
     title: 'Tracker času',
     description:
-      'Sleduj, kolik času ti zabírají různé činnosti. Po týdnu uvidíš, kam ti uniká čas.',
+      'Sledujte, kolik času vám zabírají různé činnosti. Po týdnu uvidíte, kam vám uniká čas.',
   },
   {
     icon: <CalculatorIcon sx={{ fontSize: 48 }} />,
     title: 'Cenová kalkulačka',
     description:
-      'Vypočítej si minimální, doporučenou a prémiovou hodinovku na základě tvých reálných nákladů.',
+      'Vypočítejte si minimální, doporučenou a prémiovou hodinovku na základě vašich reálných nákladů.',
   },
   {
     icon: <TrendingIcon sx={{ fontSize: 48 }} />,
     title: 'Personalizovaný report',
     description:
-      'Získej přehled o svém podnikání a tipy, jak si říct vyšší cenu.',
+      'Získejte přehled o svém podnikání a tipy, jak si říct vyšší cenu.',
   },
 ];
 
@@ -59,15 +59,15 @@ const LandingPage = () => {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Kolik opravdu stojí tvoje práce?
+              Kolik opravdu stojí vaše práce?
             </Typography>
             <Typography
               variant="h5"
               color="text.secondary"
               sx={{ maxWidth: 600, fontWeight: 400 }}
             >
-              Přestaň hádat a zjisti svou reálnou hodinovku. Naceň své služby
-              tak, abys neprodělávala.
+              Přestaňte hádat a zjistěte svou reálnou hodinovku. Nacen te své služby
+              tak, abyste neprodělávali.
             </Typography>
             <Button
               component={Link}
@@ -141,11 +141,11 @@ const LandingPage = () => {
               variant="h3"
               sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', md: '2rem' } }}
             >
-              Připravena zjistit svou hodnotu?
+              Připraveni zjistit svou hodnotu?
             </Typography>
             <Typography variant="body1" sx={{ opacity: 0.9, maxWidth: 500 }}>
-              Většina podnikatelek si účtuje méně, než by měla. Zjisti, jestli
-              to není i tvůj případ.
+              Většina podnikatelek si účtuje méně, než by měla. Zjistěte, jestli
+              to není i váš případ.
             </Typography>
             <Button
               component={Link}

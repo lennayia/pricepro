@@ -19,23 +19,23 @@ import { useAuth } from '../../contexts/AuthContext';
 const dashboardItems = [
   {
     title: 'Tracker času',
-    description: 'Sleduj svůj čas po dobu 7 dní a zjisti, kam ti uniká.',
+    description: 'Sledujte svůj čas po dobu 7 dní a zjistěte, kam vám uniká.',
     icon: <TrackerIcon sx={{ fontSize: 48 }} />,
-    path: '/pricepro/app/tracker',
+    path: '/app/tracker',
     color: '#6366F1',
   },
   {
     title: 'Cenová kalkulačka',
-    description: 'Vypočítej si svou minimální, doporučenou a prémiovou hodinovku.',
+    description: 'Vypočítejte si svou minimální, doporučenou a prémiovou hodinovku.',
     icon: <CalculatorIcon sx={{ fontSize: 48 }} />,
-    path: '/pricepro/app/kalkulacka',
+    path: '/app/kalkulacka',
     color: '#EC4899',
   },
   {
     title: 'Historie',
-    description: 'Podívej se na své předchozí výpočty a sleduj svůj pokrok.',
+    description: 'Podívejte se na své předchozí výpočty a sledujte svůj pokrok.',
     icon: <HistoryIcon sx={{ fontSize: 48 }} />,
-    path: '/pricepro/app/historie',
+    path: '/app/historie',
     color: '#10B981',
   },
 ];
@@ -50,7 +50,7 @@ const DashboardPage = () => {
           Ahoj!
         </Typography>
         <Typography color="text.secondary">
-          Vítej v PricePro. Vyber si, co chceš dnes udělat.
+          Vítejte v PricePro. Vyberte si, co chcete dnes udělat.
         </Typography>
       </Stack>
 
@@ -107,8 +107,8 @@ const DashboardPage = () => {
           </Typography>
           <Typography sx={{ opacity: 0.9 }}>
             Doporučujeme začít s <strong>Trackerem času</strong>. Po 7 dnech
-            sledování budeš přesně vědět, kolik času ti zabírají různé činnosti.
-            Tyto údaje pak můžeš použít v kalkulačce pro přesnější výpočet
+            sledování budete přesně vědět, kolik času vám zabírají různé činnosti.
+            Tyto údaje pak můžete použít v kalkulačce pro přesnější výpočet
             hodinovky.
           </Typography>
         </CardContent>
