@@ -11,6 +11,12 @@ export const COLORS = {
     dark: '#4F46E5',
     contrast: '#FFFFFF',
   },
+  secondary: {
+    main: '#EC4899',    // pink - sekundární barva
+    light: '#F472B6',
+    dark: '#DB2777',
+    contrast: '#FFFFFF',
+  },
   success: {
     main: '#10B981',    // emerald - pozitivní akce
     light: '#34D399',
