@@ -6,9 +6,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import PublicLayout from './components/layout/PublicLayout';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import RootRedirect from './components/common/RootRedirect';
 
 // Public Pages
-import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 
@@ -27,9 +27,11 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            {/* Root redirect */}
+            <Route path="/" element={<RootRedirect />} />
+
             {/* Public routes */}
             <Route element={<PublicLayout />}>
-              <Route path="/" element={<LandingPage />} />
               <Route path="/prihlaseni" element={<LoginPage />} />
               <Route path="/registrace" element={<RegisterPage />} />
             </Route>
