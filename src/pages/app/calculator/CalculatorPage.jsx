@@ -21,11 +21,9 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  ArrowForward as NextIcon,
-  Calculate as CalculateIcon,
-} from '@mui/icons-material';
+import { ArrowLeft, ArrowRight, Calculator } from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { saveCalculatorResult } from '../../../services/calculatorResults';
 
 const steps = ['Životní náklady', 'Reálný čas', 'Tržní hodnota'];
 
@@ -56,8 +54,10 @@ const demandOptions = [
 
 const CalculatorPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Layer 1: Living costs
   const [housingCosts, setHousingCosts] = useState('');
@@ -129,33 +129,44 @@ const CalculatorPage = () => {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError('');
+
     try {
-      // TODO: Save to Supabase
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const resultData = {
+        minimumMonthly: getMinimumMonthly(),
+        monthlyBillableHours: getMonthlyBillableHours(),
+        minimumHourly: getMinimumHourly(),
+        recommendedHourly: getRecommendedHourly(),
+        premiumHourly: getPremiumHourly(),
+        coefficients: getCoefficients(),
+        inputs: {
+          housingCosts,
+          livingCosts,
+          businessCosts,
+          savings,
+          weeklyHours,
+          billableHours,
+          experience,
+          specialization,
+          portfolio,
+          demand,
+        },
+      };
+
+      // Save to Supabase
+      const savedResult = await saveCalculatorResult(user.id, resultData);
+
+      // Navigate to results page with data
       navigate('/app/kalkulacka/vysledky', {
         state: {
-          minimumMonthly: getMinimumMonthly(),
-          monthlyBillableHours: getMonthlyBillableHours(),
-          minimumHourly: getMinimumHourly(),
-          recommendedHourly: getRecommendedHourly(),
-          premiumHourly: getPremiumHourly(),
-          coefficients: getCoefficients(),
-          inputs: {
-            housingCosts,
-            livingCosts,
-            businessCosts,
-            savings,
-            weeklyHours,
-            billableHours,
-            experience,
-            specialization,
-            portfolio,
-            demand,
-          },
+          ...resultData,
+          id: savedResult.id,
+          createdAt: savedResult.created_at,
         },
       });
-    } catch (error) {
-      console.error('Error saving calculator data:', error);
+    } catch (err) {
+      console.error('Error saving calculator data:', err);
+      setError(err.message || 'Nepodařilo se uložit výsledky. Zkuste to prosím znovu.');
     } finally {
       setLoading(false);
     }
@@ -420,11 +431,17 @@ const CalculatorPage = () => {
         </CardContent>
       </Card>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Button
           disabled={activeStep === 0}
           onClick={handleBack}
-          startIcon={<BackIcon />}
+          startIcon={<ArrowLeft size={20} />}
         >
           Zpět
         </Button>
@@ -432,13 +449,13 @@ const CalculatorPage = () => {
           <Button
             variant="contained"
             onClick={handleSubmit}
-            startIcon={loading ? <CircularProgress size={20} /> : <CalculateIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : <Calculator size={20} />}
             disabled={loading}
           >
             {loading ? 'Počítám...' : 'Zobrazit výsledky'}
           </Button>
         ) : (
-          <Button variant="contained" onClick={handleNext} endIcon={<NextIcon />}>
+          <Button variant="contained" onClick={handleNext} endIcon={<ArrowRight size={20} />}>
             Pokračovat
           </Button>
         )}

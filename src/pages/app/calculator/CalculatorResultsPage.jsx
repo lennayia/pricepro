@@ -13,13 +13,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  CheckCircle as CheckIcon,
-  Warning as WarningIcon,
-  Star as StarIcon,
-  Lightbulb as TipIcon,
-} from '@mui/icons-material';
+import { ArrowLeft, CheckCircle, AlertTriangle, Star, Lightbulb } from 'lucide-react';
 
 const CalculatorResultsPage = () => {
   const location = useLocation();
@@ -59,7 +53,7 @@ const CalculatorResultsPage = () => {
   return (
     <Box>
       <Button
-        startIcon={<BackIcon />}
+        startIcon={<ArrowLeft size={20} />}
         onClick={() => navigate('/app/kalkulacka')}
         sx={{ mb: 2 }}
       >
@@ -75,7 +69,7 @@ const CalculatorResultsPage = () => {
 
       {/* Price Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card
             sx={{
               height: '100%',
@@ -84,7 +78,9 @@ const CalculatorResultsPage = () => {
             }}
           >
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <WarningIcon color="error" sx={{ fontSize: 48, mb: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <AlertTriangle size={48} color="#EF4444" />
+              </Box>
               <Typography variant="h6" color="error.main" sx={{ mb: 1 }}>
                 Minimální cena
               </Typography>
@@ -105,7 +101,7 @@ const CalculatorResultsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card
             sx={{
               height: '100%',
@@ -116,7 +112,9 @@ const CalculatorResultsPage = () => {
             }}
           >
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <CheckIcon color="success" sx={{ fontSize: 48, mb: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <CheckCircle size={48} color="#10B981" />
+              </Box>
               <Typography variant="h6" color="success.main" sx={{ mb: 1 }}>
                 Doporučená cena
               </Typography>
@@ -137,7 +135,7 @@ const CalculatorResultsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card
             sx={{
               height: '100%',
@@ -146,7 +144,9 @@ const CalculatorResultsPage = () => {
             }}
           >
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <StarIcon color="warning" sx={{ fontSize: 48, mb: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <Star size={48} color="#F59E0B" />
+              </Box>
               <Typography variant="h6" color="warning.main" sx={{ mb: 1 }}>
                 Prémiová cena
               </Typography>
@@ -175,7 +175,7 @@ const CalculatorResultsPage = () => {
             Shrnutí výpočtu
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary">
                 Minimální měsíční příjem
               </Typography>
@@ -183,7 +183,7 @@ const CalculatorResultsPage = () => {
                 {formatCurrency(minimumMonthly)} Kč
               </Typography>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary">
                 Fakturovatelné hodiny měsíčně
               </Typography>
@@ -203,7 +203,7 @@ const CalculatorResultsPage = () => {
             {arguments_for_higher_price.map((arg, index) => (
               <ListItem key={index} sx={{ py: 0.5 }}>
                 <ListItemIcon sx={{ minWidth: 36 }}>
-                  <CheckIcon color="success" fontSize="small" />
+                  <CheckCircle size={20} color="#10B981" />
                 </ListItemIcon>
                 <ListItemText primary={arg} />
               </ListItem>
@@ -221,7 +221,9 @@ const CalculatorResultsPage = () => {
         }}
       >
         <CardContent sx={{ py: 4, textAlign: 'center' }}>
-          <TipIcon sx={{ fontSize: 48, mb: 2, opacity: 0.9 }} />
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <Lightbulb size={48} color="rgba(255, 255, 255, 0.9)" />
+          </Box>
           <Typography variant="h5" sx={{ mb: 2 }}>
             Víte, že spoustu toho času můžete ušetřit?
           </Typography>
