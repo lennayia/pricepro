@@ -17,6 +17,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import GoogleButton from '../../components/ui/GoogleButton';
 
 const RegisterPage = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,6 +33,11 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
 
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Prosím vyplňte jméno a příjmení');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Hesla se neshodují');
       return;
@@ -44,7 +51,7 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      await signUp(email, password);
+      await signUp(email, password, firstName, lastName);
       setSuccess(true);
     } catch (err) {
       if (err.message.includes('already registered')) {
@@ -141,6 +148,26 @@ const RegisterPage = () => {
 
               <form onSubmit={handleSubmit}>
                 <Stack spacing={3}>
+                  <TextField
+                    label="Jméno"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    fullWidth
+                    autoComplete="given-name"
+                    disabled={loading}
+                  />
+                  <TextField
+                    label="Příjmení"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                    fullWidth
+                    autoComplete="family-name"
+                    disabled={loading}
+                  />
                   <TextField
                     label="Email"
                     type="email"
