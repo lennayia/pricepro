@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -11,12 +11,14 @@ import {
   Stack,
   Chip,
   LinearProgress,
+  CircularProgress,
 } from '@mui/material';
-import {
-  CheckCircle as CheckIcon,
-  RadioButtonUnchecked as UncheckedIcon,
-  Assessment as ResultsIcon,
-} from '@mui/icons-material';
+import { CheckCircle, Circle, BarChart3 } from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { getTimeEntries } from '../../../services/timeEntries';
+import { getWeekDates, getDayNumber } from '../../../utils/dateHelpers';
+import { TIME_CONSTANTS } from '../../../constants/healthThresholds';
+import { COLORS } from '../../../constants/colors';
 
 const days = [
   { day: 1, label: 'Den 1', name: 'Pondělí' },
@@ -29,9 +31,48 @@ const days = [
 ];
 
 const TrackerPage = () => {
-  // TODO: Load completed days from Supabase
+  const { user } = useAuth();
   const [completedDays, setCompletedDays] = useState([]);
-  const progress = (completedDays.length / 7) * 100;
+  const [loading, setLoading] = useState(true);
+  const progress = (completedDays.length / TIME_CONSTANTS.DAYS_IN_WEEK) * 100;
+
+  // Load completed days from Supabase
+  useEffect(() => {
+    const loadCompletedDays = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const weekDates = getWeekDates();
+        const entries = await getTimeEntries(user.id);
+
+        // Filter entries to current week and map to day numbers
+        const completedDayNumbers = entries
+          .filter(entry => weekDates.includes(entry.date))
+          .map(entry => getDayNumber(entry.date))
+          .filter(dayNum => dayNum !== null);
+
+        setCompletedDays(completedDayNumbers);
+      } catch (err) {
+        console.error('Error loading completed days:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCompletedDays();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -51,8 +92,8 @@ const TrackerPage = () => {
               Váš pokrok
             </Typography>
             <Chip
-              label={`${completedDays.length} / 7 dní`}
-              color={completedDays.length === 7 ? 'success' : 'primary'}
+              label={`${completedDays.length} / ${TIME_CONSTANTS.DAYS_IN_WEEK} dní`}
+              color={completedDays.length === TIME_CONSTANTS.DAYS_IN_WEEK ? 'success' : 'primary'}
               size="small"
             />
           </Box>
@@ -73,13 +114,13 @@ const TrackerPage = () => {
               Zatím nemáte žádné záznamy. Začněte vyplňovat svůj první den.
             </Typography>
           )}
-          {completedDays.length > 0 && completedDays.length < 7 && (
+          {completedDays.length > 0 && completedDays.length < TIME_CONSTANTS.DAYS_IN_WEEK && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Super! Ještě {7 - completedDays.length} dní a budete mít kompletní
+              Super! Ještě {TIME_CONSTANTS.DAYS_IN_WEEK - completedDays.length} dní a budete mít kompletní
               přehled.
             </Typography>
           )}
-          {completedDays.length === 7 && (
+          {completedDays.length === TIME_CONSTANTS.DAYS_IN_WEEK && (
             <Typography variant="body2" color="success.main" sx={{ mt: 2 }}>
               Gratulujeme! Máte kompletní týden. Podívejte se na výsledky.
             </Typography>
@@ -92,12 +133,12 @@ const TrackerPage = () => {
         {days.map((day) => {
           const isCompleted = completedDays.includes(day.day);
           return (
-            <Grid item xs={6} sm={4} md={3} lg={12 / 7} key={day.day}>
+            <Grid size={{ xs: 6, sm: 4, md: 3, lg: 12 / 7 }} key={day.day}>
               <Card
                 sx={{
                   height: '100%',
                   border: isCompleted ? '2px solid' : 'none',
-                  borderColor: 'success.main',
+                  borderColor: COLORS.success.main,
                   transition: 'transform 0.2s, box-shadow 0.2s',
                   '&:hover': {
                     transform: 'translateY(-2px)',
@@ -111,14 +152,13 @@ const TrackerPage = () => {
                   sx={{ height: '100%' }}
                 >
                   <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                    {isCompleted ? (
-                      <CheckIcon color="success" sx={{ fontSize: 32, mb: 1 }} />
-                    ) : (
-                      <UncheckedIcon
-                        color="disabled"
-                        sx={{ fontSize: 32, mb: 1 }}
-                      />
-                    )}
+                    <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
+                      {isCompleted ? (
+                        <CheckCircle size={32} color={COLORS.success.main} />
+                      ) : (
+                        <Circle size={32} color="#9CA3AF" />
+                      )}
+                    </Box>
                     <Typography variant="h6" sx={{ fontSize: '1rem' }}>
                       {day.label}
                     </Typography>
@@ -140,7 +180,7 @@ const TrackerPage = () => {
           to="/app/tracker/vysledky"
           variant="contained"
           size="large"
-          startIcon={<ResultsIcon />}
+          startIcon={<BarChart3 size={20} />}
           disabled={completedDays.length === 0}
         >
           Zobrazit výsledky
