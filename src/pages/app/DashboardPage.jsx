@@ -132,13 +132,13 @@ const DashboardPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Box
                   sx={{
-                    bgcolor: COLORS.primary.light + '20',
+                    bgcolor: COLORS.neutral[100],
                     borderRadius: 2,
                     p: 1.5,
                     mr: 2,
                   }}
                 >
-                  <Clock size={24} color={COLORS.primary.main} />
+                  <Clock size={24} color={COLORS.neutral[600]} />
                 </Box>
                 <Typography variant="h6">Time Tracker</Typography>
               </Box>
@@ -225,13 +225,13 @@ const DashboardPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Box
                   sx={{
-                    bgcolor: COLORS.secondary.light + '20',
+                    bgcolor: COLORS.neutral[100],
                     borderRadius: 2,
                     p: 1.5,
                     mr: 2,
                   }}
                 >
-                  <Calculator size={24} color={COLORS.secondary.main} />
+                  <Calculator size={24} color={COLORS.neutral[600]} />
                 </Box>
                 <Typography variant="h6">Cenová kalkulačka</Typography>
               </Box>
@@ -335,7 +335,7 @@ const DashboardPage = () => {
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                  <Clock size={32} color={COLORS.primary.main} />
+                  <Clock size={32} color={COLORS.neutral[600]} />
                 </Box>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Tracker času
@@ -369,7 +369,7 @@ const DashboardPage = () => {
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                  <Calculator size={32} color={COLORS.secondary.main} />
+                  <Calculator size={32} color={COLORS.neutral[600]} />
                 </Box>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Kalkulačka
@@ -403,7 +403,7 @@ const DashboardPage = () => {
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                  <History size={32} color={COLORS.success.main} />
+                  <History size={32} color={COLORS.neutral[600]} />
                 </Box>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Historie
