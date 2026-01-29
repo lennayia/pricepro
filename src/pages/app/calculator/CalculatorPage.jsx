@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -7,9 +7,6 @@ import {
   CardContent,
   TextField,
   Stack,
-  Stepper,
-  Step,
-  StepLabel,
   InputAdornment,
   Slider,
   FormControl,
@@ -19,13 +16,35 @@ import {
   Radio,
   Alert,
   CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
-import { ArrowLeft, ArrowRight, Calculator } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calculator, TrendingUp, TrendingDown, Home, Clock, BarChart3 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { useAuth } from '../../../contexts/AuthContext';
-import { saveCalculatorResult } from '../../../services/calculatorResults';
+import { saveCalculatorResult, getCalculatorResults } from '../../../services/calculatorResults';
 import { ResponsiveButton } from '../../../components/ui';
+import { COLORS } from '../../../constants/colors';
 
-const steps = ['Životní náklady', 'Reálný čas', 'Tržní hodnota'];
+const steps = [
+  { label: 'Životní náklady', description: 'Kolik MUSÍTE vydělat?', icon: Home },
+  { label: 'Reálný čas', description: 'Kolik hodin OPRAVDU fakturujete?', icon: Clock },
+  { label: 'Tržní hodnota', description: 'Kolik DOOPRAVDY stojíte?', icon: BarChart3 },
+];
 
 const experienceOptions = [
   { value: '0-2', label: '0-2 roky', coefficient: 1.0 },
@@ -54,10 +73,13 @@ const demandOptions = [
 
 const CalculatorPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(location.state?.step || 0);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
+  const [history, setHistory] = useState([]);
 
   // Layer 1: Living costs
   const [housingCosts, setHousingCosts] = useState('');
@@ -74,6 +96,52 @@ const CalculatorPage = () => {
   const [specialization, setSpecialization] = useState('generalist');
   const [portfolio, setPortfolio] = useState('none');
   const [demand, setDemand] = useState('low');
+
+  // Load previous calculations on mount
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) {
+        setInitialLoading(false);
+        return;
+      }
+
+      try {
+        setInitialLoading(true);
+        const results = await getCalculatorResults(user.id);
+        setHistory(results);
+
+        // Pre-fill form with latest calculation
+        if (results.length > 0) {
+          const latest = results[0];
+          if (latest.inputs) {
+            setHousingCosts(latest.inputs.housingCosts || '');
+            setLivingCosts(latest.inputs.livingCosts || '');
+            setBusinessCosts(latest.inputs.businessCosts || '');
+            setSavings(latest.inputs.savings || '');
+            setWeeklyHours(latest.inputs.weeklyHours || '');
+            setBillableHours(latest.inputs.billableHours || '');
+            setExperience(latest.inputs.experience || '0-2');
+            setSpecialization(latest.inputs.specialization || 'generalist');
+            setPortfolio(latest.inputs.portfolio || 'none');
+            setDemand(latest.inputs.demand || 'low');
+          }
+        }
+      } catch (err) {
+        console.error('Error loading calculator data:', err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user]);
+
+  // Handle navigation from menu (state-based step)
+  useEffect(() => {
+    if (location.state?.step !== undefined) {
+      setActiveStep(location.state.step);
+    }
+  }, [location.state]);
 
   // Calculate minimum monthly income (Layer 1)
   const getMinimumMonthly = () => {
@@ -406,6 +474,68 @@ const CalculatorPage = () => {
     </Stack>
   );
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('cs-CZ', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    }).format(date);
+  };
+
+  const formatCurrency = (value) => {
+    return value?.toLocaleString('cs-CZ', { maximumFractionDigits: 0 }) || '0';
+  };
+
+  // Compare two calculations and find changes
+  const getChanges = (current, previous) => {
+    const changes = [];
+    const fields = [
+      { key: 'housingCosts', label: 'Náklady na bydlení' },
+      { key: 'livingCosts', label: 'Životní náklady' },
+      { key: 'businessCosts', label: 'Náklady na podnikání' },
+      { key: 'savings', label: 'Rezerva + spoření' },
+      { key: 'weeklyHours', label: 'Celkový pracovní čas týdně' },
+      { key: 'billableHours', label: 'Fakturovatelné hodiny týdně' },
+      { key: 'experience', label: 'Zkušenosti' },
+      { key: 'specialization', label: 'Specializace' },
+      { key: 'portfolio', label: 'Portfolio' },
+      { key: 'demand', label: 'Poptávka' },
+    ];
+
+    fields.forEach(field => {
+      const currentVal = current?.inputs?.[field.key];
+      const previousVal = previous?.inputs?.[field.key];
+
+      if (currentVal !== previousVal && previousVal !== undefined) {
+        changes.push({
+          field: field.label,
+          previous: previousVal,
+          current: currentVal,
+          isNumeric: ['housingCosts', 'livingCosts', 'businessCosts', 'savings', 'weeklyHours', 'billableHours'].includes(field.key),
+        });
+      }
+    });
+
+    return changes;
+  };
+
+  // Prepare chart data
+  const chartData = history.slice(0, 10).reverse().map(item => ({
+    date: formatDate(item.created_at),
+    'Minimální': Math.round(item.minimum_hourly),
+    'Doporučená': Math.round(item.recommended_hourly),
+    'Prémiová': Math.round(item.premium_hourly),
+  }));
+
+  if (initialLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Stack spacing={1} sx={{ mb: 4 }}>
@@ -413,15 +543,81 @@ const CalculatorPage = () => {
         <Typography color="text.secondary">
           Zjistěte svou minimální, doporučenou a prémiovou hodinovku.
         </Typography>
+        {history.length > 0 && (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Formulář je předvyplněn podle vaší poslední kalkulace. Můžete hodnoty upravit a uložit novou kalkulaci.
+          </Alert>
+        )}
       </Stack>
 
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+      {/* Custom Timeline Stepper */}
+      <Box sx={{ mb: 4, px: { xs: 2, md: 4 } }}>
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          const isActive = index === activeStep;
+          const isCompleted = index < activeStep;
+          const isLast = index === steps.length - 1;
+
+          return (
+            <Box key={step.label} sx={{ display: 'flex', gap: 3, position: 'relative' }}>
+              {/* Icon Circle */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: isCompleted || isActive ? 'primary.main' : 'grey.300',
+                    color: isCompleted || isActive ? 'white' : 'grey.600',
+                    border: '3px solid',
+                    borderColor: isCompleted || isActive ? 'primary.main' : 'grey.300',
+                    transition: 'all 0.3s',
+                    zIndex: 1,
+                  }}
+                >
+                  <Icon size={28} />
+                </Box>
+                {/* Vertical Line */}
+                {!isLast && (
+                  <Box
+                    sx={{
+                      width: 3,
+                      height: 80,
+                      bgcolor: isCompleted ? 'primary.main' : 'grey.300',
+                      transition: 'all 0.3s',
+                    }}
+                  />
+                )}
+              </Box>
+
+              {/* Content */}
+              <Box sx={{ pb: isLast ? 0 : 4, flex: 1 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    color: isActive ? 'primary.main' : isCompleted ? 'text.primary' : 'text.secondary',
+                    mb: 0.5,
+                  }}
+                >
+                  {step.label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: isActive ? 'text.primary' : 'text.secondary',
+                  }}
+                >
+                  {step.description}
+                </Typography>
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
 
       <Card sx={{ mb: 4 }}>
         <CardContent sx={{ p: { xs: 2, md: 4 } }}>
@@ -435,6 +631,111 @@ const CalculatorPage = () => {
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
+      )}
+
+      {/* History Chart */}
+      {history.length > 1 && (
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Vývoj hodinovek v čase
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip formatter={(value) => `${value} Kč`} />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="Minimální"
+                  stroke={COLORS.error.main}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Doporučená"
+                  stroke={COLORS.success.main}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Prémiová"
+                  stroke={COLORS.warning.main}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* History of Changes Table */}
+      {history.length > 1 && (
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 3 }}>
+              Historie změn nákladů a parametrů
+            </Typography>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Datum</TableCell>
+                    <TableCell>Co se změnilo</TableCell>
+                    <TableCell align="right">Předchozí hodnota</TableCell>
+                    <TableCell align="right">Nová hodnota</TableCell>
+                    <TableCell align="center">Změna</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {history.slice(1).map((item, index) => {
+                    const previous = history[index];
+                    const changes = getChanges(item, previous);
+
+                    return changes.map((change, changeIndex) => (
+                      <TableRow key={`${item.id}-${changeIndex}`}>
+                        {changeIndex === 0 && (
+                          <TableCell rowSpan={changes.length}>
+                            {formatDate(item.created_at)}
+                          </TableCell>
+                        )}
+                        <TableCell>{change.field}</TableCell>
+                        <TableCell align="right">
+                          {change.isNumeric ? `${formatCurrency(change.previous)} Kč` : change.previous}
+                        </TableCell>
+                        <TableCell align="right">
+                          {change.isNumeric ? `${formatCurrency(change.current)} Kč` : change.current}
+                        </TableCell>
+                        <TableCell align="center">
+                          {change.isNumeric ? (
+                            parseFloat(change.current) > parseFloat(change.previous) ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, color: 'success.main' }}>
+                                <TrendingUp size={16} />
+                                +{formatCurrency(parseFloat(change.current) - parseFloat(change.previous))} Kč
+                              </Box>
+                            ) : (
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, color: 'error.main' }}>
+                                <TrendingDown size={16} />
+                                {formatCurrency(parseFloat(change.current) - parseFloat(change.previous))} Kč
+                              </Box>
+                            )
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">Změněno</Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ));
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

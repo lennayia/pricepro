@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -18,6 +18,7 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
+  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -27,16 +28,75 @@ import {
   History as HistoryIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
+  ExpandLess,
+  ExpandMore,
+  Circle,
 } from '@mui/icons-material';
+import { Home, Clock, BarChart3, Eye } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const DRAWER_WIDTH = 280;
 
+const dayNames = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'];
+
 const menuItems = [
   { text: 'Přehled', icon: <DashboardIcon />, path: '/app' },
-  { text: 'Tracker času', icon: <TrackerIcon />, path: '/app/tracker' },
-  { text: 'Kalkulačka', icon: <CalculatorIcon />, path: '/app/kalkulacka' },
+  {
+    text: 'Tracker času',
+    icon: <TrackerIcon />,
+    path: '/app/tracker',
+    submenu: [
+      ...dayNames.map((day, index) => ({
+        text: `Den ${index + 1}`,
+        subtitle: day,
+        path: `/app/tracker/den/${index + 1}`,
+        icon: <Circle sx={{ fontSize: 8 }} />,
+      })),
+      {
+        text: 'Zobrazit výsledky',
+        subtitle: 'Přehled vašeho týdne',
+        path: '/app/tracker/vysledky',
+        icon: <Eye size={16} />,
+      },
+      {
+        text: 'Spočítat hodinovku',
+        subtitle: 'Na základě vašeho času',
+        path: '/app/kalkulacka',
+        icon: <CalculatorIcon sx={{ fontSize: 16 }} />,
+      }
+    ]
+  },
+  {
+    text: 'Kalkulačka',
+    icon: <CalculatorIcon />,
+    path: '/app/kalkulacka',
+    submenu: [
+      {
+        text: 'Životní náklady',
+        subtitle: 'Kolik MUSÍTE vydělat?',
+        path: '/app/kalkulacka#krok-1',
+        icon: <Home size={16} />,
+      },
+      {
+        text: 'Reálný čas',
+        subtitle: 'Kolik hodin fakturujete?',
+        path: '/app/kalkulacka#krok-2',
+        icon: <Clock size={16} />,
+      },
+      {
+        text: 'Tržní hodnota',
+        subtitle: 'Kolik DOOPRAVDY stojíte?',
+        path: '/app/kalkulacka#krok-3',
+        icon: <BarChart3 size={16} />,
+      },
+      {
+        text: 'Zobrazit výsledky',
+        path: '/app/kalkulacka/vysledky',
+        icon: <Eye size={16} />,
+      }
+    ]
+  },
   { text: 'Historie', icon: <HistoryIcon />, path: '/app/historie' },
 ];
 
@@ -48,6 +108,19 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+
+  const [openMenus, setOpenMenus] = useState({});
+
+  // Auto-expand menu based on current path
+  useEffect(() => {
+    const newOpenMenus = {};
+    menuItems.forEach(item => {
+      if (item.submenu && item.submenu.some(sub => location.pathname.startsWith(sub.path.split('#')[0]))) {
+        newOpenMenus[item.text] = true;
+      }
+    });
+    setOpenMenus(newOpenMenus);
+  }, [location.pathname]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -72,10 +145,27 @@ const AppLayout = () => {
   };
 
   const handleNavigation = (path) => {
-    navigate(path);
+    // Handle calculator steps with hash
+    if (path.includes('/app/kalkulacka#krok-')) {
+      const step = parseInt(path.split('#krok-')[1]);
+      // Use timestamp to force navigation even on same path
+      navigate('/app/kalkulacka', {
+        state: { step: step - 1, timestamp: Date.now() },
+        replace: location.pathname === '/app/kalkulacka'
+      });
+    } else {
+      navigate(path);
+    }
     if (isMobile) {
       setMobileOpen(false);
     }
+  };
+
+  const handleToggleMenu = (menuText) => {
+    setOpenMenus(prev => ({
+      ...prev,
+      [menuText]: !prev[menuText]
+    }));
   };
 
   const drawer = (
@@ -104,30 +194,123 @@ const AppLayout = () => {
       <List sx={{ flex: 1, px: 2, py: 1 }}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const hasSubmenu = item.submenu && item.submenu.length > 0;
+          const isOpen = openMenus[item.text];
+
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                onClick={() => handleNavigation(item.path)}
-                sx={{
-                  borderRadius: 2,
-                  bgcolor: isActive ? 'primary.main' : 'transparent',
-                  color: isActive ? 'white' : 'text.primary',
-                  '&:hover': {
-                    bgcolor: isActive ? 'primary.dark' : 'action.hover',
-                  },
-                }}
-              >
-                <ListItemIcon
+            <Box key={item.text}>
+              <ListItem disablePadding sx={{ mb: 0.5 }}>
+                <ListItemButton
+                  onClick={() => hasSubmenu ? handleToggleMenu(item.text) : handleNavigation(item.path)}
                   sx={{
-                    color: isActive ? 'white' : 'text.secondary',
-                    minWidth: 40,
+                    borderRadius: 2,
+                    bgcolor: isActive ? 'primary.main' : 'transparent',
+                    color: isActive ? 'white' : 'text.primary',
+                    '&:hover': {
+                      bgcolor: isActive ? 'primary.dark' : 'action.hover',
+                    },
                   }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </ListItem>
+                  <ListItemIcon
+                    sx={{
+                      color: isActive ? 'white' : 'text.secondary',
+                      minWidth: 40,
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                  {hasSubmenu && (isOpen ? <ExpandLess /> : <ExpandMore />)}
+                </ListItemButton>
+              </ListItem>
+
+              {/* Submenu with Timeline */}
+              {hasSubmenu && (
+                <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding sx={{ pl: 2 }}>
+                    {item.submenu.map((subitem, index) => {
+                      const isSubActive = location.pathname === subitem.path;
+                      const isLast = index === item.submenu.length - 1;
+
+                      return (
+                        <Box key={subitem.path} sx={{ display: 'flex', alignItems: 'flex-start', position: 'relative' }}>
+                          {/* Timeline indicator */}
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mr: 1.5, mt: 1 }}>
+                            <Box
+                              sx={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: isSubActive ? 'primary.main' : 'transparent',
+                                border: '2px solid',
+                                borderColor: isSubActive ? 'primary.main' : 'grey.400',
+                                color: isSubActive ? 'white' : 'grey.600',
+                              }}
+                            >
+                              {subitem.icon}
+                            </Box>
+                            {!isLast && (
+                              <Box
+                                sx={{
+                                  width: 2,
+                                  height: 40,
+                                  bgcolor: 'grey.300',
+                                  mt: 0.5,
+                                }}
+                              />
+                            )}
+                          </Box>
+
+                          {/* Submenu item */}
+                          <ListItemButton
+                            onClick={() => handleNavigation(subitem.path)}
+                            sx={{
+                              flex: 1,
+                              borderRadius: 1,
+                              py: 0.5,
+                              px: 1,
+                              minHeight: 40,
+                              bgcolor: isSubActive ? 'action.selected' : 'transparent',
+                              '&:hover': {
+                                bgcolor: 'action.hover',
+                              },
+                            }}
+                          >
+                            <Box>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontWeight: isSubActive ? 600 : 400,
+                                  color: isSubActive ? 'primary.main' : 'text.primary',
+                                  fontSize: '0.875rem',
+                                }}
+                              >
+                                {subitem.text}
+                              </Typography>
+                              {subitem.subtitle && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: 'text.secondary',
+                                    fontSize: '0.75rem',
+                                    display: 'block',
+                                  }}
+                                >
+                                  {subitem.subtitle}
+                                </Typography>
+                              )}
+                            </Box>
+                          </ListItemButton>
+                        </Box>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              )}
+            </Box>
           );
         })}
       </List>

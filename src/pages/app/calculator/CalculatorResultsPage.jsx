@@ -26,13 +26,13 @@ const CalculatorResultsPage = () => {
         <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
           Žádná data k zobrazení
         </Typography>
-        <Button
+        <ResponsiveButton
           component={Link}
           to="/app/kalkulacka"
           variant="contained"
         >
           Přejít na kalkulačku
-        </Button>
+        </ResponsiveButton>
       </Box>
     );
   }
@@ -230,9 +230,10 @@ const CalculatorResultsPage = () => {
           <Typography sx={{ mb: 3, opacity: 0.9 }}>
             Automatické odpovědi, fakturace, plánování obsahu... To všechno si můžete vytvořit sami – bez programování.
           </Typography>
-          <Button
+          <ResponsiveButton
             variant="contained"
             size="large"
+            component="a"
             href="https://vibecodingpro.cz/mentoring"
             target="_blank"
             sx={{
@@ -244,7 +245,7 @@ const CalculatorResultsPage = () => {
             }}
           >
             Zjistit víc o Vibecoding mentoringu
-          </Button>
+          </ResponsiveButton>
         </CardContent>
       </Card>
 

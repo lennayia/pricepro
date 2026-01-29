@@ -339,17 +339,17 @@ const TrackerResultsPage = () => {
       {/* Charts */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ height: 400 }}>
+          <Card sx={{ height: 500 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Rozdělení času
               </Typography>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={420}>
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
-                    cy="50%"
+                    cy="45%"
                     innerRadius={60}
                     outerRadius={100}
                     paddingAngle={2}
@@ -366,14 +366,14 @@ const TrackerResultsPage = () => {
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => `${value} hod`} />
-                  <Legend />
+                  <Legend verticalAlign="bottom" height={100} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ height: 400 }}>
+          <Card sx={{ height: 500 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Fakturovatelná práce po dnech
