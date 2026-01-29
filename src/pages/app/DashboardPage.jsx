@@ -21,6 +21,7 @@ import { calculateHealthScore } from '../../utils/healthScore';
 import { formatHours } from '../../utils/formatters';
 import { TIME_CONSTANTS } from '../../constants/healthThresholds';
 import { COLORS } from '../../constants/colors';
+import { ResponsiveButton } from '../../components/ui';
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -125,9 +126,9 @@ const DashboardPage = () => {
       {/* Quick Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Tracker Stats */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent sx={{ p: 3 }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
+          <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Box
                   sx={{
@@ -182,30 +183,35 @@ const DashboardPage = () => {
                     </Grid>
                   </Grid>
 
-                  <Button
-                    component={Link}
-                    to={`/app/tracker/den/${todayDayNumber}`}
-                    variant="outlined"
-                    fullWidth
-                    startIcon={<Clock size={18} />}
-                  >
-                    Vyplnit dnešní den
-                  </Button>
+                  <Box sx={{ mt: 'auto' }}>
+                    <ResponsiveButton
+                      component={Link}
+                      to={`/app/tracker/den/${todayDayNumber}`}
+                      variant="outlined"
+                      color="primary"
+                      responsive
+                      startIcon={<Clock size={18} />}
+                    >
+                      Vyplnit dnešní den
+                    </ResponsiveButton>
+                  </Box>
                 </>
               ) : (
                 <>
                   <Typography color="text.secondary" sx={{ mb: 2 }}>
                     Zatím nemáte žádné záznamy. Začněte trackovat svůj čas!
                   </Typography>
-                  <Button
-                    component={Link}
-                    to="/app/tracker"
-                    variant="contained"
-                    fullWidth
-                    startIcon={<Clock size={18} />}
-                  >
-                    Začít trackovat
-                  </Button>
+                  <Box sx={{ mt: 'auto' }}>
+                    <ResponsiveButton
+                      component={Link}
+                      to="/app/tracker"
+                      variant="contained"
+                      responsive
+                      startIcon={<Clock size={18} />}
+                    >
+                      Začít trackovat
+                    </ResponsiveButton>
+                  </Box>
                 </>
               )}
             </CardContent>
@@ -213,9 +219,9 @@ const DashboardPage = () => {
         </Grid>
 
         {/* Calculator Stats */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent sx={{ p: 3 }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
+          <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Box
                   sx={{
@@ -267,30 +273,35 @@ const DashboardPage = () => {
                     </Grid>
                   </Grid>
 
-                  <Button
-                    component={Link}
-                    to="/app/kalkulacka"
-                    variant="outlined"
-                    fullWidth
-                    startIcon={<Calculator size={18} />}
-                  >
-                    Nová kalkulace
-                  </Button>
+                  <Box sx={{ mt: 'auto' }}>
+                    <ResponsiveButton
+                      component={Link}
+                      to="/app/kalkulacka"
+                      variant="outlined"
+                      color="primary"
+                      responsive
+                      startIcon={<Calculator size={18} />}
+                    >
+                      Nová kalkulace
+                    </ResponsiveButton>
+                  </Box>
                 </>
               ) : (
                 <>
                   <Typography color="text.secondary" sx={{ mb: 2 }}>
                     Zjistěte, kolik byste měli účtovat za hodinu práce.
                   </Typography>
-                  <Button
-                    component={Link}
-                    to="/app/kalkulacka"
-                    variant="contained"
-                    fullWidth
-                    startIcon={<Calculator size={18} />}
-                  >
-                    Spočítat hodinovku
-                  </Button>
+                  <Box sx={{ mt: 'auto' }}>
+                    <ResponsiveButton
+                      component={Link}
+                      to="/app/kalkulacka"
+                      variant="contained"
+                      responsive
+                      startIcon={<Calculator size={18} />}
+                    >
+                      Spočítat hodinovku
+                    </ResponsiveButton>
+                  </Box>
                 </>
               )}
             </CardContent>
@@ -303,9 +314,13 @@ const DashboardPage = () => {
         Rychlé akce
       </Typography>
       <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} sx={{ display: 'flex' }}>
           <Card
             sx={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
               transition: 'transform 0.2s, box-shadow 0.2s',
               '&:hover': {
                 transform: 'translateY(-2px)',
@@ -316,7 +331,7 @@ const DashboardPage = () => {
             <CardActionArea
               component={Link}
               to="/app/tracker"
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
@@ -333,9 +348,13 @@ const DashboardPage = () => {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} sx={{ display: 'flex' }}>
           <Card
             sx={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
               transition: 'transform 0.2s, box-shadow 0.2s',
               '&:hover': {
                 transform: 'translateY(-2px)',
@@ -346,7 +365,7 @@ const DashboardPage = () => {
             <CardActionArea
               component={Link}
               to="/app/kalkulacka"
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
@@ -363,9 +382,13 @@ const DashboardPage = () => {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} sx={{ display: 'flex' }}>
           <Card
             sx={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
               transition: 'transform 0.2s, box-shadow 0.2s',
               '&:hover': {
                 transform: 'translateY(-2px)',
@@ -376,7 +399,7 @@ const DashboardPage = () => {
             <CardActionArea
               component={Link}
               to="/app/historie"
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>

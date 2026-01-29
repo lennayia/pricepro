@@ -7,12 +7,12 @@ import {
   Card,
   CardContent,
   CardActionArea,
-  Button,
   Stack,
   Chip,
   LinearProgress,
   CircularProgress,
 } from '@mui/material';
+import { ResponsiveButton } from '../../../components/ui';
 import { CheckCircle, Circle, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTimeEntries } from '../../../services/timeEntries';
@@ -175,7 +175,7 @@ const TrackerPage = () => {
 
       {/* Results Button */}
       <Box sx={{ textAlign: 'center' }}>
-        <Button
+        <ResponsiveButton
           component={Link}
           to="/app/tracker/vysledky"
           variant="contained"
@@ -184,7 +184,7 @@ const TrackerPage = () => {
           disabled={completedDays.length === 0}
         >
           Zobrazit výsledky
-        </Button>
+        </ResponsiveButton>
         {completedDays.length === 0 && (
           <Typography
             variant="body2"

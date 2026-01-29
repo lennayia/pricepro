@@ -6,12 +6,12 @@ import {
   Card,
   CardContent,
   TextField,
-  Button,
   Stack,
   Alert,
   InputAdornment,
   CircularProgress,
 } from '@mui/material';
+import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
@@ -80,12 +80,12 @@ const TrackerDayPage = () => {
         <Typography variant="h5" color="error">
           Neplatný den
         </Typography>
-        <Button
+        <ResponsiveButton
           onClick={() => navigate('/app/tracker')}
           sx={{ mt: 2 }}
         >
           Zpět na tracker
-        </Button>
+        </ResponsiveButton>
       </Box>
     );
   }
@@ -157,13 +157,13 @@ const TrackerDayPage = () => {
 
   return (
     <Box>
-      <Button
+      <ResponsiveButton
         startIcon={<ArrowLeft size={20} />}
         onClick={() => navigate('/app/tracker')}
         sx={{ mb: 2 }}
       >
         Zpět na přehled
-      </Button>
+      </ResponsiveButton>
 
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Den {day} - {dayNames[day]}</Typography>
@@ -393,21 +393,21 @@ const TrackerDayPage = () => {
         </Card>
 
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-          <Button
+          <ResponsiveButton
             variant="outlined"
             onClick={() => navigate('/app/tracker')}
             disabled={saving}
           >
             Zrušit
-          </Button>
-          <Button
+          </ResponsiveButton>
+          <ResponsiveButton
             type="submit"
             variant="contained"
             startIcon={saving ? <CircularProgress size={20} /> : <Save size={20} />}
             disabled={saving || success}
           >
             {saving ? 'Ukládám...' : 'Uložit'}
-          </Button>
+          </ResponsiveButton>
         </Box>
       </form>
       )}

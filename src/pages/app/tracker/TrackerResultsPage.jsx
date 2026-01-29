@@ -5,7 +5,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Button,
   Stack,
   Grid,
   Table,
@@ -17,6 +16,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
+import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Calculator } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTimeEntries } from '../../../services/timeEntries';
@@ -176,13 +176,13 @@ const TrackerResultsPage = () => {
   if (error) {
     return (
       <Box>
-        <Button
+        <ResponsiveButton
           startIcon={<ArrowLeft size={20} />}
           onClick={() => navigate('/app/tracker')}
           sx={{ mb: 2 }}
         >
           Zpět na tracker
-        </Button>
+        </ResponsiveButton>
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -192,13 +192,13 @@ const TrackerResultsPage = () => {
   if (totalHours === 0) {
     return (
       <Box>
-        <Button
+        <ResponsiveButton
           startIcon={<ArrowLeft size={20} />}
           onClick={() => navigate('/app/tracker')}
           sx={{ mb: 2 }}
         >
           Zpět na tracker
-        </Button>
+        </ResponsiveButton>
         <Card sx={{ textAlign: 'center', py: 8 }}>
           <CardContent>
             <Typography variant="h5" sx={{ mb: 2 }}>
@@ -208,13 +208,13 @@ const TrackerResultsPage = () => {
               Začněte trackovat svůj čas a získejte cenné poznatky o tom, jak trávíte
               svůj pracovní den.
             </Typography>
-            <Button
+            <ResponsiveButton
               component={Link}
               to="/app/tracker"
               variant="contained"
             >
               Začít trackovat čas
-            </Button>
+            </ResponsiveButton>
           </CardContent>
         </Card>
       </Box>
@@ -223,13 +223,13 @@ const TrackerResultsPage = () => {
 
   return (
     <Box>
-      <Button
+      <ResponsiveButton
         startIcon={<ArrowLeft size={20} />}
         onClick={() => navigate('/app/tracker')}
         sx={{ mb: 2 }}
       >
         Zpět na tracker
-      </Button>
+      </ResponsiveButton>
 
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Výsledky za týden</Typography>
@@ -479,7 +479,7 @@ const TrackerResultsPage = () => {
         <Typography variant="h6" sx={{ mb: 2 }}>
           Máte přehled o svém čase. Teď zjistěte svou hodinovku!
         </Typography>
-        <Button
+        <ResponsiveButton
           component={Link}
           to="/app/kalkulacka"
           variant="contained"
@@ -487,7 +487,7 @@ const TrackerResultsPage = () => {
           startIcon={<Calculator size={20} />}
         >
           Spočítat hodinovku
-        </Button>
+        </ResponsiveButton>
       </Box>
     </Box>
   );

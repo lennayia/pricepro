@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   TextField,
-  Button,
   Stack,
   Stepper,
   Step,
@@ -24,6 +23,7 @@ import {
 import { ArrowLeft, ArrowRight, Calculator } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { saveCalculatorResult } from '../../../services/calculatorResults';
+import { ResponsiveButton } from '../../../components/ui';
 
 const steps = ['Životní náklady', 'Reálný čas', 'Tržní hodnota'];
 
@@ -438,26 +438,26 @@ const CalculatorPage = () => {
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button
+        <ResponsiveButton
           disabled={activeStep === 0}
           onClick={handleBack}
           startIcon={<ArrowLeft size={20} />}
         >
           Zpět
-        </Button>
+        </ResponsiveButton>
         {activeStep === steps.length - 1 ? (
-          <Button
+          <ResponsiveButton
             variant="contained"
             onClick={handleSubmit}
-            startIcon={loading ? <CircularProgress size={20} /> : <Calculator size={20} />}
-            disabled={loading}
+            loading={loading}
+            startIcon={<Calculator size={20} />}
           >
             {loading ? 'Počítám...' : 'Zobrazit výsledky'}
-          </Button>
+          </ResponsiveButton>
         ) : (
-          <Button variant="contained" onClick={handleNext} endIcon={<ArrowRight size={20} />}>
+          <ResponsiveButton variant="contained" onClick={handleNext} endIcon={<ArrowRight size={20} />}>
             Pokračovat
-          </Button>
+          </ResponsiveButton>
         )}
       </Box>
     </Box>

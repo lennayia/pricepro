@@ -9,12 +9,29 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
-  {
-    db: {
-      schema: 'pricepro'
-    }
+// Create a single instance of Supabase client
+// Use a unique storage key to avoid conflicts
+let supabaseInstance = null;
+
+const getSupabaseClient = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(
+      supabaseUrl || 'https://placeholder.supabase.co',
+      supabaseAnonKey || 'placeholder-key',
+      {
+        db: {
+          schema: 'pricepro'
+        },
+        auth: {
+          storageKey: 'pricepro-auth',
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        }
+      }
+    );
   }
-);
+  return supabaseInstance;
+};
+
+export const supabase = getSupabaseClient();

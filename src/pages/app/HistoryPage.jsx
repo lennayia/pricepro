@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Stack,
-  Button,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -17,6 +16,7 @@ import {
   IconButton,
   Alert,
 } from '@mui/material';
+import { ResponsiveButton } from '../../components/ui';
 import { History, Calculator, Eye, Trash2, TrendingUp, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCalculatorResults, deleteCalculatorResult } from '../../services/calculatorResults';
@@ -150,14 +150,14 @@ const HistoryPage = () => {
             <Typography color="text.secondary" sx={{ mb: 3 }}>
               Až si spočítáte svou hodinovku, najdete zde historii svých výpočtů.
             </Typography>
-            <Button
+            <ResponsiveButton
               component={Link}
               to="/app/kalkulacka"
               variant="contained"
               startIcon={<Calculator size={20} />}
             >
               Spočítat hodinovku
-            </Button>
+            </ResponsiveButton>
           </CardContent>
         </Card>
       ) : (
@@ -172,9 +172,9 @@ const HistoryPage = () => {
                 },
               }}
             >
-              <CardContent>
-                <Grid container spacing={3} alignItems="center">
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <CardContent sx={{ position: 'relative' }}>
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 12, sm: 6, md: 8, lg: 4 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                       Datum vytvoření
                     </Typography>
@@ -183,7 +183,7 @@ const HistoryPage = () => {
                     </Typography>
                   </Grid>
 
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                       Doporučená hodinovka
                     </Typography>
@@ -192,7 +192,7 @@ const HistoryPage = () => {
                     </Typography>
                   </Grid>
 
-                  <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+                  <Grid size={{ xs: 6, sm: 6, md: 4, lg: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                       Minimální
                     </Typography>
@@ -201,7 +201,7 @@ const HistoryPage = () => {
                     </Typography>
                   </Grid>
 
-                  <Grid size={{ xs: 6, sm: 6, md: 2 }}>
+                  <Grid size={{ xs: 6, sm: 6, md: 4, lg: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                       Prémiová
                     </Typography>
@@ -210,8 +210,11 @@ const HistoryPage = () => {
                     </Typography>
                   </Grid>
 
-                  <Grid size={{ xs: 12, md: 1 }}>
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
+                  <Grid size={{ xs: 12, sm: 12, md: 4, lg: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, opacity: 0, visibility: { xs: 'hidden', md: 'visible' } }}>
+                      Akce
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: { xs: 1, md: 0 } }}>
                       <IconButton
                         onClick={() => handleViewDetail(item)}
                         size="small"
@@ -387,9 +390,9 @@ const HistoryPage = () => {
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDetail}>
+              <ResponsiveButton onClick={handleCloseDetail}>
                 Zavřít
-              </Button>
+              </ResponsiveButton>
             </DialogActions>
           </>
         )}
@@ -417,10 +420,10 @@ const HistoryPage = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDeleteConfirm} disabled={deleting}>
+          <ResponsiveButton onClick={handleCloseDeleteConfirm} disabled={deleting}>
             Zrušit
-          </Button>
-          <Button
+          </ResponsiveButton>
+          <ResponsiveButton
             onClick={handleDelete}
             color="error"
             variant="contained"
@@ -428,7 +431,7 @@ const HistoryPage = () => {
             startIcon={deleting ? <CircularProgress size={20} /> : <Trash2 size={20} />}
           >
             {deleting ? 'Mažu...' : 'Smazat'}
-          </Button>
+          </ResponsiveButton>
         </DialogActions>
       </Dialog>
     </Box>

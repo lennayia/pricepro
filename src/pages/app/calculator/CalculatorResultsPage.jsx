@@ -4,7 +4,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Button,
   Stack,
   Grid,
   Divider,
@@ -14,6 +13,7 @@ import {
   ListItemText,
 } from '@mui/material';
 import { ArrowLeft, CheckCircle, AlertTriangle, Star, Lightbulb } from 'lucide-react';
+import { ResponsiveButton } from '../../../components/ui';
 
 const CalculatorResultsPage = () => {
   const location = useLocation();
@@ -52,13 +52,13 @@ const CalculatorResultsPage = () => {
 
   return (
     <Box>
-      <Button
+      <ResponsiveButton
         startIcon={<ArrowLeft size={20} />}
         onClick={() => navigate('/app/kalkulacka')}
         sx={{ mb: 2 }}
       >
         Upravit zadání
-      </Button>
+      </ResponsiveButton>
 
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Vaše hodinovka</Typography>
@@ -250,18 +250,18 @@ const CalculatorResultsPage = () => {
 
       {/* Actions */}
       <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-        <Button
+        <ResponsiveButton
           variant="outlined"
           onClick={() => navigate('/app/kalkulacka')}
         >
           Upravit zadání
-        </Button>
-        <Button
+        </ResponsiveButton>
+        <ResponsiveButton
           variant="contained"
           onClick={() => navigate('/app')}
         >
           Zpět na dashboard
-        </Button>
+        </ResponsiveButton>
       </Box>
     </Box>
   );
