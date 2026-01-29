@@ -298,7 +298,7 @@ const CalculatorPage = () => {
       <Card sx={{ bgcolor: 'grey.100', mb: 2 }}>
         <CardContent sx={{ py: 1.5 }}>
           <Typography variant="body2" color="text.secondary">
-            💡 K vašim nákladům automaticky přičteme 15% na daně a odvody OSVČ.
+            K vašim nákladům automaticky přičteme 15% na daně a odvody OSVČ.
           </Typography>
         </CardContent>
       </Card>
@@ -551,7 +551,7 @@ const CalculatorPage = () => {
           <Card sx={{ bgcolor: 'grey.100', mt: 2 }}>
             <CardContent sx={{ py: 1.5 }}>
               <Typography variant="body2" color="text.secondary">
-                💡 Formulář je předvyplněn podle vaší poslední kalkulace. Můžete hodnoty upravit a uložit novou kalkulaci.
+                Formulář je předvyplněn podle vaší poslední kalkulace. Můžete hodnoty upravit a uložit novou kalkulaci.
               </Typography>
             </CardContent>
           </Card>
