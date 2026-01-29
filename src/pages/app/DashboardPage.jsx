@@ -183,16 +183,25 @@ const DashboardPage = () => {
                     </Grid>
                   </Grid>
 
-                  <Box sx={{ mt: 'auto' }}>
+                  <Box sx={{ mt: 'auto', display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <ResponsiveButton
+                      component={Link}
+                      to="/app/tracker"
+                      variant="contained"
+                      color="primary"
+                      responsive
+                      startIcon={<Clock size={18} />}
+                    >
+                      Přejít na tracker
+                    </ResponsiveButton>
                     <ResponsiveButton
                       component={Link}
                       to={`/app/tracker/den/${todayDayNumber}`}
                       variant="outlined"
                       color="primary"
                       responsive
-                      startIcon={<Clock size={18} />}
                     >
-                      Vyplnit dnešní den
+                      Dnešní den
                     </ResponsiveButton>
                   </Box>
                 </>
