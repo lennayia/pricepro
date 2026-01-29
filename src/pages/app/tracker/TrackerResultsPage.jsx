@@ -240,7 +240,7 @@ const TrackerResultsPage = () => {
 
       {/* Completion Status */}
       {completedDays < TIME_CONSTANTS.DAYS_IN_WEEK && (
-        <Alert severity="info" sx={{ mb: 4 }}>
+        <Alert severity="warning" sx={{ mb: 4 }}>
           <Typography>
             <strong>Vyplněno {completedDays}/{TIME_CONSTANTS.DAYS_IN_WEEK} dní</strong>
           </Typography>
@@ -317,7 +317,7 @@ const TrackerResultsPage = () => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" color="success.main" sx={{ fontWeight: 700 }}>
+              <Typography variant="h3" color="primary.main" sx={{ fontWeight: 700 }}>
                 {formatHours(billableHours)}
               </Typography>
               <Typography color="text.secondary">Fakturovatelných hodin</Typography>
@@ -386,7 +386,7 @@ const TrackerResultsPage = () => {
                   <Tooltip formatter={(value) => `${value} hod`} />
                   <Bar
                     dataKey="billable_work"
-                    fill={CHART_COLORS[2]}
+                    fill={CHART_COLORS[0]}
                     name="Fakturovatelná práce"
                     radius={[4, 4, 0, 0]}
                   />
@@ -403,7 +403,7 @@ const TrackerResultsPage = () => {
         if (recommendations.length === 0) return null;
 
         return (
-          <Card sx={{ mb: 4, bgcolor: 'info.main', color: 'white' }}>
+          <Card sx={{ mb: 4, bgcolor: 'neutral.600', color: 'white' }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 💡 Doporučení pro zdravější život

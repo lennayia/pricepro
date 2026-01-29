@@ -79,14 +79,14 @@ export const CHART_COLORS = [
 // Health score barvy
 export const HEALTH_SCORE_COLORS = {
   excellent: {
-    gradient: GRADIENTS.success,
-    color: COLORS.success.main,
+    gradient: GRADIENTS.primary,
+    color: COLORS.primary.main,
     label: 'Vynikající',
     icon: '✅',
   },
   good: {
-    gradient: GRADIENTS.info,
-    color: COLORS.info.main,
+    gradient: `linear-gradient(135deg, ${COLORS.neutral[600]} 0%, ${COLORS.neutral[700]} 100%)`,
+    color: COLORS.neutral[600],
     label: 'Dobré',
     icon: '👍',
   },
