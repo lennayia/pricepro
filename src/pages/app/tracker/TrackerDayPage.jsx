@@ -330,7 +330,7 @@ const TrackerDayPage = () => {
               ? COLORS.error.main
               : sleepHours < 6
               ? COLORS.warning.main
-              : COLORS.primary.main,
+              : COLORS.neutral[700],
             color: 'white'
           }}
         >
@@ -353,7 +353,7 @@ const TrackerDayPage = () => {
             <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
               <Box>
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                  💼 Práce
+                  Práce
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   {formatHours(workHours)}h
@@ -361,7 +361,7 @@ const TrackerDayPage = () => {
               </Box>
               <Box>
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                  🌟 Osobní život
+                  Osobní život
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   {formatHours(personalHours)}h
@@ -369,7 +369,7 @@ const TrackerDayPage = () => {
               </Box>
               <Box>
                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                  ⏰ Zbývá
+                  Zbývá
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   {formatHours(TIME_CONSTANTS.HOURS_IN_DAY - totalHours)}h
