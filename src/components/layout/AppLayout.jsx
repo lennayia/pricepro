@@ -201,7 +201,14 @@ const AppLayout = () => {
             <Box key={item.text}>
               <ListItem disablePadding sx={{ mb: 0.5 }}>
                 <ListItemButton
-                  onClick={() => hasSubmenu ? handleToggleMenu(item.text) : handleNavigation(item.path)}
+                  onClick={() => {
+                    if (hasSubmenu) {
+                      handleToggleMenu(item.text);
+                      handleNavigation(item.path);
+                    } else {
+                      handleNavigation(item.path);
+                    }
+                  }}
                   sx={{
                     borderRadius: 2,
                     bgcolor: isActive ? 'primary.main' : 'transparent',
