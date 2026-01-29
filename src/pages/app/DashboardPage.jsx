@@ -116,7 +116,7 @@ const DashboardPage = () => {
       {/* Header */}
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">
-          Vítejte zpět! 👋
+          Vítejte zpět!
         </Typography>
         <Typography color="text.secondary">
           Tady je váš přehled a rychlý přístup k nástrojům.
