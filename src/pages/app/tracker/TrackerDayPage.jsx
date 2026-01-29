@@ -220,7 +220,7 @@ const TrackerDayPage = () => {
                 >
                   <Box
                     sx={{
-                      color: category.color || COLORS.primary.main,
+                      color: category.color || COLORS.neutral[600],
                       display: 'flex',
                       alignItems: 'center',
                     }}
@@ -275,10 +275,6 @@ const TrackerDayPage = () => {
             return (
             <Card
               key={category.key}
-              sx={{
-                border: category.recommended ? '1px solid' : 'none',
-                borderColor: COLORS.success.light,
-              }}
             >
               <CardContent sx={{ py: 2 }}>
                 <Box
@@ -290,7 +286,7 @@ const TrackerDayPage = () => {
                 >
                   <Box
                     sx={{
-                      color: category.color || COLORS.success.main,
+                      color: category.color || COLORS.neutral[600],
                       display: 'flex',
                       alignItems: 'center',
                     }}
