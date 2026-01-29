@@ -138,7 +138,7 @@ const TrackerPage = () => {
                 sx={{
                   height: '100%',
                   border: isCompleted ? '2px solid' : 'none',
-                  borderColor: COLORS.success.main,
+                  borderColor: 'primary.main',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                   '&:hover': {
                     transform: 'translateY(-2px)',
@@ -154,7 +154,7 @@ const TrackerPage = () => {
                   <CardContent sx={{ textAlign: 'center', py: 3 }}>
                     <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
                       {isCompleted ? (
-                        <CheckCircle size={32} color={COLORS.success.main} />
+                        <CheckCircle size={32} color={COLORS.primary.main} />
                       ) : (
                         <Circle size={32} color="#9CA3AF" />
                       )}
