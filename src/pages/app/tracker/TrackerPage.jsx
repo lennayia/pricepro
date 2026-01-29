@@ -154,7 +154,7 @@ const TrackerPage = () => {
                   <CardContent sx={{ textAlign: 'center', py: 3 }}>
                     <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
                       {isCompleted ? (
-                        <CheckCircle size={32} color="#CD7F32" />
+                        <CheckCircle size={32} color={COLORS.primary.main} />
                       ) : (
                         <Circle size={32} color="#9CA3AF" />
                       )}

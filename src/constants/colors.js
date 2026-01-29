@@ -6,16 +6,16 @@
 // Hlavní barvy aplikace (konzervativnější tóny)
 export const COLORS = {
   primary: {
-    main: '#6366F1',    // indigo - hlavní brand barva
-    light: '#818CF8',
-    dark: '#4F46E5',
+    main: '#CD7F32',    // bronze - hlavní brand barva
+    light: '#E39B5D',
+    dark: '#A0522D',    // copper
     contrast: '#FFFFFF',
   },
   secondary: {
-    main: '#EC4899',    // pink - sekundární barva
-    light: '#F472B6',
-    dark: '#DB2777',
-    contrast: '#FFFFFF',
+    main: '#FFD700',    // gold - sekundární barva
+    light: '#FFEB3B',
+    dark: '#FFC107',
+    contrast: '#000000',
   },
   success: {
     main: '#10B981',    // emerald - pozitivní akce
@@ -66,12 +66,12 @@ export const GRADIENTS = {
 
 // Barvy specifické pro grafy (pestřejší paleta)
 export const CHART_COLORS = [
-  '#6366F1', // indigo
-  '#EC4899', // pink
+  '#CD7F32', // bronze
+  '#FFD700', // gold
   '#10B981', // emerald
   '#F59E0B', // amber
-  '#3B82F6', // blue
-  '#8B5CF6', // violet
+  '#A0522D', // copper
+  '#E39B5D', // light bronze
   '#14B8A6', // teal
   '#64748B', // slate
 ];
