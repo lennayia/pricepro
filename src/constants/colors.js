@@ -106,6 +106,6 @@ export const HEALTH_SCORE_COLORS = {
 
 // Kategorie barev (pro work vs personal)
 export const CATEGORY_COLORS = {
-  work: COLORS.primary.main,
-  personal: COLORS.success.main,
+  work: COLORS.neutral[600],
+  personal: COLORS.neutral[600],
 };
