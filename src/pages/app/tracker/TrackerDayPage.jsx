@@ -330,7 +330,7 @@ const TrackerDayPage = () => {
               ? COLORS.error.main
               : sleepHours < 6
               ? COLORS.warning.main
-              : COLORS.neutral[700],
+              : 'primary.main',
             color: 'white'
           }}
         >
