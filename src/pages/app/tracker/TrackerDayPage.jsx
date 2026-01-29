@@ -193,8 +193,17 @@ const TrackerDayPage = () => {
       {!loading && (
       <form onSubmit={handleSubmit}>
         {/* Work Section */}
-        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-          💼 Pracovní čas
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            textTransform: 'uppercase',
+            fontWeight: 700,
+            letterSpacing: 0.5,
+            color: 'primary.main'
+          }}
+        >
+          Pracovní čas
         </Typography>
         <Stack spacing={2} sx={{ mb: 4 }}>
           {WORK_CATEGORIES.map((category) => {
@@ -248,8 +257,17 @@ const TrackerDayPage = () => {
         </Stack>
 
         {/* Personal Life Section */}
-        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-          🌟 Osobní život
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 2,
+            textTransform: 'uppercase',
+            fontWeight: 700,
+            letterSpacing: 0.5,
+            color: 'text.primary'
+          }}
+        >
+          Osobní život
         </Typography>
         <Stack spacing={2} sx={{ mb: 4 }}>
           {PERSONAL_CATEGORIES.map((category) => {
