@@ -328,8 +328,10 @@ const TrackerDayPage = () => {
             mb: 4,
             bgcolor: totalHours > TIME_CONSTANTS.HOURS_IN_DAY
               ? COLORS.error.main
-              : sleepHours < 6
+              : sleepHours < 6 && sleepHours > 0
               ? COLORS.warning.main
+              : workHours > 10
+              ? '#CE4800'
               : 'primary.main',
             color: 'white'
           }}
