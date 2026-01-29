@@ -378,31 +378,27 @@ const TrackerDayPage = () => {
             </Box>
 
             {/* Smart feedback */}
-            {totalHours > TIME_CONSTANTS.HOURS_IN_DAY && (
+            {totalHours > TIME_CONSTANTS.HOURS_IN_DAY ? (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
                 ⚠️ Pozor! Den má pouze {TIME_CONSTANTS.HOURS_IN_DAY} hodin. Zkontrolujte prosím své údaje.
               </Typography>
-            )}
-            {totalHours <= TIME_CONSTANTS.HOURS_IN_DAY && sleepHours < 6 && sleepHours > 0 && (
+            ) : sleepHours < 6 && sleepHours > 0 ? (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
                 ⚠️ Pozor! Spíte méně než 6 hodin - riziko vyhoření!
               </Typography>
-            )}
-            {totalHours <= TIME_CONSTANTS.HOURS_IN_DAY && sleepHours >= 7 && sleepHours <= 8 && workHours > 10 && (
+            ) : workHours > 10 ? (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
                 ⚠️ Hodně práce dnes ({formatHours(workHours)}h). Najděte si čas na odpočinek!
               </Typography>
-            )}
-            {totalHours <= TIME_CONSTANTS.HOURS_IN_DAY && sleepHours >= 7 && sleepHours <= 8 && personalHours >= 2 && (
+            ) : sleepHours >= 7 && sleepHours <= 8 && personalHours >= 2 && workHours <= 10 ? (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
                 ✅ Skvělý balanc! Spánek i osobní čas v pořádku.
               </Typography>
-            )}
-            {totalHours <= TIME_CONSTANTS.HOURS_IN_DAY && sleepHours === 0 && personalHours === 0 && workHours > 0 && (
+            ) : sleepHours === 0 && personalHours === 0 && workHours > 0 ? (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
                 💡 Nezapomeňte vyplnit spánek a osobní čas pro kompletní přehled!
               </Typography>
-            )}
+            ) : null}
           </CardContent>
         </Card>
 
