@@ -395,7 +395,7 @@ const TrackerDayPage = () => {
             )}
             {totalHours <= TIME_CONSTANTS.HOURS_IN_DAY && sleepHours >= 7 && sleepHours <= 8 && personalHours >= 2 && (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                ✅ Skvělý balans! Spánek i osobní čas v pořádku.
+                ✅ Skvělý balanc! Spánek i osobní čas v pořádku.
               </Typography>
             )}
             {totalHours <= TIME_CONSTANTS.HOURS_IN_DAY && sleepHours === 0 && personalHours === 0 && workHours > 0 && (
