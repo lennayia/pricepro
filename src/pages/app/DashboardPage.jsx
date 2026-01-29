@@ -241,7 +241,7 @@ const DashboardPage = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     Vaše doporučená hodinovka
                   </Typography>
-                  <Typography variant="h3" sx={{ mb: 2, fontWeight: 700 }}>
+                  <Typography variant="h3" sx={{ mb: 2, fontWeight: 700, color: 'success.main' }}>
                     {calculatorData.recommended_hourly.toLocaleString('cs-CZ', {
                       maximumFractionDigits: 0,
                     })}{' '}
