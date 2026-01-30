@@ -18,36 +18,28 @@ import {
   DialogContent,
   DialogActions,
   useTheme,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Autocomplete,
-  Chip,
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
-import { ArrowLeft, Plus, Edit2, Trash2, Briefcase, Image, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Users, Image, X } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
-  getProjects,
-  createProject,
-  updateProject,
-  deleteProject,
-  uploadProjectLogo,
-  deleteProjectLogo,
-} from '../../../services/projects';
-import { getProjectThemes } from '../../../services/projectThemes';
+  getClients,
+  createClient,
+  updateClient,
+  deleteClient,
+  uploadClientLogo,
+  deleteClientLogo,
+} from '../../../services/clients';
 import { INFO_CARD_STYLES } from '../../../constants/colors';
 
-const ProjectsSettingsPage = () => {
+const ClientsSettingsPage = () => {
   const { user } = useAuth();
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const [projects, setProjects] = useState([]);
-  const [themes, setThemes] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -55,25 +47,23 @@ const ProjectsSettingsPage = () => {
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState(null);
-  const [projectName, setProjectName] = useState('');
-  const [projectType, setProjectType] = useState('other');
-  const [projectTheme, setProjectTheme] = useState(null);
-  const [projectStatus, setProjectStatus] = useState('active');
-  const [projectColor, setProjectColor] = useState('');
-  const [projectStartDate, setProjectStartDate] = useState('');
-  const [projectEndDate, setProjectEndDate] = useState('');
+  const [editingClient, setEditingClient] = useState(null);
+  const [clientName, setClientName] = useState('');
+  const [clientColor, setClientColor] = useState('');
+  const [clientStartDate, setClientStartDate] = useState('');
+  const [clientEndDate, setClientEndDate] = useState('');
+  const [clientNotes, setClientNotes] = useState('');
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [removeLogo, setRemoveLogo] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load projects and themes on mount
+  // Load clients on mount
   useEffect(() => {
-    loadProjectsAndThemes();
+    loadClients();
   }, [user]);
 
-  const loadProjectsAndThemes = async () => {
+  const loadClients = async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -81,30 +71,24 @@ const ProjectsSettingsPage = () => {
 
     try {
       setLoading(true);
-      const [projectsData, themesData] = await Promise.all([
-        getProjects(user.id, false, true), // includeArchived=false, includeEnded=true
-        getProjectThemes(user.id),
-      ]);
-      setProjects(projectsData);
-      setThemes(themesData);
+      const data = await getClients(user.id, true); // Include ended clients
+      setClients(data);
     } catch (err) {
-      console.error('Error loading data:', err);
-      setError('Nepodařilo se načíst data.');
+      console.error('Error loading clients:', err);
+      setError('Nepodařilo se načíst klienty.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenDialog = (project = null) => {
-    setEditingProject(project);
-    setProjectName(project?.name || '');
-    setProjectType(project?.type || 'other');
-    setProjectTheme(project?.theme || null);
-    setProjectStatus(project?.status || 'active');
-    setProjectColor(project?.color || '');
-    setProjectStartDate(project?.start_date || '');
-    setProjectEndDate(project?.end_date || '');
-    setLogoPreview(project?.logo_url || '');
+  const handleOpenDialog = (client = null) => {
+    setEditingClient(client);
+    setClientName(client?.name || '');
+    setClientColor(client?.color || '');
+    setClientStartDate(client?.start_date || '');
+    setClientEndDate(client?.end_date || '');
+    setClientNotes(client?.notes || '');
+    setLogoPreview(client?.logo_url || '');
     setLogoFile(null);
     setRemoveLogo(false);
     setDialogOpen(true);
@@ -113,14 +97,12 @@ const ProjectsSettingsPage = () => {
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
-    setEditingProject(null);
-    setProjectName('');
-    setProjectType('other');
-    setProjectTheme(null);
-    setProjectStatus('active');
-    setProjectColor('');
-    setProjectStartDate('');
-    setProjectEndDate('');
+    setEditingClient(null);
+    setClientName('');
+    setClientColor('');
+    setClientStartDate('');
+    setClientEndDate('');
+    setClientNotes('');
     setLogoFile(null);
     setLogoPreview('');
     setRemoveLogo(false);
@@ -182,8 +164,8 @@ const ProjectsSettingsPage = () => {
   };
 
   const handleSave = async () => {
-    if (!projectName.trim()) {
-      setError('Vyplňte název projektu.');
+    if (!clientName.trim()) {
+      setError('Vyplňte název klienta.');
       return;
     }
 
@@ -191,71 +173,72 @@ const ProjectsSettingsPage = () => {
       setSaving(true);
       setError('');
 
-      let projectId;
+      let clientId;
 
-      if (editingProject) {
-        // Update existing project
-        await updateProject(editingProject.id, {
-          name: projectName.trim(),
-          type: projectType,
-          theme_id: projectTheme?.id || null,
-          status: projectStatus,
-          color: projectColor || null,
-          start_date: projectStartDate || null,
-          end_date: projectEndDate || null,
+      if (editingClient) {
+        // Update existing client
+        await updateClient(editingClient.id, {
+          name: clientName.trim(),
+          color: clientColor || null,
+          start_date: clientStartDate || null,
+          end_date: clientEndDate || null,
+          notes: clientNotes || null,
         });
-        projectId = editingProject.id;
-        setSuccess('Projekt byl úspěšně aktualizován.');
+        clientId = editingClient.id;
+        setSuccess('Klient byl úspěšně aktualizován.');
       } else {
-        // Create new project
-        const newProject = await createProject(user.id, {
-          name: projectName.trim(),
-          type: projectType,
-          theme_id: projectTheme?.id || null,
-          status: projectStatus,
-          color: projectColor || null,
-          start_date: projectStartDate || null,
-          end_date: projectEndDate || null,
+        // Create new client
+        const newClient = await createClient(user.id, {
+          name: clientName.trim(),
+          color: clientColor || null,
+          start_date: clientStartDate || null,
+          end_date: clientEndDate || null,
+          notes: clientNotes || null,
         });
-        projectId = newProject.id;
-        setSuccess('Projekt byl úspěšně vytvořen.');
+        clientId = newClient.id;
+        setSuccess('Klient byl úspěšně vytvořen.');
       }
 
       // Handle logo upload/removal
-      if (removeLogo && editingProject?.logo_url) {
+      if (removeLogo && editingClient?.logo_url) {
         // Remove existing logo
-        await deleteProjectLogo(user.id, projectId);
+        await deleteClientLogo(user.id, clientId);
       } else if (logoFile) {
         // Upload new logo
-        await uploadProjectLogo(user.id, projectId, logoFile);
+        await uploadClientLogo(user.id, clientId, logoFile);
       }
 
       handleCloseDialog();
-      loadProjectsAndThemes();
+      loadClients();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      console.error('Error saving project:', err);
-      setError(err.message || 'Nepodařilo se uložit projekt.');
+      console.error('Error saving client:', err);
+      setError(err.message || 'Nepodařilo se uložit klienta.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (projectId, projectName) => {
-    if (!confirm(`Opravdu chcete smazat projekt "${projectName}"?`)) {
+  const handleDelete = async (clientId, clientName) => {
+    if (!confirm(`Opravdu chcete smazat klienta "${clientName}"?`)) {
       return;
     }
 
     try {
-      await deleteProject(projectId);
-      setSuccess('Projekt byl úspěšně smazán.');
-      loadProjectsAndThemes();
+      await deleteClient(clientId);
+      setSuccess('Klient byl úspěšně smazán.');
+      loadClients();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      console.error('Error deleting project:', err);
-      setError('Nepodařilo se smazat projekt.');
+      console.error('Error deleting client:', err);
+      setError('Nepodařilo se smazat klienta.');
     }
   };
+
+  // Filter clients based on showEnded checkbox
+  const filteredClients = showEnded
+    ? clients
+    : clients.filter(c => !c.end_date);
 
   if (loading) {
     return (
@@ -279,9 +262,9 @@ const ProjectsSettingsPage = () => {
             Zpět na tracker
           </ResponsiveButton>
         </Box>
-        <Typography variant="h4">Správa projektů a klientů</Typography>
+        <Typography variant="h4">Správa klientů</Typography>
         <Typography color="text.secondary">
-          Vytvořte si seznam projektů a klientů pro lepší organizaci vašeho času.
+          Spravujte své klienty a jejich údaje.
         </Typography>
       </Stack>
 
@@ -307,19 +290,19 @@ const ProjectsSettingsPage = () => {
       >
         <CardContent>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-            <Briefcase size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
+            <Users size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
             <Box>
               <Typography fontWeight={600} sx={{ mb: 1 }}>
                 Jak to funguje?
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                • Vytvořte si projekty nebo klienty (např. "Klient Anna", "Můj kurz XY")
+                • Přidejte klienty, se kterými spolupracujete
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                • V trackeru pak u každé kategorie můžete vybrat, pro který projekt jste pracovali
+                • V trackeru pak můžete vybrat klienta pro danou práci
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                • Ve výsledcích uvidíte přehled podle projektů i podle kategorií
+                • Ve výsledcích uvidíte přehled práce podle klientů
               </Typography>
             </Box>
           </Box>
@@ -333,7 +316,7 @@ const ProjectsSettingsPage = () => {
           startIcon={<Plus size={20} />}
           onClick={() => handleOpenDialog()}
         >
-          Přidat projekt/klienta
+          Přidat klienta
         </ResponsiveButton>
 
         <FormControlLabel
@@ -343,32 +326,30 @@ const ProjectsSettingsPage = () => {
               onChange={(e) => setShowEnded(e.target.checked)}
             />
           }
-          label="Zobrazit ukončené projekty"
+          label="Zobrazit ukončené spolupráce"
         />
       </Box>
 
-      {/* Projects List */}
+      {/* Clients List */}
       <Card>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Moje projekty a klienti ({projects.filter(p => showEnded || (p.status !== 'completed' && p.status !== 'cancelled')).length})
+            Moji klienti ({filteredClients.length})
           </Typography>
 
-          {projects.filter(p => showEnded || (p.status !== 'completed' && p.status !== 'cancelled')).length === 0 ? (
+          {filteredClients.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 6 }}>
               <Typography color="text.secondary" sx={{ mb: 2 }}>
-                {showEnded ? 'Zatím nemáte žádné projekty' : 'Zatím nemáte žádné aktivní projekty'}
+                {showEnded ? 'Zatím nemáte žádné klienty' : 'Zatím nemáte žádné aktivní klienty'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Klikněte na tlačítko výše a přidejte svůj první projekt nebo klienta
+                Klikněte na tlačítko výše a přidejte svého prvního klienta
               </Typography>
             </Box>
           ) : (
             <List disablePadding>
-              {projects
-                .filter(p => showEnded || (p.status !== 'completed' && p.status !== 'cancelled'))
-                .map((project, index) => (
-                <Box key={project.id}>
+              {filteredClients.map((client, index) => (
+                <Box key={client.id}>
                   <ListItem
                     sx={{
                       display: 'flex',
@@ -379,11 +360,11 @@ const ProjectsSettingsPage = () => {
                     }}
                   >
                     {/* Logo or color indicator */}
-                    {project.logo_url ? (
+                    {client.logo_url ? (
                       <Box
                         component="img"
-                        src={project.logo_url}
-                        alt={project.name}
+                        src={client.logo_url}
+                        alt={client.name}
                         sx={{
                           width: 32,
                           height: 32,
@@ -394,64 +375,47 @@ const ProjectsSettingsPage = () => {
                           flexShrink: 0,
                         }}
                       />
-                    ) : project.color ? (
+                    ) : client.color ? (
                       <Box
                         sx={{
                           width: 16,
                           height: 16,
                           borderRadius: '50%',
-                          bgcolor: project.color,
+                          bgcolor: client.color,
                           flexShrink: 0,
                         }}
                       />
                     ) : null}
 
-                    {/* Project name & details */}
+                    {/* Client name */}
                     <Box sx={{ flex: 1 }}>
-                      <Typography>{project.name}</Typography>
-                      <Box sx={{ display: 'flex', gap: 1, mt: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
-                        {/* Theme chip */}
-                        {project.theme && (
-                          <Chip
-                            label={project.theme.name}
-                            size="small"
-                            sx={{
-                              bgcolor: project.theme.color || 'primary.main',
-                              color: 'white',
-                              fontSize: '0.7rem',
-                              height: 20,
-                            }}
-                          />
-                        )}
-                        {/* Status badge */}
+                      <Typography>{client.name}</Typography>
+                      {client.end_date && (
                         <Typography variant="caption" color="text.secondary">
-                          {project.status === 'active' && '● Aktivní'}
-                          {project.status === 'paused' && '⏸ Pozastavený'}
-                          {project.status === 'completed' && '✓ Dokončený'}
-                          {project.status === 'cancelled' && '✗ Zrušený'}
+                          Ukončeno: {new Date(client.end_date).toLocaleDateString('cs-CZ')}
                         </Typography>
-                      </Box>
+                      )}
                     </Box>
 
                     {/* Actions */}
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <IconButton
                         size="small"
-                        onClick={() => handleOpenDialog(project)}
+                        onClick={() => handleOpenDialog(client)}
                         sx={{ color: 'primary.main' }}
                       >
                         <Edit2 size={18} />
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDelete(project.id, project.name)}
+                        onClick={() => handleDelete(client.id, client.name)}
                         sx={{ color: 'error.main' }}
                       >
                         <Trash2 size={18} />
                       </IconButton>
                     </Box>
                   </ListItem>
-                  {index < projects.filter(p => showEnded || (p.status !== 'completed' && p.status !== 'cancelled')).length - 1 && <Divider />}
+                  {index < filteredClients.length - 1 && <Divider />}
                 </Box>
               ))}
             </List>
@@ -462,17 +426,17 @@ const ProjectsSettingsPage = () => {
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingProject ? 'Upravit projekt' : 'Přidat projekt/klienta'}
+          {editingClient ? 'Upravit klienta' : 'Přidat klienta'}
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
             <TextField
-              label="Název projektu/klienta"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
+              label="Název klienta"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
               fullWidth
               autoFocus
-              placeholder="např. Klient Anna, Kurz XYZ..."
+              placeholder="např. Anna Nováková, Firma XYZ..."
             />
 
             {/* Logo Upload Section */}
@@ -481,7 +445,7 @@ const ProjectsSettingsPage = () => {
                 Logo (volitelné)
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Nahrajte logo klienta nebo projektu. Max 50 KB, max 50×50 px. Formáty: PNG, JPG, WEBP, HEIC.
+                Nahrajte logo klienta. Max 50 KB, max 50×50 px. Formáty: PNG, JPG, WEBP, HEIC.
               </Typography>
 
               {logoPreview && (
@@ -549,107 +513,49 @@ const ProjectsSettingsPage = () => {
               </label>
             </Box>
 
-            {/* Project Type */}
-            <FormControl fullWidth>
-              <InputLabel>Typ projektu</InputLabel>
-              <Select
-                value={projectType}
-                onChange={(e) => setProjectType(e.target.value)}
-                label="Typ projektu"
-              >
-                <MenuItem value="billable">Fakturovatelný (1:1 práce)</MenuItem>
-                <MenuItem value="scalable">Škálovatelný (investice)</MenuItem>
-                <MenuItem value="other">Ostatní (režie)</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Theme Selection */}
-            <Autocomplete
-              value={projectTheme}
-              onChange={(e, newValue) => setProjectTheme(newValue)}
-              options={themes}
-              getOptionLabel={(option) => option.name || ''}
-              renderInput={(params) => (
-                <TextField {...params} label="Téma (volitelné)" />
-              )}
-              renderOption={(props, option) => (
-                <li {...props}>
-                  <Chip
-                    label={option.name}
-                    size="small"
-                    sx={{
-                      bgcolor: option.color || 'primary.main',
-                      color: 'white',
-                      fontWeight: 500,
-                    }}
-                  />
-                </li>
-              )}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    {...getTagProps({ index })}
-                    key={option.id}
-                    label={option.name}
-                    size="small"
-                    sx={{
-                      bgcolor: option.color || 'primary.main',
-                      color: 'white',
-                    }}
-                  />
-                ))
-              }
-            />
-
-            {/* Status */}
-            <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={projectStatus}
-                onChange={(e) => setProjectStatus(e.target.value)}
-                label="Status"
-              >
-                <MenuItem value="active">Aktivní</MenuItem>
-                <MenuItem value="paused">Pozastavený</MenuItem>
-                <MenuItem value="completed">Dokončený</MenuItem>
-                <MenuItem value="cancelled">Zrušený</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Dates */}
-            <TextField
-              label="Datum začátku (volitelné)"
-              type="date"
-              value={projectStartDate}
-              onChange={(e) => setProjectStartDate(e.target.value)}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-
-            <TextField
-              label="Datum konce (volitelné)"
-              type="date"
-              value={projectEndDate}
-              onChange={(e) => setProjectEndDate(e.target.value)}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              helperText="Nevyplňujte, pokud projekt pokračuje"
-            />
-
             <TextField
               label="Barva (volitelné)"
-              value={projectColor}
+              value={clientColor}
               onChange={(e) => {
                 let value = e.target.value;
                 // Auto-add # if user enters hex code without it
                 if (value && !value.startsWith('#') && /^[0-9A-Fa-f]+$/.test(value)) {
                   value = '#' + value;
                 }
-                setProjectColor(value);
+                setClientColor(value);
               }}
               fullWidth
               placeholder="#3B82F6 nebo 3B82F6"
               helperText="Použije se, pokud není nahrané logo. Zadejte hex kód (# se doplní automaticky)."
+            />
+
+            <TextField
+              label="Datum začátku spolupráce (volitelné)"
+              type="date"
+              value={clientStartDate}
+              onChange={(e) => setClientStartDate(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <TextField
+              label="Datum konce spolupráce (volitelné)"
+              type="date"
+              value={clientEndDate}
+              onChange={(e) => setClientEndDate(e.target.value)}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              helperText="Nevyplňujte, pokud spolupráce pokračuje"
+            />
+
+            <TextField
+              label="Poznámky (volitelné)"
+              value={clientNotes}
+              onChange={(e) => setClientNotes(e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
+              placeholder="Kontaktní údaje, poznámky..."
             />
           </Stack>
         </DialogContent>
@@ -663,7 +569,7 @@ const ProjectsSettingsPage = () => {
             disabled={saving}
             startIcon={saving ? <CircularProgress size={16} color="inherit" /> : null}
           >
-            {saving ? 'Ukládám...' : editingProject ? 'Uložit' : 'Přidat'}
+            {saving ? 'Ukládám...' : editingClient ? 'Uložit' : 'Přidat'}
           </ResponsiveButton>
         </DialogActions>
       </Dialog>
@@ -671,4 +577,4 @@ const ProjectsSettingsPage = () => {
   );
 };
 
-export default ProjectsSettingsPage;
+export default ClientsSettingsPage;

@@ -23,6 +23,8 @@ import CalculatorResultsPage from './pages/app/calculator/CalculatorResultsPage'
 import HistoryPage from './pages/app/HistoryPage';
 import CategorySettingsPage from './pages/app/settings/CategorySettingsPage';
 import ProjectsSettingsPage from './pages/app/settings/ProjectsSettingsPage';
+import ClientsSettingsPage from './pages/app/settings/ClientsSettingsPage';
+import ThemesSettingsPage from './pages/app/settings/ThemesSettingsPage';
 
 function App() {
   return (
@@ -59,6 +61,8 @@ function App() {
               {/* Settings routes */}
               <Route path="nastaveni/kategorie" element={<CategorySettingsPage />} />
               <Route path="nastaveni/projekty" element={<ProjectsSettingsPage />} />
+              <Route path="nastaveni/klienti" element={<ClientsSettingsPage />} />
+              <Route path="nastaveni/temata" element={<ThemesSettingsPage />} />
 
               {/* Calculator routes */}
               <Route path="kalkulacka" element={<CalculatorPage />} />
