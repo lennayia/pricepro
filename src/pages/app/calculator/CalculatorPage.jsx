@@ -80,6 +80,16 @@ const demandOptions = [
   { value: 'waiting', label: 'Mám čekačku', coefficient: 1.4 },
 ];
 
+// 2026 wage constants
+const WAGES_2026 = {
+  minimal: { monthly: 22400, label: 'Minimální mzda', hourly: 133 }, // 22400 / 168h
+  average_cz: { monthly: 48967, label: 'Průměrná mzda ČR', hourly: 291 }, // 48967 / 168h
+  average_prague: { monthly: 65000, label: 'Průměrná mzda Praha', hourly: 387 }, // 65000 / 168h
+};
+
+const WAGE_FUND_HOURS = 160; // Standard monthly working hours for wage calculation
+const OSVC_COEFFICIENT = 1.3; // 30% extra for taxes and contributions
+
 const CalculatorPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -104,6 +114,8 @@ const CalculatorPage = () => {
   const [weeklyHours, setWeeklyHours] = useState('');
   const [billableHours, setBillableHours] = useState('');
   const [weeksToTrack, setWeeksToTrack] = useState(1); // Number of weeks to calculate average from
+  const [baseWage, setBaseWage] = useState('average_prague'); // Base wage selection for calculation B
+  const [customWage, setCustomWage] = useState(''); // Custom hourly wage if selected
 
   // Layer 3: Market value
   const [experience, setExperience] = useState('0-2');
@@ -135,6 +147,8 @@ const CalculatorPage = () => {
             setWeeklyHours(latest.inputs.weeklyHours || '');
             setBillableHours(latest.inputs.billableHours || '');
             setWeeksToTrack(latest.inputs.weeksToTrack || 1);
+            setBaseWage(latest.inputs.baseWage || 'average_prague');
+            setCustomWage(latest.inputs.customWage || '');
             setExperience(latest.inputs.experience || '0-2');
             setSpecialization(latest.inputs.specialization || 'generalist');
             setPortfolio(latest.inputs.portfolio || 'none');
@@ -260,6 +274,44 @@ const CalculatorPage = () => {
     return getRecommendedHourly() * 1.3;
   };
 
+  // ============================================
+  // CALCULATION B: Dignity Wage Approach
+  // ============================================
+
+  // Get base hourly wage (from selected wage)
+  const getBaseHourlyWage = () => {
+    if (baseWage === 'custom') {
+      return parseFloat(customWage) || 0;
+    }
+    return WAGES_2026[baseWage]?.hourly || 0;
+  };
+
+  // Calculate what you should earn monthly (dignity wage × total work hours)
+  const getDignityMonthlyEarnings = () => {
+    const baseHourly = getBaseHourlyWage();
+    const hourlyWithOSVC = baseHourly * OSVC_COEFFICIENT; // +30% for OSVČ
+    const totalMonthlyHours = (parseFloat(weeklyHours) || 0) * 4;
+    return hourlyWithOSVC * totalMonthlyHours;
+  };
+
+  // Calculate minimum hourly rate needed to achieve dignity wage (Calculation B)
+  const getDignityMinimumHourly = () => {
+    const dignityEarnings = getDignityMonthlyEarnings();
+    const monthlyBillable = getMonthlyBillableHours();
+    if (monthlyBillable === 0) return 0;
+    return dignityEarnings / monthlyBillable;
+  };
+
+  // Calculate recommended hourly rate with market coefficients (Calculation B)
+  const getDignityRecommendedHourly = () => {
+    return getDignityMinimumHourly() * getCoefficients();
+  };
+
+  // Calculate premium hourly rate (Calculation B)
+  const getDignityPremiumHourly = () => {
+    return getDignityRecommendedHourly() * 1.3;
+  };
+
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
   };
@@ -274,12 +326,19 @@ const CalculatorPage = () => {
 
     try {
       const resultData = {
+        // Calculation A: From living costs
         minimumMonthly: getMinimumMonthly(),
         monthlyBillableHours: getMonthlyBillableHours(),
         minimumHourly: getMinimumHourly(),
         recommendedHourly: getRecommendedHourly(),
         premiumHourly: getPremiumHourly(),
         coefficients: getCoefficients(),
+        // Calculation B: From dignity wage
+        dignityMonthlyEarnings: getDignityMonthlyEarnings(),
+        dignityMinimumHourly: getDignityMinimumHourly(),
+        dignityRecommendedHourly: getDignityRecommendedHourly(),
+        dignityPremiumHourly: getDignityPremiumHourly(),
+        baseHourlyWage: getBaseHourlyWage(),
         inputs: {
           housingCosts,
           livingCosts,
@@ -288,6 +347,8 @@ const CalculatorPage = () => {
           weeklyHours,
           billableHours,
           weeksToTrack,
+          baseWage,
+          customWage,
           experience,
           specialization,
           portfolio,
@@ -540,6 +601,69 @@ const CalculatorPage = () => {
           )}
         </>
       )}
+
+      {/* Base wage selection for Calculation B */}
+      <Box sx={{ mt: 4 }}>
+        <FormControl component="fieldset" fullWidth>
+          <FormLabel component="legend" sx={{ mb: 1, fontWeight: 600 }}>
+            Jakou minimální hodinovou mzdu očekáváte?
+          </FormLabel>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Toto použijeme pro výpočet důstojné hodinovky (hrubá mzda zaměstnance pro porovnání)
+          </Typography>
+          <RadioGroup value={baseWage} onChange={(e) => setBaseWage(e.target.value)}>
+            <FormControlLabel
+              value="minimal"
+              control={<Radio />}
+              label={`Minimální mzda (${WAGES_2026.minimal.hourly} Kč/h)`}
+            />
+            <FormControlLabel
+              value="average_cz"
+              control={<Radio />}
+              label={`Průměrná mzda ČR (${WAGES_2026.average_cz.hourly} Kč/h)`}
+            />
+            <FormControlLabel
+              value="average_prague"
+              control={<Radio />}
+              label={`Průměrná mzda Praha (${WAGES_2026.average_prague.hourly} Kč/h) – doporučeno`}
+            />
+            <FormControlLabel
+              value="custom"
+              control={<Radio />}
+              label="Vlastní hodnota"
+            />
+          </RadioGroup>
+
+          {baseWage === 'custom' && (
+            <TextField
+              label="Vlastní hodinová mzda"
+              type="number"
+              value={customWage}
+              onChange={(e) => setCustomWage(e.target.value)}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">Kč/h</InputAdornment>,
+              }}
+              sx={{ mt: 2 }}
+              fullWidth
+            />
+          )}
+
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <Typography variant="body2" sx={{ mb: 0.5 }}>
+              ℹ️ Pro OSVČ počítáme +30% (odvody a daně)
+            </Typography>
+            <Typography variant="body2" fontWeight={600}>
+              → Vaše cílová hodinovka:{' '}
+              {Math.round(
+                (baseWage === 'custom'
+                  ? parseFloat(customWage) || 0
+                  : WAGES_2026[baseWage]?.hourly || 0) * OSVC_COEFFICIENT
+              ).toLocaleString('cs-CZ')}{' '}
+              Kč/h
+            </Typography>
+          </Alert>
+        </FormControl>
+      </Box>
 
       <Alert
         severity="warning"

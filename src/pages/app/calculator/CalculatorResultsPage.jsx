@@ -46,6 +46,11 @@ const CalculatorResultsPage = () => {
             premiumHourly: latest.premium_hourly,
             minimumMonthly: latest.minimum_monthly,
             monthlyBillableHours: latest.inputs?.monthlyBillableHours || 0,
+            // Calculation B fields
+            dignityMinimumHourly: latest.dignity_minimum_hourly,
+            dignityRecommendedHourly: latest.dignity_recommended_hourly,
+            dignityPremiumHourly: latest.dignity_premium_hourly,
+            dignityMonthlyEarnings: latest.dignity_monthly_earnings,
           });
         } else {
           setError('no_data');
@@ -88,10 +93,34 @@ const CalculatorResultsPage = () => {
     );
   }
 
-  const { minimumHourly, recommendedHourly, premiumHourly, minimumMonthly, monthlyBillableHours } = data;
+  const {
+    minimumHourly,
+    recommendedHourly,
+    premiumHourly,
+    minimumMonthly,
+    monthlyBillableHours,
+    // Calculation B fields
+    dignityMinimumHourly,
+    dignityRecommendedHourly,
+    dignityPremiumHourly,
+    dignityMonthlyEarnings,
+  } = data;
 
   const formatCurrency = (value) =>
-    value.toLocaleString('cs-CZ', { maximumFractionDigits: 0 });
+    value?.toLocaleString('cs-CZ', { maximumFractionDigits: 0 }) || '0';
+
+  // Check if we have Calculation B data
+  const hasCalculationB = dignityRecommendedHourly && dignityRecommendedHourly > 0;
+
+  // Calculate difference between the two calculations
+  const getDifference = () => {
+    if (!hasCalculationB) return null;
+    const diff = dignityRecommendedHourly - recommendedHourly;
+    const percentDiff = (diff / recommendedHourly) * 100;
+    return { diff, percentDiff };
+  };
+
+  const difference = getDifference();
 
   const arguments_for_higher_price = [
     'Váš čas je omezený - nemůžete pracovat víc hodin',
@@ -114,12 +143,211 @@ const CalculatorResultsPage = () => {
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Vaše hodinovka</Typography>
         <Typography color="text.secondary">
-          Na základě vašich údajů jsme vypočítali tři cenové hladiny.
+          {hasCalculationB
+            ? 'Porovnání dvou přístupů k cenotvorbě – od nákladů a od důstojné mzdy.'
+            : 'Na základě vašich údajů jsme vypočítali tři cenové hladiny.'}
         </Typography>
       </Stack>
 
-      {/* Price Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      {/* Comparison Info Card */}
+      {hasCalculationB && difference && (
+        <Card
+          sx={{
+            bgcolor: Math.abs(difference.percentDiff) < 20
+              ? INFO_CARD_STYLES[theme.palette.mode].bgcolor
+              : 'warning.lighter',
+            border: INFO_CARD_STYLES[theme.palette.mode].border,
+            mb: 3,
+          }}
+        >
+          <CardContent>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+              <Lightbulb size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
+              <Box>
+                <Typography fontWeight={600} sx={{ mb: 1 }}>
+                  {Math.abs(difference.percentDiff) < 20
+                    ? '✓ Výpočty se shodují – vaše cena je validní!'
+                    : '⚠️ Velký rozdíl mezi výpočty'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {Math.abs(difference.percentDiff) < 20
+                    ? `Oba přístupy k cenotvorbě vedou k podobnému výsledku (rozdíl ${Math.abs(difference.percentDiff).toFixed(1)}%). To znamená, že vaše cena je správně nastavená a odpovídá jak vašim nákladům, tak důstojné hodnotě vaší práce.`
+                    : difference.diff > 0
+                    ? `Výpočet z důstojné mzdy je o ${Math.abs(difference.percentDiff).toFixed(0)}% vyšší. Váš celkový pracovní čas (včetně nefakturovatelné práce) si zaslouží vyšší ohodnocení. Zvažte navýšení ceny.`
+                    : `Výpočet z nákladů je o ${Math.abs(difference.percentDiff).toFixed(0)}% vyšší. Vaše náklady jsou vysoké vzhledem k počtu odpracovaných hodin. Zvažte optimalizaci nákladů nebo navýšení fakturovatelných hodin.`}
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Price Cards - Two Column Comparison */}
+      {hasCalculationB ? (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* Column 1: Calculation A (From Costs) */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card
+              sx={{
+                height: '100%',
+                border: '2px solid',
+                borderColor: 'primary.main',
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6" color="primary" sx={{ mb: 2, textAlign: 'center' }}>
+                  Výpočet A: Od nákladů
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
+                  Co MUSÍTE vydělat pro pokrytí nákladů
+                </Typography>
+
+                <Divider sx={{ mb: 3 }} />
+
+                {/* Minimum */}
+                <Box sx={{ mb: 3, textAlign: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <AlertTriangle size={32} color={COLORS.error.main} />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Minimální cena
+                  </Typography>
+                  <Typography variant="h4" color="error.main" sx={{ fontWeight: 700 }}>
+                    {formatCurrency(minimumHourly)} Kč
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Pod tuhle NIKDY nejděte
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 3 }} />
+
+                {/* Recommended */}
+                <Box sx={{ mb: 3, textAlign: 'center', bgcolor: 'success.lighter', borderRadius: 2, p: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <CheckCircle size={40} color={COLORS.success.main} />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Doporučená cena
+                  </Typography>
+                  <Typography variant="h3" color="success.main" sx={{ fontWeight: 700 }}>
+                    {formatCurrency(recommendedHourly)} Kč
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Vaše ideální hodinovka
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 3 }} />
+
+                {/* Premium */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <Star size={32} color={COLORS.warning.main} />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Prémiová cena
+                  </Typography>
+                  <Typography variant="h4" color="warning.main" sx={{ fontWeight: 700 }}>
+                    {formatCurrency(premiumHourly)} Kč
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Až budete mít čekačku
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  💡 Tento výpočet vychází z vašich nákladů na život a podnikání, fakturovatelných hodin a tržních koeficientů.
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Column 2: Calculation B (From Dignity Wage) */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card
+              sx={{
+                height: '100%',
+                border: '2px solid',
+                borderColor: 'secondary.main',
+              }}
+            >
+              <CardContent>
+                <Typography variant="h6" color="secondary" sx={{ mb: 2, textAlign: 'center' }}>
+                  Výpočet B: Od důstojné mzdy
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
+                  Co si ZASLOUŽÍTE za všechen čas
+                </Typography>
+
+                <Divider sx={{ mb: 3 }} />
+
+                {/* Minimum */}
+                <Box sx={{ mb: 3, textAlign: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <AlertTriangle size={32} color={COLORS.error.main} />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Minimální cena
+                  </Typography>
+                  <Typography variant="h4" color="error.main" sx={{ fontWeight: 700 }}>
+                    {formatCurrency(dignityMinimumHourly)} Kč
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Pro pokrytí důstojné mzdy
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 3 }} />
+
+                {/* Recommended */}
+                <Box sx={{ mb: 3, textAlign: 'center', bgcolor: 'secondary.lighter', borderRadius: 2, p: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <CheckCircle size={40} color={theme.palette.secondary.main} />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Doporučená cena
+                  </Typography>
+                  <Typography variant="h3" color="secondary.main" sx={{ fontWeight: 700 }}>
+                    {formatCurrency(dignityRecommendedHourly)} Kč
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    S tržními koeficienty
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 3 }} />
+
+                {/* Premium */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    <Star size={32} color={COLORS.warning.main} />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Prémiová cena
+                  </Typography>
+                  <Typography variant="h4" color="warning.main" sx={{ fontWeight: 700 }}>
+                    {formatCurrency(dignityPremiumHourly)} Kč
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Až budete mít čekačku
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  💡 Tento výpočet vychází z důstojné hodinové mzdy, celkového času stráveného prací (včetně nefakturovatelné) a fakturovatelných hodin.
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      ) : (
+        /* Original three-card layout for backwards compatibility */
+        <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card
             sx={{
@@ -217,7 +445,8 @@ const CalculatorResultsPage = () => {
             </CardContent>
           </Card>
         </Grid>
-      </Grid>
+        </Grid>
+      )}
 
       {/* Summary */}
       <Card sx={{ mb: 4 }}>

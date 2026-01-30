@@ -24,12 +24,19 @@ export const saveCalculatorResult = async (userId, data) => {
     .insert([
       {
         user_id: userId,
+        // Calculation A fields
         minimum_monthly: data.minimumMonthly,
         monthly_billable_hours: data.monthlyBillableHours,
         minimum_hourly: data.minimumHourly,
         recommended_hourly: data.recommendedHourly,
         premium_hourly: data.premiumHourly,
         coefficients: data.coefficients,
+        // Calculation B fields
+        dignity_monthly_earnings: data.dignityMonthlyEarnings,
+        dignity_minimum_hourly: data.dignityMinimumHourly,
+        dignity_recommended_hourly: data.dignityRecommendedHourly,
+        dignity_premium_hourly: data.dignityPremiumHourly,
+        base_hourly_wage: data.baseHourlyWage,
         inputs: data.inputs,
       },
     ])
