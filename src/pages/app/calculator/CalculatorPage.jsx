@@ -39,7 +39,7 @@ import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../../../contexts/AuthContext';
 import { saveCalculatorResult, getCalculatorResults } from '../../../services/calculatorResults';
 import { ResponsiveButton } from '../../../components/ui';
-import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES } from '../../../constants/colors';
+import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES, WARNING_CARD_STYLES } from '../../../constants/colors';
 
 const steps = [
   { label: 'Životní náklady', description: 'Kolik MUSÍTE vydělat?', icon: Home },
@@ -361,7 +361,17 @@ const CalculatorPage = () => {
         fullWidth
       />
 
-      <Alert severity="warning">
+      <Alert
+        severity="warning"
+        sx={{
+          bgcolor: WARNING_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: WARNING_CARD_STYLES[theme.palette.mode].border,
+          color: theme.palette.mode === 'dark' ? WARNING_CARD_STYLES.dark.iconColor : undefined,
+          '& .MuiAlert-icon': {
+            color: WARNING_CARD_STYLES[theme.palette.mode].iconColor,
+          },
+        }}
+      >
         Většina podnikatelek přeceňuje své fakturovatelné hodiny. Buďte k sobě upřímní!
       </Alert>
 
