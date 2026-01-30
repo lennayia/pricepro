@@ -244,7 +244,7 @@ const TrackerDayPage = () => {
                     min={0}
                     max={TIME_CONSTANTS.HOURS_IN_DAY}
                     step={0.5}
-                    sx={{ width: 100 }}
+                    sx={{ width: 75 }}
                     disabled={saving || success}
                   />
                 </Box>
@@ -306,7 +306,7 @@ const TrackerDayPage = () => {
                     min={0}
                     max={TIME_CONSTANTS.HOURS_IN_DAY}
                     step={0.5}
-                    sx={{ width: 100 }}
+                    sx={{ width: 75 }}
                     disabled={saving || success}
                   />
                 </Box>
