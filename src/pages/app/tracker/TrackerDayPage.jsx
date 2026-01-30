@@ -430,7 +430,7 @@ const TrackerDayPage = () => {
           </CardContent>
         </Card>
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
           <ResponsiveButton
             variant="outlined"
             onClick={() => navigate('/app/tracker')}
