@@ -216,29 +216,27 @@ const TrackerDayPage = () => {
                 <Box
                   sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    alignItems: 'flex-start',
                     gap: 2,
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1 }}>
-                    <Box
-                      sx={{
-                        color: category.color || COLORS.neutral[600],
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Icon size={24} />
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                        {category.label}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {category.description}
-                      </Typography>
-                    </Box>
+                  <Box
+                    sx={{
+                      color: category.color || COLORS.neutral[600],
+                      display: 'flex',
+                      alignItems: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon size={24} />
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                      {category.label}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                      {category.description}
+                    </Typography>
                   </Box>
                   <NumberInput
                     value={formData[category.key]}
@@ -248,7 +246,7 @@ const TrackerDayPage = () => {
                     max={TIME_CONSTANTS.HOURS_IN_DAY}
                     step={0.5}
                     size="small"
-                    sx={{ width: { xs: '100%', sm: 75 } }}
+                    sx={{ width: 75, flexShrink: 0 }}
                     disabled={saving || success}
                   />
                 </Box>
@@ -282,29 +280,27 @@ const TrackerDayPage = () => {
                 <Box
                   sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    alignItems: 'flex-start',
                     gap: 2,
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1 }}>
-                    <Box
-                      sx={{
-                        color: category.color || COLORS.neutral[600],
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Icon size={24} />
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                        {category.label}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {category.description}
-                      </Typography>
-                    </Box>
+                  <Box
+                    sx={{
+                      color: category.color || COLORS.neutral[600],
+                      display: 'flex',
+                      alignItems: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon size={24} />
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                      {category.label}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                      {category.description}
+                    </Typography>
                   </Box>
                   <NumberInput
                     value={formData[category.key]}
@@ -314,7 +310,7 @@ const TrackerDayPage = () => {
                     max={TIME_CONSTANTS.HOURS_IN_DAY}
                     step={0.5}
                     size="small"
-                    sx={{ width: { xs: '100%', sm: 75 } }}
+                    sx={{ width: 75, flexShrink: 0 }}
                     disabled={saving || success}
                   />
                 </Box>
