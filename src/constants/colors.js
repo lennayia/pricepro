@@ -100,6 +100,9 @@ export const getChartColors = (mode) =>
 // Zpětná kompatibilita - defaultně light
 export const CHART_COLORS = CHART_COLORS_LIGHT;
 
+// Lime color pro dark mode akcenty
+export const LIME_COLOR = '#D4FF00';
+
 // Health score barvy
 export const HEALTH_SCORE_COLORS = {
   excellent: {

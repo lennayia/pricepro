@@ -21,7 +21,7 @@ import { getWeekDates, getDayNumber, getDateForDay } from '../../utils/dateHelpe
 import { calculateHealthScore } from '../../utils/healthScore';
 import { formatHours } from '../../utils/formatters';
 import { TIME_CONSTANTS } from '../../constants/healthThresholds';
-import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES } from '../../constants/colors';
+import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES, LIME_COLOR } from '../../constants/colors';
 import { ResponsiveButton } from '../../components/ui';
 
 const DashboardPage = () => {
@@ -168,10 +168,16 @@ const DashboardPage = () => {
                       <Typography variant="body2" color="text.secondary">
                         Health Score
                       </Typography>
-                      <Typography variant="h5" color={
-                        trackerData.healthScore >= 80 ? 'success.main' :
-                        trackerData.healthScore >= 60 ? 'warning.main' : 'error.main'
-                      }>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          color: trackerData.healthScore >= 80
+                            ? theme.palette.mode === 'dark' ? LIME_COLOR : COLORS.success.main
+                            : trackerData.healthScore >= 60
+                            ? COLORS.warning.main
+                            : COLORS.error.main
+                        }}
+                      >
                         {trackerData.healthScore}%
                       </Typography>
                     </Grid>
@@ -252,7 +258,14 @@ const DashboardPage = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     Vaše doporučená hodinovka
                   </Typography>
-                  <Typography variant="h3" sx={{ mb: 2, fontWeight: 700, color: 'success.main' }}>
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      mb: 2,
+                      fontWeight: 700,
+                      color: theme.palette.mode === 'dark' ? LIME_COLOR : COLORS.success.main
+                    }}
+                  >
                     {calculatorData.recommended_hourly.toLocaleString('cs-CZ', {
                       maximumFractionDigits: 0,
                     })}{' '}
