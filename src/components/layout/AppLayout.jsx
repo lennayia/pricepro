@@ -358,12 +358,12 @@ const AppLayout = () => {
           </IconButton>
           <Box sx={{ flexGrow: 1 }} />
           <ThemeToggle />
-          <IconButton onClick={handleMenuOpen} sx={{ p: 0.5, ml: 1 }}>
+          <IconButton onClick={handleMenuOpen} sx={{ p: 0, ml: 1 }}>
             <Avatar
               sx={{
                 bgcolor: 'primary.main',
-                width: 36,
-                height: 36,
+                width: 40,
+                height: 40,
               }}
             >
               <PersonIcon />
