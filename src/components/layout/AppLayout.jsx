@@ -211,8 +211,9 @@ const AppLayout = () => {
                   }}
                   sx={{
                     borderRadius: 2,
-                    py: 1,
+                    py: 0.75,
                     px: 1.5,
+                    minHeight: 'auto',
                     bgcolor: isActive ? (theme) => theme.palette.mode === 'dark' ? 'rgba(13, 221, 13, 0.15)' : 'rgba(205, 127, 50, 0.15)' : 'transparent',
                     color: 'text.primary',
                     border: isActive ? '1px solid' : 'none',
@@ -225,7 +226,7 @@ const AppLayout = () => {
                   <ListItemIcon
                     sx={{
                       color: isActive ? (theme) => theme.palette.mode === 'dark' ? '#0DDD0D' : '#CD7F32' : 'text.secondary',
-                      minWidth: 40,
+                      minWidth: 36,
                     }}
                   >
                     {item.icon}
