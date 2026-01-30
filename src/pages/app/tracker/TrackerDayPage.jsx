@@ -211,13 +211,14 @@ const TrackerDayPage = () => {
           {WORK_CATEGORIES.map((category) => {
             const Icon = category.icon;
             return (
-            <Card key={category.key}>
-              <CardContent sx={{ py: 2, px: 2 }}>
+            <Card key={category.key} sx={{ overflow: 'hidden' }}>
+              <CardContent sx={{ py: 2, px: 2, overflow: 'hidden' }}>
                 <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 1.5,
+                    width: '100%',
                   }}
                 >
                   <Box
@@ -230,7 +231,7 @@ const TrackerDayPage = () => {
                   >
                     <Icon size={20} />
                   </Box>
-                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden', maxWidth: 'calc(100% - 115px)' }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9375rem' }}>
                       {category.label}
                     </Typography>
@@ -238,7 +239,7 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0 }}>
+                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 75 }}>
                     <NumberInput
                       value={formData[category.key]}
                       onChange={(value) => handleChange(category.key, value)}
