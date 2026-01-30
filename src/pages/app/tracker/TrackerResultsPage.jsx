@@ -15,6 +15,7 @@ import {
   TableRow,
   CircularProgress,
   Alert,
+  useTheme,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Calculator, Moon, Briefcase, Users, Sparkles, Lightbulb, CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -23,7 +24,7 @@ import { getTimeEntries } from '../../../services/timeEntries';
 import { getWeekDates, formatDayName } from '../../../utils/dateHelpers';
 import { CATEGORY_DEFINITIONS, WORK_CATEGORY_KEYS, PERSONAL_CATEGORY_KEYS, getCategoryLabel } from '../../../constants/categories';
 import { TIME_CONSTANTS } from '../../../constants/healthThresholds';
-import { CHART_COLORS, HEALTH_SCORE_COLORS } from '../../../constants/colors';
+import { CHART_COLORS, HEALTH_SCORE_COLORS, INFO_CARD_STYLES, WARNING_CARD_STYLES, getChartColors } from '../../../constants/colors';
 import { calculateHealthScore, generateRecommendations, getHealthScoreColors } from '../../../utils/healthScore';
 import { formatHours, formatPercentage } from '../../../utils/formatters';
 import { calculateCategoryTotal, findBiggest } from '../../../utils/calculators';
@@ -47,6 +48,8 @@ const allCategoryKeys = Object.keys(CATEGORY_DEFINITIONS);
 const TrackerResultsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const theme = useTheme();
+  const chartColors = getChartColors(theme.palette.mode);
   const [weekData, setWeekData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -154,14 +157,34 @@ const TrackerResultsPage = () => {
   // Prepare pie chart data
   const pieData = Object.entries(totals)
     .map(([key, value]) => ({
+      key: key,
       name: getCategoryLabel(key),
       value: parseFloat(formatHours(value)),
     }))
     .filter((item) => item.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  // Find biggest time sink (non-billable) - použijeme findBiggest z utils
-  const biggestTimeSink = findBiggest(totals, ['billable_work']);
+  // Color mapping - každá kategorie má fixed barvu
+  const getCategoryColor = (categoryKey) => {
+    const colorMap = {
+      'billable_work': chartColors[0], // neon green (dark) / bronze (light)
+      'client_communication': chartColors[1], // neon yellow (dark) / gold (light)
+      'other': chartColors[2], // neon orange (dark) / amber (light)
+      'messages': chartColors[3], // neon red (dark) / red (light)
+      'family_time': chartColors[4], // neon pink/magenta (dark) / pink (light)
+      'sleep': chartColors[5], // neon purple (dark) / purple (light)
+      'social_media': chartColors[6], // neon blue (dark) / blue (light)
+      'personal_time': chartColors[7], // neon cyan (dark) / teal (light)
+      'content_creation': chartColors[8], // neon lime (dark) / emerald (light)
+      'administration': chartColors[9], // neon hot pink (dark) / copper (light)
+      'education': chartColors[10], // neon violet (dark) / violet (light)
+    };
+
+    return colorMap[categoryKey] || chartColors[0];
+  };
+
+  // Find biggest time sink (jen pracovní aktivity, ne osobní život) - použijeme findBiggest z utils
+  const biggestTimeSink = findBiggest(totals, ['billable_work', 'sleep', 'family_time', 'personal_time']);
 
   // Show loading state
   if (loading) {
@@ -240,11 +263,22 @@ const TrackerResultsPage = () => {
 
       {/* Completion Status */}
       {completedDays < TIME_CONSTANTS.DAYS_IN_WEEK && (
-        <Alert severity="warning" sx={{ mb: 4 }}>
-          <Typography>
+        <Alert
+          severity="warning"
+          sx={{
+            mb: 4,
+            bgcolor: WARNING_CARD_STYLES[theme.palette.mode].bgcolor,
+            border: WARNING_CARD_STYLES[theme.palette.mode].border,
+            color: theme.palette.mode === 'dark' ? WARNING_CARD_STYLES.dark.iconColor : undefined,
+            '& .MuiAlert-icon': {
+              color: WARNING_CARD_STYLES[theme.palette.mode].iconColor,
+            },
+          }}
+        >
+          <Typography sx={{ color: 'inherit' }}>
             <strong>Vyplněno {completedDays}/{TIME_CONSTANTS.DAYS_IN_WEEK} dní</strong>
           </Typography>
-          <Typography variant="body2">
+          <Typography variant="body2" sx={{ color: 'inherit' }}>
             Pro přesnější přehled doporučujeme vyplnit celý týden.{' '}
             <Link to="/app/tracker" style={{ color: 'inherit', fontWeight: 600 }}>
               Pokračovat ve vyplňování
@@ -257,8 +291,16 @@ const TrackerResultsPage = () => {
       <Card
         sx={{
           mb: 4,
-          background: healthColors.gradient,
-          color: 'white',
+          bgcolor: healthScore >= 60
+            ? INFO_CARD_STYLES[theme.palette.mode].bgcolor
+            : undefined,
+          background: healthScore >= 60
+            ? undefined
+            : healthColors.gradient,
+          border: healthScore >= 60
+            ? INFO_CARD_STYLES[theme.palette.mode].border
+            : 'none',
+          color: healthScore >= 60 ? 'text.primary' : 'white',
         }}
       >
         <CardContent>
@@ -268,43 +310,49 @@ const TrackerResultsPage = () => {
                 {healthScore}%
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
-                {healthScore >= 80 ? <CheckCircle size={20} /> : healthScore >= 60 ? <AlertTriangle size={20} /> : <AlertCircle size={20} />}
+                {healthScore >= 80 ? (
+                  <CheckCircle size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
+                ) : healthScore >= 60 ? (
+                  <AlertTriangle size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
+                ) : (
+                  <AlertCircle size={20} color="white" />
+                )}
                 <Typography variant="h6">
                   {healthScore >= 80 ? 'Vynikající' : healthScore >= 60 ? 'Lze zlepšit' : 'Varování'}
                 </Typography>
               </Box>
-              <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 Work-Life Balance Skóre
               </Typography>
             </Grid>
             <Grid size={{ xs: 12, md: 8 }}>
               <Stack spacing={2}>
                 <Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9, mb: 0.5 }}>
-                    <Moon size={16} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Moon size={16} color={healthScore >= 60 ? INFO_CARD_STYLES[theme.palette.mode].iconColor : 'white'} />
                     <Typography variant="body2">
                       Průměrný spánek: <strong>{formatHours(avgSleep)}h/den</strong>
                       {avgSleep < 6 && ' - Kriticky málo!'}
                       {avgSleep >= 7 && avgSleep <= 8 && ' - Ideální'}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9, mb: 0.5 }}>
-                    <Briefcase size={16} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Briefcase size={16} color={healthScore >= 60 ? INFO_CARD_STYLES[theme.palette.mode].iconColor : 'white'} />
                     <Typography variant="body2">
                       Průměrná práce: <strong>{formatHours(avgWork)}h/den</strong>
                       {avgWork > 12 && ' - Přetížení!'}
                       {avgWork <= 8 && ' - Zdravý balanc'}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9, mb: 0.5 }}>
-                    <Users size={16} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Users size={16} color={healthScore >= 60 ? INFO_CARD_STYLES[theme.palette.mode].iconColor : 'white'} />
                     <Typography variant="body2">
                       Čas s rodinou: <strong>{formatHours(avgFamily)}h/den</strong>
                       {avgFamily < 0.5 && ' - Věnujte více času blízkým'}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
-                    <Sparkles size={16} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Sparkles size={16} color={healthScore >= 60 ? INFO_CARD_STYLES[theme.palette.mode].iconColor : 'white'} />
                     <Typography variant="body2">
                       Osobní čas: <strong>{formatHours(avgPersonal)}h/den</strong>
                       {avgPersonal < 0.5 && ' - Nezapomínejte na sebe!'}
@@ -369,19 +417,45 @@ const TrackerResultsPage = () => {
                     outerRadius={100}
                     paddingAngle={2}
                     dataKey="value"
-                    label={({ name, percent }) =>
-                      `${(percent * 100).toFixed(0)}%`
-                    }
+                    label={(props) => {
+                      const { cx, cy, midAngle, innerRadius, outerRadius, percent, index } = props;
+                      const RADIAN = Math.PI / 180;
+                      const radius = outerRadius + 20;
+                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                      const entry = pieData[index];
+
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          fill={getCategoryColor(entry.key, index)}
+                          textAnchor={x > cx ? 'start' : 'end'}
+                          dominantBaseline="central"
+                          fontWeight="400"
+                          fontSize="14"
+                        >
+                          {`${(percent * 100).toFixed(0)}%`}
+                        </text>
+                      );
+                    }}
+                    labelLine={false}
                   >
                     {pieData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                        fill={getCategoryColor(entry.key, index)}
+                        stroke="none"
                       />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => `${value} hod`} />
-                  <Legend verticalAlign="bottom" height={100} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={100}
+                    formatter={(value) => <span style={{ fontWeight: 300 }}>{value}</span>}
+                    iconType="circle"
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -401,7 +475,7 @@ const TrackerResultsPage = () => {
                   <Tooltip formatter={(value) => `${value} hod`} />
                   <Bar
                     dataKey="billable_work"
-                    fill={CHART_COLORS[0]}
+                    fill={chartColors[0]}
                     name="Fakturovatelná práce"
                     radius={[4, 4, 0, 0]}
                   />
@@ -418,17 +492,23 @@ const TrackerResultsPage = () => {
         if (recommendations.length === 0) return null;
 
         return (
-          <Card sx={{ mb: 4, bgcolor: 'neutral.600', color: 'white' }}>
+          <Card
+            sx={{
+              mb: 4,
+              bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+              border: INFO_CARD_STYLES[theme.palette.mode].border,
+            }}
+          >
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Lightbulb size={20} />
+                <Lightbulb size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
                 <Typography variant="h6">
                   Doporučení pro zdravější život
                 </Typography>
               </Box>
               <Stack spacing={1}>
                 {recommendations.map((rec, index) => (
-                  <Typography key={index} variant="body2">
+                  <Typography key={index} variant="body2" color="text.primary">
                     {rec.message}
                   </Typography>
                 ))}
@@ -440,12 +520,18 @@ const TrackerResultsPage = () => {
 
       {/* Insight Card */}
       {biggestTimeSink.value > 0 && (
-        <Card sx={{ mb: 4, bgcolor: 'warning.main', color: 'white' }}>
+        <Card
+          sx={{
+            mb: 4,
+            bgcolor: WARNING_CARD_STYLES[theme.palette.mode].bgcolor,
+            border: WARNING_CARD_STYLES[theme.palette.mode].border,
+          }}
+        >
           <CardContent>
-            <Typography variant="h6" sx={{ mb: 1 }}>
+            <Typography variant="h6" sx={{ mb: 1 }} color="text.primary">
               Kam ti uniká čas?
             </Typography>
-            <Typography>
+            <Typography color="text.primary">
               <strong>{formatHours(biggestTimeSink.value)} hodin týdně</strong>{' '}
               trávíte činností "{getCategoryLabel(biggestTimeSink.key)}". To je{' '}
               {formatPercentage((biggestTimeSink.value / totalHours) * 100)} vašeho

@@ -2,6 +2,7 @@ import { IconButton, Tooltip } from '@mui/material';
 import { Sun, Moon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
+import { COLORS, INFO_CARD_STYLES, WARNING_CARD_STYLES } from '../../constants/colors';
 
 /**
  * ThemeToggle - Přepínač mezi světlým a tmavým režimem
@@ -17,9 +18,9 @@ function ThemeToggle() {
         sx={{
           width: 40,
           height: 40,
-          color: isDark ? '#0DDD0D' : '#CD7F32',
+          color: isDark ? WARNING_CARD_STYLES.dark.iconColor : COLORS.primary.main,
           '&:hover': {
-            backgroundColor: isDark ? 'rgba(13, 221, 13, 0.1)' : 'rgba(205, 127, 50, 0.1)',
+            backgroundColor: isDark ? WARNING_CARD_STYLES.dark.bgcolor : INFO_CARD_STYLES.light.bgcolor,
           },
         }}
       >

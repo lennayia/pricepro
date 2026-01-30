@@ -11,6 +11,7 @@ import {
   Button,
   CircularProgress,
   LinearProgress,
+  useTheme,
 } from '@mui/material';
 import { Clock, Calculator, History, ArrowRight, TrendingUp, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,12 +21,13 @@ import { getWeekDates, getDayNumber, getDateForDay } from '../../utils/dateHelpe
 import { calculateHealthScore } from '../../utils/healthScore';
 import { formatHours } from '../../utils/formatters';
 import { TIME_CONSTANTS } from '../../constants/healthThresholds';
-import { COLORS } from '../../constants/colors';
+import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES } from '../../constants/colors';
 import { ResponsiveButton } from '../../components/ui';
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [trackerData, setTrackerData] = useState(null);
   const [calculatorData, setCalculatorData] = useState(null);
@@ -132,13 +134,13 @@ const DashboardPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Box
                   sx={{
-                    bgcolor: COLORS.neutral[100],
+                    bgcolor: (theme) => CARD_ICON_STYLES[theme.palette.mode].bgcolor,
                     borderRadius: 2,
                     p: 1.5,
                     mr: 2,
                   }}
                 >
-                  <Clock size={24} color={COLORS.neutral[600]} />
+                  <Clock size={24} color={CARD_ICON_STYLES[theme.palette.mode].iconColor} />
                 </Box>
                 <Typography variant="h6">Time Tracker</Typography>
               </Box>
@@ -234,13 +236,13 @@ const DashboardPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Box
                   sx={{
-                    bgcolor: COLORS.neutral[100],
+                    bgcolor: (theme) => CARD_ICON_STYLES[theme.palette.mode].bgcolor,
                     borderRadius: 2,
                     p: 1.5,
                     mr: 2,
                   }}
                 >
-                  <Calculator size={24} color={COLORS.neutral[600]} />
+                  <Calculator size={24} color={CARD_ICON_STYLES[theme.palette.mode].iconColor} />
                 </Box>
                 <Typography variant="h6">Cenová kalkulačka</Typography>
               </Box>
@@ -344,7 +346,7 @@ const DashboardPage = () => {
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                  <Clock size={32} color={COLORS.neutral[600]} />
+                  <Clock size={32} color={CARD_ICON_STYLES[theme.palette.mode].iconColor} />
                 </Box>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Tracker času
@@ -378,7 +380,7 @@ const DashboardPage = () => {
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                  <Calculator size={32} color={COLORS.neutral[600]} />
+                  <Calculator size={32} color={CARD_ICON_STYLES[theme.palette.mode].iconColor} />
                 </Box>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Kalkulačka
@@ -412,7 +414,7 @@ const DashboardPage = () => {
             >
               <CardContent sx={{ textAlign: 'center', py: 3 }}>
                 <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                  <History size={32} color={COLORS.neutral[600]} />
+                  <History size={32} color={CARD_ICON_STYLES[theme.palette.mode].iconColor} />
                 </Box>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Historie
@@ -427,23 +429,31 @@ const DashboardPage = () => {
       </Grid>
 
       {/* Tip Card */}
-      <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
+      <Card
+        sx={{
+          bgcolor: (theme) => INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: (theme) => INFO_CARD_STYLES[theme.palette.mode].border,
+        }}
+      >
         <CardContent sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
             <Box
               sx={{
-                bgcolor: 'rgba(255, 255, 255, 0.2)',
+                bgcolor: (theme) => INFO_CARD_STYLES[theme.palette.mode].iconBg,
                 borderRadius: 2,
                 p: 1.5,
               }}
             >
-              <TrendingUp size={24} />
+              <TrendingUp
+                size={24}
+                color={INFO_CARD_STYLES[theme.palette.mode].iconColor}
+              />
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h6" sx={{ mb: 1 }}>
                 Tip pro efektivní práci
               </Typography>
-              <Typography sx={{ opacity: 0.9 }}>
+              <Typography color="text.primary">
                 Doporučujeme začít s <strong>Trackerem času</strong>. Po 7 dnech
                 sledování budete přesně vědět, kolik času vám zabírají různé činnosti.
                 Tyto údaje pak můžete použít v kalkulačce pro přesnější výpočet

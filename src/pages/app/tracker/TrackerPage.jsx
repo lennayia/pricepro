@@ -11,6 +11,7 @@ import {
   Chip,
   LinearProgress,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
 import { CheckCircle, Circle, BarChart3 } from 'lucide-react';
@@ -32,6 +33,7 @@ const days = [
 
 const TrackerPage = () => {
   const { user } = useAuth();
+  const theme = useTheme();
   const [completedDays, setCompletedDays] = useState([]);
   const [loading, setLoading] = useState(true);
   const progress = (completedDays.length / TIME_CONSTANTS.DAYS_IN_WEEK) * 100;
@@ -154,9 +156,9 @@ const TrackerPage = () => {
                   <CardContent sx={{ textAlign: 'center', py: 3 }}>
                     <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
                       {isCompleted ? (
-                        <CheckCircle size={32} color={COLORS.primary.main} />
+                        <CheckCircle size={32} color={theme.palette.primary.main} />
                       ) : (
-                        <Circle size={32} color="#9CA3AF" />
+                        <Circle size={32} color={COLORS.neutral[400]} />
                       )}
                     </Box>
                     <Typography variant="h6" sx={{ fontSize: '1rem' }}>

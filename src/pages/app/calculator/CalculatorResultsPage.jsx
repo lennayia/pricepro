@@ -17,6 +17,7 @@ import { ArrowLeft, CheckCircle, AlertTriangle, Star, Lightbulb } from 'lucide-r
 import { ResponsiveButton } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getLatestCalculatorResult } from '../../../services/calculatorResults';
+import { COLORS } from '../../../constants/colors';
 
 const CalculatorResultsPage = () => {
   const location = useLocation();
@@ -126,7 +127,7 @@ const CalculatorResultsPage = () => {
           >
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <AlertTriangle size={48} color="#EF4444" />
+                <AlertTriangle size={48} color={COLORS.error.main} />
               </Box>
               <Typography variant="h6" color="error.main" sx={{ mb: 1 }}>
                 Minimální cena
@@ -160,7 +161,7 @@ const CalculatorResultsPage = () => {
           >
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <CheckCircle size={48} color="#10B981" />
+                <CheckCircle size={48} color={COLORS.success.main} />
               </Box>
               <Typography variant="h6" color="success.main" sx={{ mb: 1 }}>
                 Doporučená cena
@@ -192,7 +193,7 @@ const CalculatorResultsPage = () => {
           >
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                <Star size={48} color="#F59E0B" />
+                <Star size={48} color={COLORS.warning.main} />
               </Box>
               <Typography variant="h6" color="warning.main" sx={{ mb: 1 }}>
                 Prémiová cena
@@ -250,7 +251,7 @@ const CalculatorResultsPage = () => {
             {arguments_for_higher_price.map((arg, index) => (
               <ListItem key={index} sx={{ py: 0.5 }}>
                 <ListItemIcon sx={{ minWidth: 36 }}>
-                  <CheckCircle size={20} color="#10B981" />
+                  <CheckCircle size={20} color={COLORS.success.main} />
                 </ListItemIcon>
                 <ListItemText primary={arg} />
               </ListItem>

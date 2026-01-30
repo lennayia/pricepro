@@ -10,6 +10,7 @@ import {
   Alert,
   InputAdornment,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
@@ -20,7 +21,7 @@ import { WORK_CATEGORIES, PERSONAL_CATEGORIES } from '../../../constants/categor
 import { calculateTotalHours, calculateWorkHours, calculatePersonalHours } from '../../../utils/calculators';
 import { formatHours } from '../../../utils/formatters';
 import { TIME_CONSTANTS } from '../../../constants/healthThresholds';
-import { COLORS } from '../../../constants/colors';
+import { COLORS, INFO_CARD_STYLES } from '../../../constants/colors';
 
 // Kategorie jsou nyní importované z constants/categories.js
 const categories = [...WORK_CATEGORIES, ...PERSONAL_CATEGORIES];
@@ -31,6 +32,7 @@ const TrackerDayPage = () => {
   const { dayNumber } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const theme = useTheme();
   const day = parseInt(dayNumber, 10);
 
   const [formData, setFormData] = useState(
@@ -331,9 +333,18 @@ const TrackerDayPage = () => {
               : sleepHours < 6 && sleepHours > 0
               ? COLORS.warning.main
               : workHours > 10
-              ? '#CE4800'
-              : 'primary.main',
-            color: 'white'
+              ? COLORS.warning.dark
+              : INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+            border: totalHours > TIME_CONSTANTS.HOURS_IN_DAY ||
+              (sleepHours < 6 && sleepHours > 0) ||
+              workHours > 10
+              ? 'none'
+              : INFO_CARD_STYLES[theme.palette.mode].border,
+            color: totalHours > TIME_CONSTANTS.HOURS_IN_DAY ||
+              (sleepHours < 6 && sleepHours > 0) ||
+              workHours > 10
+              ? 'white'
+              : 'text.primary',
           }}
         >
           <CardContent>
@@ -354,7 +365,7 @@ const TrackerDayPage = () => {
             {/* Work vs Personal breakdown */}
             <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
               <Box>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                <Typography variant="body2" color="text.secondary">
                   Práce
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -362,7 +373,7 @@ const TrackerDayPage = () => {
                 </Typography>
               </Box>
               <Box>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                <Typography variant="body2" color="text.secondary">
                   Osobní život
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -370,7 +381,7 @@ const TrackerDayPage = () => {
                 </Typography>
               </Box>
               <Box>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                <Typography variant="body2" color="text.secondary">
                   Zbývá
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -381,36 +392,36 @@ const TrackerDayPage = () => {
 
             {/* Smart feedback */}
             {totalHours > TIME_CONSTANTS.HOURS_IN_DAY ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
-                <AlertTriangle size={16} />
-                <Typography variant="body2">
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AlertTriangle size={16} color="white" />
+                <Typography variant="body2" sx={{ color: 'white' }}>
                   Pozor! Den má pouze {TIME_CONSTANTS.HOURS_IN_DAY} hodin. Zkontrolujte prosím své údaje.
                 </Typography>
               </Box>
             ) : sleepHours < 6 && sleepHours > 0 ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
-                <AlertTriangle size={16} />
-                <Typography variant="body2">
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AlertTriangle size={16} color="white" />
+                <Typography variant="body2" sx={{ color: 'white' }}>
                   Pozor! Spíte méně než 6 hodin - riziko vyhoření!
                 </Typography>
               </Box>
             ) : workHours > 10 ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
-                <AlertTriangle size={16} />
-                <Typography variant="body2">
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AlertTriangle size={16} color="white" />
+                <Typography variant="body2" sx={{ color: 'white' }}>
                   Hodně práce dnes ({formatHours(workHours)}h). Najděte si čas na odpočinek!
                 </Typography>
               </Box>
             ) : sleepHours >= 7 && sleepHours <= 8 && personalHours >= 2 && workHours <= 10 ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
-                <CheckCircle size={16} />
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CheckCircle size={16} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
                 <Typography variant="body2">
                   Skvělý balanc! Spánek i osobní čas v pořádku.
                 </Typography>
               </Box>
             ) : sleepHours === 0 && personalHours === 0 && workHours > 0 ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
-                <Lightbulb size={16} />
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Lightbulb size={16} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
                 <Typography variant="body2">
                   Nezapomeňte vyplnit spánek a osobní čas pro kompletní přehled!
                 </Typography>
