@@ -172,7 +172,7 @@ const DashboardPage = () => {
                         variant="h5"
                         sx={{
                           color: trackerData.healthScore >= 80
-                            ? theme.palette.mode === 'dark' ? LIME_COLOR : COLORS.success.main
+                            ? theme.palette.mode === 'dark' ? LIME_COLOR : COLORS.secondary.main
                             : trackerData.healthScore >= 60
                             ? COLORS.warning.main
                             : COLORS.error.main
@@ -263,7 +263,7 @@ const DashboardPage = () => {
                     sx={{
                       mb: 2,
                       fontWeight: 700,
-                      color: theme.palette.mode === 'dark' ? LIME_COLOR : COLORS.success.main
+                      color: theme.palette.mode === 'dark' ? LIME_COLOR : COLORS.secondary.main
                     }}
                   >
                     {calculatorData.recommended_hourly.toLocaleString('cs-CZ', {
