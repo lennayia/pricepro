@@ -18,7 +18,7 @@ import { useTheme } from '@mui/material/styles';
 import { ResponsiveButton } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getLatestCalculatorResult } from '../../../services/calculatorResults';
-import { COLORS, GRADIENTS } from '../../../constants/colors';
+import { COLORS, GRADIENTS, INFO_CARD_STYLES } from '../../../constants/colors';
 
 const CalculatorResultsPage = () => {
   const location = useLocation();
@@ -253,7 +253,7 @@ const CalculatorResultsPage = () => {
             {arguments_for_higher_price.map((arg, index) => (
               <ListItem key={index} sx={{ py: 0.5 }}>
                 <ListItemIcon sx={{ minWidth: 36 }}>
-                  <CheckCircle size={20} color={COLORS.success.main} />
+                  <CheckCircle size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
                 </ListItemIcon>
                 <ListItemText primary={arg} />
               </ListItem>
