@@ -191,7 +191,7 @@ const AppLayout = () => {
         </Typography>
       </Box>
       <Divider />
-      <List sx={{ flex: 1, px: 2, py: 1 }}>
+      <List sx={{ flex: 1, px: 3, py: 1 }}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           const hasSubmenu = item.submenu && item.submenu.length > 0;
