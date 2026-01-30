@@ -231,7 +231,7 @@ const TrackerDayPage = () => {
                     <Icon size={24} />
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {category.label}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
@@ -297,7 +297,7 @@ const TrackerDayPage = () => {
                     <Icon size={24} />
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {category.label}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
