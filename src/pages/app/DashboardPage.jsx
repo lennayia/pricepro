@@ -220,7 +220,6 @@ const DashboardPage = () => {
                       component={Link}
                       to="/app/tracker"
                       variant="contained"
-                      responsive
                       startIcon={<Clock size={18} />}
                     >
                       Začít trackovat
@@ -300,7 +299,6 @@ const DashboardPage = () => {
                       to="/app/kalkulacka"
                       variant="outlined"
                       color="primary"
-                      responsive
                       startIcon={<Calculator size={18} />}
                     >
                       Nová kalkulace
@@ -317,7 +315,6 @@ const DashboardPage = () => {
                       component={Link}
                       to="/app/kalkulacka"
                       variant="contained"
-                      responsive
                       startIcon={<Calculator size={18} />}
                     >
                       Spočítat hodinovku
