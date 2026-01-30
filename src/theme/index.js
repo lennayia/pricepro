@@ -271,9 +271,9 @@ const darkTheme = createTheme({
       contrastText: '#0A0A1A',
     },
     secondary: {
-      main: '#1DE91D',
-      light: '#4FFF4F',
-      dark: '#0BC70B',
+      main: '#D4FF00', // Lime
+      light: '#E5FF33',
+      dark: '#B8DD00',
       contrastText: '#0A0A1A',
     },
     background: {
