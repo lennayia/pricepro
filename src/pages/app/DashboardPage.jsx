@@ -191,7 +191,7 @@ const DashboardPage = () => {
                     </Grid>
                   </Grid>
 
-                  <Box sx={{ mt: 'auto', display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ mt: 'auto', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                     <ResponsiveButton
                       component={Link}
                       to="/app/tracker"
