@@ -210,9 +210,9 @@ const AppLayout = () => {
                     }
                   }}
                   sx={{
-                    borderRadius: 2,
+                    borderRadius: '16px',
                     py: 0.75,
-                    px: 1.5,
+                    px: 1.25,
                     minHeight: 'auto',
                     bgcolor: isActive ? (theme) => theme.palette.mode === 'dark' ? 'rgba(13, 221, 13, 0.15)' : 'rgba(205, 127, 50, 0.15)' : 'transparent',
                     color: 'text.primary',
