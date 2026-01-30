@@ -211,16 +211,20 @@ const AppLayout = () => {
                   }}
                   sx={{
                     borderRadius: 2,
-                    bgcolor: isActive ? 'primary.main' : 'transparent',
-                    color: isActive ? 'white' : 'text.primary',
+                    py: 1,
+                    px: 1.5,
+                    bgcolor: isActive ? (theme) => theme.palette.mode === 'dark' ? 'rgba(13, 221, 13, 0.15)' : 'rgba(205, 127, 50, 0.15)' : 'transparent',
+                    color: 'text.primary',
+                    border: isActive ? '1px solid' : 'none',
+                    borderColor: isActive ? (theme) => theme.palette.mode === 'dark' ? 'rgba(13, 221, 13, 0.3)' : 'rgba(205, 127, 50, 0.3)' : 'transparent',
                     '&:hover': {
-                      bgcolor: isActive ? 'primary.dark' : 'action.hover',
+                      bgcolor: isActive ? (theme) => theme.palette.mode === 'dark' ? 'rgba(13, 221, 13, 0.2)' : 'rgba(205, 127, 50, 0.2)' : 'action.hover',
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      color: isActive ? 'white' : 'text.secondary',
+                      color: isActive ? (theme) => theme.palette.mode === 'dark' ? '#0DDD0D' : '#CD7F32' : 'text.secondary',
                       minWidth: 40,
                     }}
                   >
@@ -251,10 +255,10 @@ const AppLayout = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                bgcolor: isSubActive ? 'primary.main' : 'transparent',
-                                border: '2px solid',
-                                borderColor: isSubActive ? 'primary.main' : 'grey.400',
-                                color: isSubActive ? 'white' : 'grey.600',
+                                bgcolor: isSubActive ? (theme) => theme.palette.mode === 'dark' ? 'rgba(13, 221, 13, 0.15)' : 'rgba(205, 127, 50, 0.15)' : 'transparent',
+                                border: '1px solid',
+                                borderColor: isSubActive ? (theme) => theme.palette.mode === 'dark' ? 'rgba(13, 221, 13, 0.5)' : 'rgba(205, 127, 50, 0.5)' : 'grey.400',
+                                color: isSubActive ? (theme) => theme.palette.mode === 'dark' ? '#0DDD0D' : '#CD7F32' : 'grey.600',
                               }}
                             >
                               {subitem.icon}
