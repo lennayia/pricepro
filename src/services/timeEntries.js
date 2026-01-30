@@ -93,6 +93,8 @@ export const upsertTimeEntry = async (userId, date, data) => {
       project_name: data.project_name || null, // Keep for backward compatibility
       category_projects: data.category_projects || {},
       category_project_hours: data.category_project_hours || {},
+      category_project_clients: data.category_project_clients || {},
+      client_id: data.client_id || null,
       updated_at: new Date().toISOString()
     };
 

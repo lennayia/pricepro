@@ -31,6 +31,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useWeek } from '../../../contexts/WeekContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
 import { getProjects, createProject, uploadProjectLogo } from '../../../services/projects';
+import { getClients } from '../../../services/clients';
 import { getDateForDayInWeek, formatDateWithDayName } from '../../../utils/dateHelpers';
 import { WORK_CATEGORIES, PERSONAL_CATEGORIES } from '../../../constants/categories';
 import { calculateTotalHours, calculateWorkHours, calculatePersonalHours } from '../../../utils/calculators';
@@ -66,6 +67,7 @@ const TrackerDayPage = () => {
   );
 
   const [projects, setProjects] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -82,19 +84,23 @@ const TrackerDayPage = () => {
   const [createProjectError, setCreateProjectError] = useState('');
   const [pendingProjectSelection, setPendingProjectSelection] = useState(null); // { categoryKey, rowIndex }
 
-  // Load projects
+  // Load projects and clients
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadProjectsAndClients = async () => {
       if (!user) return;
       try {
-        const data = await getProjects(user.id);
-        setProjects(data);
+        const [projectsData, clientsData] = await Promise.all([
+          getProjects(user.id),
+          getClients(user.id)
+        ]);
+        setProjects(projectsData);
+        setClients(clientsData);
       } catch (err) {
-        console.error('Error loading projects:', err);
+        console.error('Error loading projects and clients:', err);
       }
     };
 
-    loadProjects();
+    loadProjectsAndClients();
   }, [user]);
 
   // Load existing data for this day
@@ -122,10 +128,12 @@ const TrackerDayPage = () => {
           WORK_CATEGORIES.forEach(cat => {
             const categoryKey = cat.key;
             const projectHours = entry.category_project_hours?.[categoryKey] || {};
+            const projectClients = entry.category_project_clients?.[categoryKey] || {};
 
-            // Convert DB format { projectId: hours } to array [{ projectId, hours }]
+            // Convert DB format { projectId: hours } to array [{ projectId, clientId, hours }]
             const rows = Object.entries(projectHours).map(([projectId, hours]) => ({
               projectId,
+              clientId: projectClients[projectId] || '',
               hours: hours || 0
             }));
 
@@ -226,27 +234,37 @@ const TrackerDayPage = () => {
       // Convert project rows to DB format
       const category_projects = {};
       const category_project_hours = {};
+      const category_project_clients = {};
 
       WORK_CATEGORIES.forEach(cat => {
         const rows = categoryProjectRows[cat.key] || [];
         if (rows.length > 0) {
           const projectIds = rows.map(row => row.projectId).filter(Boolean);
           const projectHours = {};
+          const projectClients = {};
+
           rows.forEach(row => {
             if (row.projectId && row.hours > 0) {
               projectHours[row.projectId] = parseFloat(row.hours);
+              if (row.clientId) {
+                projectClients[row.projectId] = row.clientId;
+              }
             }
           });
 
           if (projectIds.length > 0) {
             category_projects[cat.key] = projectIds;
             category_project_hours[cat.key] = projectHours;
+            if (Object.keys(projectClients).length > 0) {
+              category_project_clients[cat.key] = projectClients;
+            }
           }
         }
       });
 
       dataToSave.category_projects = category_projects;
       dataToSave.category_project_hours = category_project_hours;
+      dataToSave.category_project_clients = category_project_clients;
 
       await upsertTimeEntry(user.id, actualDate, dataToSave);
 
@@ -283,6 +301,15 @@ const TrackerDayPage = () => {
       ...prev,
       [categoryKey]: (prev[categoryKey] || []).filter((_, index) => index !== rowIndex)
     }));
+  };
+
+  // Update client ID in row
+  const handleUpdateClientId = (categoryKey, rowIndex, clientId) => {
+    setCategoryProjectRows(prev => {
+      const rows = [...(prev[categoryKey] || [])];
+      rows[rowIndex] = { ...rows[rowIndex], clientId };
+      return { ...prev, [categoryKey]: rows };
+    });
   };
 
   // Update project ID in row
@@ -401,7 +428,7 @@ const TrackerDayPage = () => {
           // Add new row with the new project
           setCategoryProjectRows(prev => ({
             ...prev,
-            [categoryKey]: [...(prev[categoryKey] || []), { projectId: newProject.id, hours: 0 }]
+            [categoryKey]: [...(prev[categoryKey] || []), { clientId: '', projectId: newProject.id, hours: 0 }]
           }));
         } else {
           // Update existing row
@@ -520,6 +547,110 @@ const TrackerDayPage = () => {
                           pl: 3.5
                         }}
                       >
+                        {/* Client Autocomplete */}
+                        <Autocomplete
+                          size="small"
+                          value={clients.find(c => c.id === row.clientId) || null}
+                          onChange={(e, newValue) => {
+                            if (isEmptyRow && newValue) {
+                              // Adding new row with selected client
+                              setCategoryProjectRows(prev => ({
+                                ...prev,
+                                [category.key]: [...(prev[category.key] || []), { clientId: newValue.id, projectId: '', hours: 0 }]
+                              }));
+                            } else if (!isEmptyRow) {
+                              // Updating existing row
+                              handleUpdateClientId(category.key, rowIndex, newValue?.id || '');
+                            }
+                          }}
+                          options={clients}
+                          getOptionLabel={(option) => option.name || ''}
+                          renderOption={(props, option) => (
+                            <li {...props} style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                            }}>
+                              {option.logo_url ? (
+                                <Box
+                                  component="img"
+                                  src={option.logo_url}
+                                  alt={option.name}
+                                  sx={{
+                                    width: 20,
+                                    height: 20,
+                                    objectFit: 'contain',
+                                    borderRadius: 0.5,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                              ) : option.color ? (
+                                <Box
+                                  sx={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: '50%',
+                                    backgroundColor: option.color,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                              ) : (
+                                <Box sx={{ width: 12, height: 12, flexShrink: 0 }} />
+                              )}
+                              {option.name}
+                            </li>
+                          )}
+                          renderInput={(params) => {
+                            const selectedClient = clients.find(c => c.id === row.clientId);
+                            return (
+                              <TextField
+                                {...params}
+                                placeholder={isEmptyRow ? "Klient" : "Vyberte klienta"}
+                                size="small"
+                                InputProps={{
+                                  ...params.InputProps,
+                                  startAdornment: (
+                                    <>
+                                      {!isEmptyRow && selectedClient?.logo_url ? (
+                                        <Box
+                                          component="img"
+                                          src={selectedClient.logo_url}
+                                          alt={selectedClient.name}
+                                          sx={{
+                                            width: 16,
+                                            height: 16,
+                                            objectFit: 'contain',
+                                            borderRadius: 0.5,
+                                            ml: 1,
+                                            mr: 0.5,
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                      ) : !isEmptyRow && selectedClient?.color ? (
+                                        <Box
+                                          sx={{
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            backgroundColor: selectedClient.color,
+                                            ml: 1,
+                                            mr: 0.5,
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                      ) : null}
+                                      {params.InputProps.startAdornment}
+                                    </>
+                                  ),
+                                }}
+                              />
+                            );
+                          }}
+                          sx={{ flex: 1 }}
+                          disabled={saving || success}
+                        />
+
+                        {/* Project Autocomplete */}
                         <Autocomplete
                           size="small"
                           value={projects.find(p => p.id === row.projectId) || null}
@@ -534,7 +665,7 @@ const TrackerDayPage = () => {
                               // Adding new row with selected project
                               setCategoryProjectRows(prev => ({
                                 ...prev,
-                                [category.key]: [...(prev[category.key] || []), { projectId: newValue.id, hours: 0 }]
+                                [category.key]: [...(prev[category.key] || []), { clientId: '', projectId: newValue.id, hours: 0 }]
                               }));
                             } else if (!isEmptyRow) {
                               // Updating existing row
@@ -591,15 +722,13 @@ const TrackerDayPage = () => {
                             return (
                               <TextField
                                 {...params}
-                                placeholder={isEmptyRow ? "Vybrat" : "Vyberte projekt"}
+                                placeholder={isEmptyRow ? "Projekt" : "Vyberte projekt"}
                                 size="small"
                                 InputProps={{
                                   ...params.InputProps,
                                   startAdornment: (
                                     <>
-                                      {isEmptyRow ? (
-                                        <Plus size={16} style={{ marginLeft: 8, marginRight: 4, color: '#666' }} />
-                                      ) : selectedProject?.logo_url ? (
+                                      {!isEmptyRow && selectedProject?.logo_url ? (
                                         <Box
                                           component="img"
                                           src={selectedProject.logo_url}
@@ -614,7 +743,7 @@ const TrackerDayPage = () => {
                                             flexShrink: 0,
                                           }}
                                         />
-                                      ) : selectedProject?.color ? (
+                                      ) : !isEmptyRow && selectedProject?.color ? (
                                         <Box
                                           sx={{
                                             width: 10,
@@ -853,18 +982,52 @@ const TrackerDayPage = () => {
           </CardContent>
         </Card>
 
-        {/* Info o projektech */}
-        {projects.length === 0 && (
+        {/* Info o klientech a projektech */}
+        {(projects.length === 0 || clients.length === 0) && (
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">
-              💡 Nemáte žádné projekty. Chcete-li přiřadit práci konkrétnímu klientovi nebo projektu,{' '}
-              <a
-                href="/app/nastaveni/projekty"
-                onClick={(e) => { e.preventDefault(); navigate('/app/nastaveni/projekty'); }}
-                style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}
-              >
-                vytvořte si je v nastavení
-              </a>.
+              💡 {projects.length === 0 && clients.length === 0 ? (
+                <>
+                  Nemáte žádné klienty ani projekty.{' '}
+                  <a
+                    href="/app/nastaveni/klienti"
+                    onClick={(e) => { e.preventDefault(); navigate('/app/nastaveni/klienti'); }}
+                    style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}
+                  >
+                    Vytvořte si klienty
+                  </a>
+                  {' '}a{' '}
+                  <a
+                    href="/app/nastaveni/projekty"
+                    onClick={(e) => { e.preventDefault(); navigate('/app/nastaveni/projekty'); }}
+                    style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}
+                  >
+                    projekty v nastavení
+                  </a>.
+                </>
+              ) : projects.length === 0 ? (
+                <>
+                  Nemáte žádné projekty.{' '}
+                  <a
+                    href="/app/nastaveni/projekty"
+                    onClick={(e) => { e.preventDefault(); navigate('/app/nastaveni/projekty'); }}
+                    style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}
+                  >
+                    Vytvořte si je v nastavení
+                  </a>.
+                </>
+              ) : (
+                <>
+                  Nemáte žádné klienty.{' '}
+                  <a
+                    href="/app/nastaveni/klienti"
+                    onClick={(e) => { e.preventDefault(); navigate('/app/nastaveni/klienti'); }}
+                    style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}
+                  >
+                    Vytvořte si je v nastavení
+                  </a>.
+                </>
+              )}
             </Typography>
           </Alert>
         )}
