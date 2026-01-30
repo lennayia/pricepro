@@ -12,7 +12,7 @@ import {
   CircularProgress,
   useTheme,
 } from '@mui/material';
-import { ResponsiveButton, NumberInput } from '../../../components/ui';
+import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
@@ -205,7 +205,7 @@ const TrackerDayPage = () => {
             color: 'primary.main'
           }}
         >
-          Pracovní čas
+          Pracovní čas (v hodinách)
         </Typography>
         <Stack spacing={2} sx={{ mb: 4 }}>
           {WORK_CATEGORIES.map((category) => {
@@ -237,15 +237,13 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <NumberInput
+                  <TextField
+                    type="number"
                     value={formData[category.key]}
-                    onChange={(value) => handleChange(category.key, value)}
+                    onChange={(e) => handleChange(category.key, e.target.value)}
                     placeholder="0"
-                    min={0}
-                    max={TIME_CONSTANTS.HOURS_IN_DAY}
-                    step={0.5}
-                    unit="hod"
-                    sx={{ width: 120 }}
+                    inputProps={{ min: 0, max: TIME_CONSTANTS.HOURS_IN_DAY, step: 0.5 }}
+                    sx={{ width: 80 }}
                     disabled={saving || success}
                   />
                 </Box>
@@ -266,7 +264,7 @@ const TrackerDayPage = () => {
             color: 'text.primary'
           }}
         >
-          Osobní život
+          Osobní život (v hodinách)
         </Typography>
         <Stack spacing={2} sx={{ mb: 4 }}>
           {PERSONAL_CATEGORIES.map((category) => {
@@ -300,15 +298,13 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <NumberInput
+                  <TextField
+                    type="number"
                     value={formData[category.key]}
-                    onChange={(value) => handleChange(category.key, value)}
+                    onChange={(e) => handleChange(category.key, e.target.value)}
                     placeholder="0"
-                    min={0}
-                    max={TIME_CONSTANTS.HOURS_IN_DAY}
-                    step={0.5}
-                    unit="hod"
-                    sx={{ width: 120 }}
+                    inputProps={{ min: 0, max: TIME_CONSTANTS.HOURS_IN_DAY, step: 0.5 }}
+                    sx={{ width: 80 }}
                     disabled={saving || success}
                   />
                 </Box>
