@@ -212,12 +212,12 @@ const TrackerDayPage = () => {
             const Icon = category.icon;
             return (
             <Card key={category.key} sx={{ overflow: 'hidden' }}>
-              <CardContent sx={{ py: 2, px: 1.5, overflow: 'hidden' }}>
+              <CardContent sx={{ py: 1.5, px: 1, overflow: 'hidden', '&:last-child': { pb: 1.5 } }}>
                 <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: 1,
+                    gap: 0.75,
                     width: '100%',
                   }}
                 >
@@ -227,20 +227,20 @@ const TrackerDayPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       flexShrink: 0,
-                      width: 20,
+                      width: 18,
                     }}
                   >
-                    <Icon size={20} />
+                    <Icon size={18} />
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9375rem' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.875rem' }}>
                       {category.label}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word', fontSize: '0.8125rem' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word', fontSize: '0.75rem', lineHeight: 1.3 }}>
                       {category.description}
                     </Typography>
                   </Box>
-                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 75, ml: 1 }}>
+                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 70, ml: 0.5 }}>
                     <NumberInput
                       value={formData[category.key]}
                       onChange={(value) => handleChange(category.key, value)}
