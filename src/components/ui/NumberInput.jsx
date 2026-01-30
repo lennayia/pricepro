@@ -9,7 +9,6 @@ import { Plus, Minus } from 'lucide-react';
  * @param {number} min - Minimální hodnota (default: 0)
  * @param {number} max - Maximální hodnota (default: Infinity)
  * @param {number} step - Krok pro +/- tlačítka (default: 1)
- * @param {string} unit - Jednotka zobrazená vpravo (např. "hod", "Kč/měsíc")
  * @param {string} label - Label inputu
  * @param {string} helperText - Pomocný text pod inputem
  * @param {boolean} disabled - Zakázat input
@@ -22,7 +21,6 @@ function NumberInput({
   min = 0,
   max = Infinity,
   step = 1,
-  unit,
   label,
   helperText,
   disabled = false,
@@ -59,80 +57,70 @@ function NumberInput({
   };
 
   return (
-    <Box sx={{ position: 'relative', ...sx }}>
-      <TextField
-        type="number"
-        value={value}
-        onChange={handleInputChange}
-        label={label}
-        helperText={helperText}
-        disabled={disabled}
-        fullWidth={fullWidth}
-        InputProps={{
-          endAdornment: unit ? (
-            <InputAdornment position="end">{unit}</InputAdornment>
-          ) : null,
-          inputProps: { min, max, step },
-        }}
-        sx={{
-          '& input[type=number]': {
-            MozAppearance: 'textfield',
-            '&::-webkit-outer-spin-button': {
-              WebkitAppearance: 'none',
-              margin: 0,
-            },
-            '&::-webkit-inner-spin-button': {
-              WebkitAppearance: 'none',
-              margin: 0,
-            },
+    <TextField
+      type="number"
+      value={value}
+      onChange={handleInputChange}
+      label={label}
+      helperText={helperText}
+      disabled={disabled}
+      fullWidth={fullWidth}
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end" sx={{ gap: 0.5, mr: -1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+              <IconButton
+                size="small"
+                onClick={handleIncrement}
+                disabled={disabled || parseFloat(value) >= max}
+                sx={{
+                  padding: '2px',
+                  minWidth: 20,
+                  minHeight: 16,
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                  },
+                }}
+              >
+                <Plus size={12} />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={handleDecrement}
+                disabled={disabled || parseFloat(value) <= min}
+                sx={{
+                  padding: '2px',
+                  minWidth: 20,
+                  minHeight: 16,
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                  },
+                }}
+              >
+                <Minus size={12} />
+              </IconButton>
+            </Box>
+          </InputAdornment>
+        ),
+        inputProps: { min, max, step },
+      }}
+      sx={{
+        '& input[type=number]': {
+          MozAppearance: 'textfield',
+          paddingRight: 0.5,
+          '&::-webkit-outer-spin-button': {
+            WebkitAppearance: 'none',
+            margin: 0,
           },
-        }}
-        {...otherProps}
-      />
-
-      {/* Custom +/- buttons */}
-      <Box
-        sx={{
-          position: 'absolute',
-          right: unit ? 100 : 12,
-          top: label ? 16 : 8,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0.25,
-        }}
-      >
-        <IconButton
-          size="small"
-          onClick={handleIncrement}
-          disabled={disabled || parseFloat(value) >= max}
-          sx={{
-            padding: '2px',
-            minWidth: 20,
-            minHeight: 20,
-            '&:hover': {
-              bgcolor: 'action.hover',
-            },
-          }}
-        >
-          <Plus size={14} />
-        </IconButton>
-        <IconButton
-          size="small"
-          onClick={handleDecrement}
-          disabled={disabled || parseFloat(value) <= min}
-          sx={{
-            padding: '2px',
-            minWidth: 20,
-            minHeight: 20,
-            '&:hover': {
-              bgcolor: 'action.hover',
-            },
-          }}
-        >
-          <Minus size={14} />
-        </IconButton>
-      </Box>
-    </Box>
+          '&::-webkit-inner-spin-button': {
+            WebkitAppearance: 'none',
+            margin: 0,
+          },
+        },
+        ...sx,
+      }}
+      {...otherProps}
+    />
   );
 }
 
