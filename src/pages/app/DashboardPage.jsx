@@ -197,7 +197,6 @@ const DashboardPage = () => {
                       to="/app/tracker"
                       variant="contained"
                       color="primary"
-                      responsive
                     >
                       Tracker
                     </ResponsiveButton>
@@ -206,7 +205,6 @@ const DashboardPage = () => {
                       to={`/app/tracker/den/${todayDayNumber}`}
                       variant="outlined"
                       color="primary"
-                      responsive
                     >
                       Dnešek
                     </ResponsiveButton>
