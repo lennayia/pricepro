@@ -212,12 +212,12 @@ const TrackerDayPage = () => {
             const Icon = category.icon;
             return (
             <Card key={category.key}>
-              <CardContent sx={{ py: 2 }}>
+              <CardContent sx={{ py: 2, px: 2 }}>
                 <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: 2,
+                    gap: 1.5,
                   }}
                 >
                   <Box
@@ -228,17 +228,17 @@ const TrackerDayPage = () => {
                       flexShrink: 0,
                     }}
                   >
-                    <Icon size={24} />
+                    <Icon size={20} />
                   </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9375rem' }}>
                       {category.label}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word', fontSize: '0.8125rem' }}>
                       {category.description}
                     </Typography>
                   </Box>
-                  <Box sx={{ alignSelf: 'flex-end' }}>
+                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0 }}>
                     <NumberInput
                       value={formData[category.key]}
                       onChange={(value) => handleChange(category.key, value)}
