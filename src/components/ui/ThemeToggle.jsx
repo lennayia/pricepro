@@ -16,11 +16,12 @@ function ThemeToggle() {
       <IconButton
         onClick={toggleTheme}
         sx={{
-          width: 44,
-          height: 44,
+          width: 48,
+          height: 48,
           color: isDark ? WARNING_CARD_STYLES.dark.iconColor : COLORS.primary.main,
           '&:hover': {
-            backgroundColor: isDark ? WARNING_CARD_STYLES.dark.bgcolor : INFO_CARD_STYLES.light.bgcolor,
+            backgroundColor: 'transparent',
+            color: isDark ? '#3FE73F' : COLORS.primary.dark,
           },
         }}
       >
@@ -32,7 +33,7 @@ function ThemeToggle() {
           key={isDark ? 'sun' : 'moon'}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          {isDark ? <Sun size={24} /> : <Moon size={24} />}
+          {isDark ? <Sun size={28} /> : <Moon size={28} />}
         </motion.div>
       </IconButton>
     </Tooltip>
