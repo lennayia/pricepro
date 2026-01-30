@@ -35,10 +35,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../../../contexts/AuthContext';
 import { saveCalculatorResult, getCalculatorResults } from '../../../services/calculatorResults';
 import { ResponsiveButton } from '../../../components/ui';
-import { COLORS } from '../../../constants/colors';
+import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES } from '../../../constants/colors';
 
 const steps = [
   { label: 'Životní náklady', description: 'Kolik MUSÍTE vydělat?', icon: Home },
@@ -74,6 +75,7 @@ const demandOptions = [
 const CalculatorPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
   const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(location.state?.step || 0);
   const [loading, setLoading] = useState(false);
@@ -295,7 +297,13 @@ const CalculatorPage = () => {
         fullWidth
       />
 
-      <Card sx={{ bgcolor: 'grey.100', mb: 2 }}>
+      <Card
+        sx={{
+          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: INFO_CARD_STYLES[theme.palette.mode].border,
+          mb: 2,
+        }}
+      >
         <CardContent sx={{ py: 1.5 }}>
           <Typography variant="body2" color="text.secondary">
             K vašim nákladům automaticky přičteme 15% na daně a odvody OSVČ.
@@ -303,7 +311,12 @@ const CalculatorPage = () => {
         </CardContent>
       </Card>
 
-      <Card sx={{ bgcolor: 'grey.100' }}>
+      <Card
+        sx={{
+          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: INFO_CARD_STYLES[theme.palette.mode].border,
+        }}
+      >
         <CardContent>
           <Typography variant="body2" color="text.secondary">
             Vaše minimální měsíční příjmy
@@ -352,7 +365,12 @@ const CalculatorPage = () => {
         Většina podnikatelek přeceňuje své fakturovatelné hodiny. Buďte k sobě upřímní!
       </Alert>
 
-      <Card sx={{ bgcolor: 'grey.100' }}>
+      <Card
+        sx={{
+          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: INFO_CARD_STYLES[theme.palette.mode].border,
+        }}
+      >
         <CardContent>
           <Stack spacing={1}>
             <Box>
@@ -452,7 +470,12 @@ const CalculatorPage = () => {
         </RadioGroup>
       </FormControl>
 
-      <Card sx={{ bgcolor: 'grey.100' }}>
+      <Card
+        sx={{
+          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: INFO_CARD_STYLES[theme.palette.mode].border,
+        }}
+      >
         <CardContent>
           <Stack spacing={1}>
             <Box>
@@ -548,7 +571,13 @@ const CalculatorPage = () => {
           Zjistěte svou minimální, doporučenou a prémiovou hodinovku.
         </Typography>
         {history.length > 0 && (
-          <Card sx={{ bgcolor: 'grey.100', mt: 2 }}>
+          <Card
+            sx={{
+              bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+              border: INFO_CARD_STYLES[theme.palette.mode].border,
+              mt: 2,
+            }}
+          >
             <CardContent sx={{ py: 1.5 }}>
               <Typography variant="body2" color="text.secondary">
                 Formulář je předvyplněn podle vaší poslední kalkulace. Můžete hodnoty upravit a uložit novou kalkulaci.
@@ -578,10 +607,10 @@ const CalculatorPage = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: isCompleted || isActive ? 'primary.main' : 'grey.300',
-                    color: isCompleted || isActive ? 'white' : 'grey.600',
+                    bgcolor: isCompleted || isActive ? 'primary.main' : CARD_ICON_STYLES[theme.palette.mode].bgcolor,
+                    color: isCompleted || isActive ? 'white' : CARD_ICON_STYLES[theme.palette.mode].iconColor,
                     border: '3px solid',
-                    borderColor: isCompleted || isActive ? 'primary.main' : 'grey.300',
+                    borderColor: isCompleted || isActive ? 'primary.main' : CARD_ICON_STYLES[theme.palette.mode].bgcolor,
                     transition: 'all 0.3s',
                     zIndex: 1,
                   }}
@@ -594,7 +623,7 @@ const CalculatorPage = () => {
                     sx={{
                       width: 3,
                       height: 80,
-                      bgcolor: isCompleted ? 'primary.main' : 'grey.300',
+                      bgcolor: isCompleted ? 'primary.main' : CARD_ICON_STYLES[theme.palette.mode].bgcolor,
                       transition: 'all 0.3s',
                     }}
                   />
