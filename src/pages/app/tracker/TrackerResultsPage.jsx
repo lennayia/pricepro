@@ -24,6 +24,7 @@ import { useWeek } from '../../../contexts/WeekContext';
 import { getTimeEntries } from '../../../services/timeEntries';
 import { getBillableCategoryKeys, getScalableCategoryKeys } from '../../../services/categorySettings';
 import { getProjects } from '../../../services/projects';
+import { getClients } from '../../../services/clients';
 import { getWeekDatesForWeek, formatDayName } from '../../../utils/dateHelpers';
 import WeekNavigation from '../../../components/tracker/WeekNavigation';
 import { CATEGORY_DEFINITIONS, WORK_CATEGORY_KEYS, PERSONAL_CATEGORY_KEYS, getCategoryLabel } from '../../../constants/categories';
@@ -60,6 +61,8 @@ const TrackerResultsPage = () => {
   const [scalableCategoryKeys, setScalableCategoryKeys] = useState([]);
   const [projects, setProjects] = useState([]);
   const [projectsMap, setProjectsMap] = useState({});
+  const [clients, setClients] = useState([]);
+  const [clientsMap, setClientsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -83,25 +86,37 @@ const TrackerResultsPage = () => {
     loadCategorySettings();
   }, [user]);
 
-  // Load projects
+  // Load projects and clients
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadProjectsAndClients = async () => {
       if (!user) return;
       try {
-        const data = await getProjects(user.id);
-        setProjects(data);
-        // Create map for fast lookup
-        const map = data.reduce((acc, project) => {
+        const [projectsData, clientsData] = await Promise.all([
+          getProjects(user.id),
+          getClients(user.id)
+        ]);
+
+        setProjects(projectsData);
+        setClients(clientsData);
+
+        // Create maps for fast lookup
+        const projectsMapData = projectsData.reduce((acc, project) => {
           acc[project.id] = project;
           return acc;
         }, {});
-        setProjectsMap(map);
+        setProjectsMap(projectsMapData);
+
+        const clientsMapData = clientsData.reduce((acc, client) => {
+          acc[client.id] = client;
+          return acc;
+        }, {});
+        setClientsMap(clientsMapData);
       } catch (err) {
-        console.error('Error loading projects:', err);
+        console.error('Error loading projects and clients:', err);
       }
     };
 
-    loadProjects();
+    loadProjectsAndClients();
   }, [user]);
 
   // Load week data from Supabase
@@ -142,9 +157,10 @@ const TrackerResultsPage = () => {
               sleep: parseFloat(entry.sleep) || 0,
               family_time: parseFloat(entry.family_time) || 0,
               personal_time: parseFloat(entry.personal_time) || 0,
-              // CRITICAL: Include project data!
+              // CRITICAL: Include project and client data!
               category_projects: entry.category_projects || {},
               category_project_hours: entry.category_project_hours || {},
+              category_project_clients: entry.category_project_clients || {},
             };
           }
 
@@ -165,6 +181,7 @@ const TrackerResultsPage = () => {
             personal_time: 0,
             category_projects: {},
             category_project_hours: {},
+            category_project_clients: {},
           };
         });
 
@@ -264,6 +281,50 @@ const TrackerResultsPage = () => {
 
   // Convert to array and sort by total hours
   const projectBreakdownArray = Object.values(projectBreakdown)
+    .sort((a, b) => b.totalHours - a.totalHours);
+
+  // Calculate breakdown by clients
+  const clientBreakdown = {};
+  weekData.forEach(day => {
+    const categoryProjectHours = day.category_project_hours || {};
+    const categoryProjectClients = day.category_project_clients || {};
+
+    // Process category_project_hours and map to clients
+    Object.entries(categoryProjectHours).forEach(([categoryKey, projectHoursMap]) => {
+      Object.entries(projectHoursMap).forEach(([projectId, hours]) => {
+        if (!projectId || !hours) return;
+
+        // Get client ID for this project
+        const clientId = categoryProjectClients[categoryKey]?.[projectId];
+        if (!clientId) return;
+
+        if (!clientBreakdown[clientId]) {
+          clientBreakdown[clientId] = {
+            clientId,
+            billableHours: 0,
+            scalableHours: 0,
+            otherHours: 0,
+            totalHours: 0,
+          };
+        }
+
+        const hoursValue = parseFloat(hours) || 0;
+
+        // Categorize hours
+        if (billableCategoryKeys.includes(categoryKey)) {
+          clientBreakdown[clientId].billableHours += hoursValue;
+        } else if (scalableCategoryKeys.includes(categoryKey)) {
+          clientBreakdown[clientId].scalableHours += hoursValue;
+        } else {
+          clientBreakdown[clientId].otherHours += hoursValue;
+        }
+        clientBreakdown[clientId].totalHours += hoursValue;
+      });
+    });
+  });
+
+  // Convert to array and sort by total hours
+  const clientBreakdownArray = Object.values(clientBreakdown)
     .sort((a, b) => b.totalHours - a.totalHours);
 
   // Count how many days have data
@@ -565,7 +626,7 @@ const TrackerResultsPage = () => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell><strong>Projekt / Klient</strong></TableCell>
+                    <TableCell><strong>Projekt</strong></TableCell>
                     <TableCell align="right">💼 Fakturovatelné</TableCell>
                     <TableCell align="right">📈 Škálovatelné</TableCell>
                     <TableCell align="right">🔧 Ostatní</TableCell>
@@ -593,6 +654,93 @@ const TrackerResultsPage = () => {
                               />
                             )}
                             <Typography fontWeight={500}>{projectName}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">
+                          {item.billableHours > 0 ? `${formatHours(item.billableHours)}h` : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {item.scalableHours > 0 ? `${formatHours(item.scalableHours)}h` : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {item.otherHours > 0 ? `${formatHours(item.otherHours)}h` : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          <strong>{formatHours(item.totalHours)}h</strong>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Client Breakdown */}
+      {clientBreakdownArray.length > 0 && (
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography variant="h6">
+                👥 Přehled podle klientů ({clientBreakdownArray.length})
+              </Typography>
+              <ResponsiveButton
+                component={Link}
+                to="/app/nastaveni/klienti"
+                variant="outlined"
+                size="small"
+              >
+                Spravovat klienty
+              </ResponsiveButton>
+            </Box>
+
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Klient</strong></TableCell>
+                    <TableCell align="right">💼 Fakturovatelné</TableCell>
+                    <TableCell align="right">📈 Škálovatelné</TableCell>
+                    <TableCell align="right">🔧 Ostatní</TableCell>
+                    <TableCell align="right"><strong>Celkem</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {clientBreakdownArray.map((item) => {
+                    const client = clientsMap[item.clientId];
+                    const clientName = client?.name || 'Neznámý klient';
+
+                    return (
+                      <TableRow key={item.clientId}>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {client?.logo_url ? (
+                              <Box
+                                component="img"
+                                src={client.logo_url}
+                                alt={client.name}
+                                sx={{
+                                  width: 20,
+                                  height: 20,
+                                  objectFit: 'contain',
+                                  borderRadius: 0.5,
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : client?.color ? (
+                              <Box
+                                sx={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: '50%',
+                                  bgcolor: client.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : null}
+                            <Typography fontWeight={500}>{clientName}</Typography>
                           </Box>
                         </TableCell>
                         <TableCell align="right">
