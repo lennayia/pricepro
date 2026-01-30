@@ -22,6 +22,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  FormHelperText,
   Autocomplete,
   Chip,
   FormControlLabel,
@@ -312,14 +313,27 @@ const ProjectsSettingsPage = () => {
               <Typography fontWeight={600} sx={{ mb: 1 }}>
                 Jak to funguje?
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 • Vytvořte si projekty nebo klienty (např. "Klient Anna", "Můj kurz XY")
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 • V trackeru pak u každé kategorie můžete vybrat, pro který projekt jste pracovali
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 • Ve výsledcích uvidíte přehled podle projektů i podle kategorií
+              </Typography>
+
+              <Typography fontWeight={600} sx={{ mb: 1, mt: 2 }}>
+                Typy projektů:
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                💼 <strong>Fakturovatelný (1:1 práce)</strong> - Veškerá práce pro konkrétního klienta včetně příprav, rešerší, konzultací, follow-upů. Počítá se do kalkulačky hodinovky.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                📈 <strong>Škálovatelný (investice)</strong> - Tvorba digiproduktu, kurzů, MLM, affiliate. Negeneruje hodinovku, ale pasivní příjem, který snižuje potřebu fakturovatelných hodin.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                🔧 <strong>Ostatní (režie)</strong> - Okamžitě nefakturovatelné náklady businessu (administrativa, obecné vzdělávání, networking). Rozpouští se do hodinovky jako overhead.
               </Typography>
             </Box>
           </Box>
@@ -557,10 +571,15 @@ const ProjectsSettingsPage = () => {
                 onChange={(e) => setProjectType(e.target.value)}
                 label="Typ projektu"
               >
-                <MenuItem value="billable">Fakturovatelný (1:1 práce)</MenuItem>
-                <MenuItem value="scalable">Škálovatelný (investice)</MenuItem>
-                <MenuItem value="other">Ostatní (režie)</MenuItem>
+                <MenuItem value="billable">💼 Fakturovatelný (1:1 práce)</MenuItem>
+                <MenuItem value="scalable">📈 Škálovatelný (investice)</MenuItem>
+                <MenuItem value="other">🔧 Ostatní (režie)</MenuItem>
               </Select>
+              <FormHelperText>
+                {projectType === 'billable' && 'Práce pro klienta včetně příprav a follow-upů. Jde přímo do kalkulačky hodinovky.'}
+                {projectType === 'scalable' && 'Digiprodukty, kurzy, MLM. Generuje pasivní příjem místo hodinovky.'}
+                {projectType === 'other' && 'Administrativa, networking, vzdělávání. Rozpouští se do hodinovky jako overhead.'}
+              </FormHelperText>
             </FormControl>
 
             {/* Theme Selection */}

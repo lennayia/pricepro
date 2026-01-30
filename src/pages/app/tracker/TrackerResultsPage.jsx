@@ -561,6 +561,35 @@ const TrackerResultsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Info about work types */}
+      <Card
+        sx={{
+          mb: 3,
+          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: INFO_CARD_STYLES[theme.palette.mode].border,
+        }}
+      >
+        <CardContent>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+            <Lightbulb size={20} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
+            <Box>
+              <Typography fontWeight={600} sx={{ mb: 1 }}>
+                Co znamenají typy práce?
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                💼 <strong>Fakturovatelné (1:1)</strong> - Veškerá práce pro konkrétního klienta (konzultace, přípravy, rešerše, follow-upy). Používá se pro výpočet hodinovky v kalkulačce.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                📈 <strong>Škálovatelné</strong> - Investice do digiproduktu, kurzů, MLM. Negeneruje hodinovku, ale pasivní příjem - můžete pak pracovat méně 1:1 hodin.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                🔧 <strong>Ostatní (režie)</strong> - Overhead (administrativa, obecné vzdělávání, networking). Rozpouští se do hodinovky jako náklady businessu.
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
       {/* Summary Cards - Work Type Breakdown */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 4 }}>
