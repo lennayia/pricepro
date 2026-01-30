@@ -238,17 +238,19 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <NumberInput
-                    value={formData[category.key]}
-                    onChange={(value) => handleChange(category.key, value)}
-                    placeholder="0"
-                    min={0}
-                    max={TIME_CONSTANTS.HOURS_IN_DAY}
-                    step={0.5}
-                    size="small"
-                    sx={{ width: 75, flexShrink: 0 }}
-                    disabled={saving || success}
-                  />
+                  <Box sx={{ alignSelf: 'flex-end' }}>
+                    <NumberInput
+                      value={formData[category.key]}
+                      onChange={(value) => handleChange(category.key, value)}
+                      placeholder="0"
+                      min={0}
+                      max={TIME_CONSTANTS.HOURS_IN_DAY}
+                      step={0.5}
+                      size="small"
+                      sx={{ width: 75 }}
+                      disabled={saving || success}
+                    />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
@@ -302,17 +304,19 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <NumberInput
-                    value={formData[category.key]}
-                    onChange={(value) => handleChange(category.key, value)}
-                    placeholder="0"
-                    min={0}
-                    max={TIME_CONSTANTS.HOURS_IN_DAY}
-                    step={0.5}
-                    size="small"
-                    sx={{ width: 75, flexShrink: 0 }}
-                    disabled={saving || success}
-                  />
+                  <Box sx={{ alignSelf: 'flex-end' }}>
+                    <NumberInput
+                      value={formData[category.key]}
+                      onChange={(value) => handleChange(category.key, value)}
+                      placeholder="0"
+                      min={0}
+                      max={TIME_CONSTANTS.HOURS_IN_DAY}
+                      step={0.5}
+                      size="small"
+                      sx={{ width: 75 }}
+                      disabled={saving || success}
+                    />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
