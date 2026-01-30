@@ -4,19 +4,27 @@ import { supabase } from './supabase';
  * Get all projects for a user (excluding archived by default)
  * @param {string} userId - User ID
  * @param {boolean} includeArchived - Whether to include archived projects
- * @returns {Promise<Array>} Array of project objects
+ * @param {boolean} includeEnded - Whether to include projects with status completed/cancelled
+ * @returns {Promise<Array>} Array of project objects with theme details
  */
-export const getProjects = async (userId, includeArchived = false) => {
+export const getProjects = async (userId, includeArchived = false, includeEnded = true) => {
   let query = supabase
     .from('projects')
-    .select('*')
+    .select(`
+      *,
+      theme:project_themes(id, name, color)
+    `)
     .eq('user_id', userId);
 
   if (!includeArchived) {
     query = query.eq('is_archived', false);
   }
 
-  const { data, error } = await query.order('name', { ascending: true });
+  if (!includeEnded) {
+    query = query.in('status', ['active', 'paused']);
+  }
+
+  const { data, error} = await query.order('name', { ascending: true });
 
   if (error) {
     console.error('Error fetching projects:', error);
@@ -52,6 +60,11 @@ export const getProject = async (projectId) => {
  * @param {Object} projectData - Project data
  * @param {string} projectData.name - Project name
  * @param {string} projectData.color - Optional color (hex code)
+ * @param {string} projectData.type - Optional type: billable/scalable/other
+ * @param {string} projectData.theme_id - Optional theme ID
+ * @param {string} projectData.status - Optional status: active/paused/completed/cancelled
+ * @param {string} projectData.start_date - Optional start date
+ * @param {string} projectData.end_date - Optional end date
  * @returns {Promise<Object>} Created project
  */
 export const createProject = async (userId, projectData) => {
@@ -61,6 +74,11 @@ export const createProject = async (userId, projectData) => {
       user_id: userId,
       name: projectData.name,
       color: projectData.color || null,
+      type: projectData.type || 'other',
+      theme_id: projectData.theme_id || null,
+      status: projectData.status || 'active',
+      start_date: projectData.start_date || null,
+      end_date: projectData.end_date || null,
       is_archived: false,
     })
     .select()

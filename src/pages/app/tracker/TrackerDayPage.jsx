@@ -18,13 +18,19 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  InputAdornment,
 } from '@mui/material';
 import { ResponsiveButton, NumberInput } from '../../../components/ui';
-import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb, Plus, X } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb, Plus, X, Image } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useWeek } from '../../../contexts/WeekContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
-import { getProjects, createProject } from '../../../services/projects';
+import { getProjects, createProject, uploadProjectLogo } from '../../../services/projects';
 import { getDateForDayInWeek, formatDateWithDayName } from '../../../utils/dateHelpers';
 import { WORK_CATEGORIES, PERSONAL_CATEGORIES } from '../../../constants/categories';
 import { calculateTotalHours, calculateWorkHours, calculatePersonalHours } from '../../../utils/calculators';
@@ -68,6 +74,10 @@ const TrackerDayPage = () => {
   // New project dialog state
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectType, setNewProjectType] = useState('client');
+  const [newProjectColor, setNewProjectColor] = useState('');
+  const [newProjectLogoFile, setNewProjectLogoFile] = useState(null);
+  const [newProjectLogoPreview, setNewProjectLogoPreview] = useState('');
   const [creatingProject, setCreatingProject] = useState(false);
   const [createProjectError, setCreateProjectError] = useState('');
   const [pendingProjectSelection, setPendingProjectSelection] = useState(null); // { categoryKey, rowIndex }
@@ -304,7 +314,63 @@ const TrackerDayPage = () => {
     setPendingProjectSelection({ categoryKey, rowIndex });
     setCreateProjectDialogOpen(true);
     setNewProjectName('');
+    setNewProjectType('client');
+    setNewProjectColor('');
+    setNewProjectLogoFile(null);
+    setNewProjectLogoPreview('');
     setCreateProjectError('');
+  };
+
+  // Handle logo upload
+  const handleNewProjectLogoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 50KB)
+    if (file.size > 50 * 1024) {
+      setCreateProjectError('Logo je příliš velké. Maximální velikost je 50 KB.');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/heic', 'image/heif'];
+    if (!allowedTypes.includes(file.type)) {
+      setCreateProjectError('Neplatný formát. Povolené formáty: PNG, JPG, WEBP, HEIC.');
+      return;
+    }
+
+    // Validate image dimensions (max 50x50px)
+    try {
+      const dimensions = await new Promise((resolve, reject) => {
+        const img = new globalThis.Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = () => reject(new Error('Nepodařilo se načíst obrázek.'));
+        img.src = URL.createObjectURL(file);
+      });
+
+      if (dimensions.width > 50 || dimensions.height > 50) {
+        setCreateProjectError('Logo je příliš velké. Maximální rozměry jsou 50×50 px.');
+        return;
+      }
+    } catch (err) {
+      setCreateProjectError('Nepodařilo se načíst obrázek.');
+      return;
+    }
+
+    setNewProjectLogoFile(file);
+    setCreateProjectError('');
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewProjectLogoPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveNewProjectLogo = () => {
+    setNewProjectLogoFile(null);
+    setNewProjectLogoPreview('');
   };
 
   // Handle creating new project
