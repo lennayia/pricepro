@@ -12,7 +12,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
 import { getDateForDay } from '../../../utils/dateHelpers';
@@ -381,25 +381,40 @@ const TrackerDayPage = () => {
 
             {/* Smart feedback */}
             {totalHours > TIME_CONSTANTS.HOURS_IN_DAY ? (
-              <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                ⚠️ Pozor! Den má pouze {TIME_CONSTANTS.HOURS_IN_DAY} hodin. Zkontrolujte prosím své údaje.
-              </Typography>
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
+                <AlertTriangle size={16} />
+                <Typography variant="body2">
+                  Pozor! Den má pouze {TIME_CONSTANTS.HOURS_IN_DAY} hodin. Zkontrolujte prosím své údaje.
+                </Typography>
+              </Box>
             ) : sleepHours < 6 && sleepHours > 0 ? (
-              <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                ⚠️ Pozor! Spíte méně než 6 hodin - riziko vyhoření!
-              </Typography>
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
+                <AlertTriangle size={16} />
+                <Typography variant="body2">
+                  Pozor! Spíte méně než 6 hodin - riziko vyhoření!
+                </Typography>
+              </Box>
             ) : workHours > 10 ? (
-              <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                ⚠️ Hodně práce dnes ({formatHours(workHours)}h). Najděte si čas na odpočinek!
-              </Typography>
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
+                <AlertTriangle size={16} />
+                <Typography variant="body2">
+                  Hodně práce dnes ({formatHours(workHours)}h). Najděte si čas na odpočinek!
+                </Typography>
+              </Box>
             ) : sleepHours >= 7 && sleepHours <= 8 && personalHours >= 2 && workHours <= 10 ? (
-              <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                ✅ Skvělý balanc! Spánek i osobní čas v pořádku.
-              </Typography>
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
+                <CheckCircle size={16} />
+                <Typography variant="body2">
+                  Skvělý balanc! Spánek i osobní čas v pořádku.
+                </Typography>
+              </Box>
             ) : sleepHours === 0 && personalHours === 0 && workHours > 0 ? (
-              <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                💡 Nezapomeňte vyplnit spánek a osobní čas pro kompletní přehled!
-              </Typography>
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
+                <Lightbulb size={16} />
+                <Typography variant="body2">
+                  Nezapomeňte vyplnit spánek a osobní čas pro kompletní přehled!
+                </Typography>
+              </Box>
             ) : null}
           </CardContent>
         </Card>

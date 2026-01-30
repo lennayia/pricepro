@@ -90,13 +90,13 @@ export const generateRecommendations = ({ avgSleep, avgWork, avgPersonal, avgFam
     recommendations.push({
       type: 'critical',
       category: 'sleep',
-      message: `🚨 Kriticky málo spánku! Průměrně spíte jen ${avgSleep.toFixed(1)}h denně. Minimálně ${RECOMMENDED_VALUES.sleep.min} hodin je nutné pro zdraví a produktivitu.`,
+      message: `Kriticky málo spánku! Průměrně spíte jen ${avgSleep.toFixed(1)}h denně. Minimálně ${RECOMMENDED_VALUES.sleep.min} hodin je nutné pro zdraví a produktivitu.`,
     });
   } else if (avgSleep < RECOMMENDED_VALUES.sleep.min) {
     recommendations.push({
       type: 'warning',
       category: 'sleep',
-      message: `💤 Málo spánku: Zkuste přidat 30-60 minut spánku denně. Doporučujeme ${RECOMMENDED_VALUES.sleep.min}-${RECOMMENDED_VALUES.sleep.max} hodin pro optimální výkon.`,
+      message: `Málo spánku: Zkuste přidat 30-60 minut spánku denně. Doporučujeme ${RECOMMENDED_VALUES.sleep.min}-${RECOMMENDED_VALUES.sleep.max} hodin pro optimální výkon.`,
     });
   }
 
@@ -105,13 +105,13 @@ export const generateRecommendations = ({ avgSleep, avgWork, avgPersonal, avgFam
     recommendations.push({
       type: 'critical',
       category: 'work',
-      message: `⚠️ Přetížení prací! Pracujete průměrně ${avgWork.toFixed(1)}h denně. Riziko vyhoření je vysoké. Zkuste delegovat nebo automatizovat úkoly.`,
+      message: `Přetížení prací! Pracujete průměrně ${avgWork.toFixed(1)}h denně. Riziko vyhoření je vysoké. Zkuste delegovat nebo automatizovat úkoly.`,
     });
   } else if (avgWork > RECOMMENDED_VALUES.work.warning) {
     recommendations.push({
       type: 'warning',
       category: 'work',
-      message: `💼 Hodně práce: Sledujte svou produktivitu. Může být čas na efektivnější pracovní metody?`,
+      message: `Hodně práce: Sledujte svou produktivitu. Může být čas na efektivnější pracovní metody?`,
     });
   }
 
@@ -120,7 +120,7 @@ export const generateRecommendations = ({ avgSleep, avgWork, avgPersonal, avgFam
     recommendations.push({
       type: 'warning',
       category: 'personal',
-      message: `🎯 Chybí osobní čas: Najděte si denně aspoň 30 minut pro koníčky, sport nebo relaxaci. Je to investice do vaší produktivity!`,
+      message: `Chybí osobní čas: Najděte si denně aspoň 30 minut pro koníčky, sport nebo relaxaci. Je to investice do vaší produktivity!`,
     });
   }
 
@@ -129,7 +129,7 @@ export const generateRecommendations = ({ avgSleep, avgWork, avgPersonal, avgFam
     recommendations.push({
       type: 'warning',
       category: 'family',
-      message: `👨‍👩‍👧 Málo času s blízkými: Kvalitní vztahy jsou základ spokojeného života. Plánujte pravidelný čas s rodinou a přáteli.`,
+      message: `Málo času s blízkými: Kvalitní vztahy jsou základ spokojeného života. Plánujte pravidelný čas s rodinou a přáteli.`,
     });
   }
 
@@ -144,7 +144,7 @@ export const generateRecommendations = ({ avgSleep, avgWork, avgPersonal, avgFam
     recommendations.push({
       type: 'success',
       category: 'overall',
-      message: `✅ Výborný balanc! Máte zdravý poměr mezi prací, odpočinkem a osobním životem. Pokračujte v tom!`,
+      message: `Výborný balanc! Máte zdravý poměr mezi prací, odpočinkem a osobním životem. Pokračujte v tom!`,
     });
   }
 
@@ -172,10 +172,10 @@ export const getMetricStatuses = (avgSleep, avgWork, avgPersonal, avgFamily) => 
           : 'warning',
       label:
         avgSleep < RECOMMENDED_VALUES.sleep.critical
-          ? '🚨 Kriticky málo!'
+          ? 'Kriticky málo!'
           : avgSleep >= RECOMMENDED_VALUES.sleep.min &&
             avgSleep <= RECOMMENDED_VALUES.sleep.max
-          ? '✅ Ideální'
+          ? 'Ideální'
           : '',
     },
     work: {
@@ -190,20 +190,20 @@ export const getMetricStatuses = (avgSleep, avgWork, avgPersonal, avgFamily) => 
           : 'good',
       label:
         avgWork > RECOMMENDED_VALUES.work.critical
-          ? '⚠️ Přetížení!'
+          ? 'Přetížení!'
           : avgWork <= RECOMMENDED_VALUES.work.optimal
-          ? '✅ Zdravý balanc'
+          ? 'Zdravý balanc'
           : '',
     },
     family: {
       value: avgFamily,
       status: avgFamily < RECOMMENDED_VALUES.familyTime.warning ? 'warning' : 'good',
-      label: avgFamily < RECOMMENDED_VALUES.familyTime.warning ? '⚠️ Věnujte více času blízkým' : '',
+      label: avgFamily < RECOMMENDED_VALUES.familyTime.warning ? 'Věnujte více času blízkým' : '',
     },
     personal: {
       value: avgPersonal,
       status: avgPersonal < RECOMMENDED_VALUES.personalTime.warning ? 'warning' : 'good',
-      label: avgPersonal < RECOMMENDED_VALUES.personalTime.warning ? '⚠️ Nezapomínejte na sebe!' : '',
+      label: avgPersonal < RECOMMENDED_VALUES.personalTime.warning ? 'Nezapomínejte na sebe!' : '',
     },
   };
 };

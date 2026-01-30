@@ -17,7 +17,7 @@ import {
   Alert,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
-import { ArrowLeft, Calculator } from 'lucide-react';
+import { ArrowLeft, Calculator, Moon, Briefcase, Users, Sparkles, Lightbulb, CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTimeEntries } from '../../../services/timeEntries';
 import { getWeekDates, formatDayName } from '../../../utils/dateHelpers';
@@ -267,9 +267,12 @@ const TrackerResultsPage = () => {
               <Typography variant="h2" sx={{ fontWeight: 700, mb: 1 }}>
                 {healthScore}%
               </Typography>
-              <Typography variant="h6">
-                {healthScore >= 80 ? '✅ Vynikající' : healthScore >= 60 ? '⚠️ Lze zlepšit' : '🚨 Varování'}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+                {healthScore >= 80 ? <CheckCircle size={20} /> : healthScore >= 60 ? <AlertTriangle size={20} /> : <AlertCircle size={20} />}
+                <Typography variant="h6">
+                  {healthScore >= 80 ? 'Vynikající' : healthScore >= 60 ? 'Lze zlepšit' : 'Varování'}
+                </Typography>
+              </Box>
               <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
                 Work-Life Balance Skóre
               </Typography>
@@ -277,24 +280,36 @@ const TrackerResultsPage = () => {
             <Grid size={{ xs: 12, md: 8 }}>
               <Stack spacing={2}>
                 <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
-                    💤 Průměrný spánek: <strong>{formatHours(avgSleep)}h/den</strong>
-                    {avgSleep < 6 && ' - 🚨 Kriticky málo!'}
-                    {avgSleep >= 7 && avgSleep <= 8 && ' - ✅ Ideální'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
-                    💼 Průměrná práce: <strong>{formatHours(avgWork)}h/den</strong>
-                    {avgWork > 12 && ' - ⚠️ Přetížení!'}
-                    {avgWork <= 8 && ' - ✅ Zdravý balanc'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
-                    👨‍👩‍👧 Čas s rodinou: <strong>{formatHours(avgFamily)}h/den</strong>
-                    {avgFamily < 0.5 && ' - ⚠️ Věnujte více času blízkým'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    🎯 Osobní čas: <strong>{formatHours(avgPersonal)}h/den</strong>
-                    {avgPersonal < 0.5 && ' - ⚠️ Nezapomínejte na sebe!'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9, mb: 0.5 }}>
+                    <Moon size={16} />
+                    <Typography variant="body2">
+                      Průměrný spánek: <strong>{formatHours(avgSleep)}h/den</strong>
+                      {avgSleep < 6 && ' - Kriticky málo!'}
+                      {avgSleep >= 7 && avgSleep <= 8 && ' - Ideální'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9, mb: 0.5 }}>
+                    <Briefcase size={16} />
+                    <Typography variant="body2">
+                      Průměrná práce: <strong>{formatHours(avgWork)}h/den</strong>
+                      {avgWork > 12 && ' - Přetížení!'}
+                      {avgWork <= 8 && ' - Zdravý balanc'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9, mb: 0.5 }}>
+                    <Users size={16} />
+                    <Typography variant="body2">
+                      Čas s rodinou: <strong>{formatHours(avgFamily)}h/den</strong>
+                      {avgFamily < 0.5 && ' - Věnujte více času blízkým'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.9 }}>
+                    <Sparkles size={16} />
+                    <Typography variant="body2">
+                      Osobní čas: <strong>{formatHours(avgPersonal)}h/den</strong>
+                      {avgPersonal < 0.5 && ' - Nezapomínejte na sebe!'}
+                    </Typography>
+                  </Box>
                 </Box>
               </Stack>
             </Grid>
@@ -405,9 +420,12 @@ const TrackerResultsPage = () => {
         return (
           <Card sx={{ mb: 4, bgcolor: 'neutral.600', color: 'white' }}>
             <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                💡 Doporučení pro zdravější život
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Lightbulb size={20} />
+                <Typography variant="h6">
+                  Doporučení pro zdravější život
+                </Typography>
+              </Box>
               <Stack spacing={1}>
                 {recommendations.map((rec, index) => (
                   <Typography key={index} variant="body2">
