@@ -28,6 +28,7 @@ import {
   History as HistoryIcon,
   Logout as LogoutIcon,
   Person as PersonIcon,
+  Settings as SettingsIcon,
   ExpandLess,
   ExpandMore,
   Circle,
@@ -380,6 +381,25 @@ const AppLayout = () => {
               <Typography variant="body2" color="text.secondary">
                 {user?.email}
               </Typography>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={() => {
+              handleMenuClose();
+              navigate('/app/nastaveni/kategorie');
+            }}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              Nastavení kategorií
+            </MenuItem>
+            <MenuItem onClick={() => {
+              handleMenuClose();
+              navigate('/app/nastaveni/projekty');
+            }}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              Správa projektů
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleSignOut}>

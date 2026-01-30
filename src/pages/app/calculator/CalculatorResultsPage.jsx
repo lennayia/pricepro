@@ -19,6 +19,7 @@ import { ResponsiveButton } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getLatestCalculatorResult } from '../../../services/calculatorResults';
 import { COLORS, GRADIENTS, INFO_CARD_STYLES } from '../../../constants/colors';
+import PassiveIncomeInsight from '../../../components/calculator/PassiveIncomeInsight';
 
 const CalculatorResultsPage = () => {
   const location = useLocation();
@@ -261,6 +262,12 @@ const CalculatorResultsPage = () => {
           </List>
         </CardContent>
       </Card>
+
+      {/* Passive Income Insight */}
+      <PassiveIncomeInsight
+        minimumMonthly={minimumMonthly}
+        recommendedHourly={recommendedHourly}
+      />
 
       {/* CTA */}
       <Card

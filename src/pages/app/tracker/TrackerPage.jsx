@@ -16,27 +16,31 @@ import {
 import { ResponsiveButton } from '../../../components/ui';
 import { CheckCircle, Circle, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useWeek } from '../../../contexts/WeekContext';
 import { getTimeEntries } from '../../../services/timeEntries';
-import { getWeekDates, getDayNumber } from '../../../utils/dateHelpers';
+import { getWeekDatesForWeek, formatDateWithDayName } from '../../../utils/dateHelpers';
 import { TIME_CONSTANTS } from '../../../constants/healthThresholds';
 import { COLORS } from '../../../constants/colors';
-
-const days = [
-  { day: 1, label: 'Den 1', name: 'Pondělí' },
-  { day: 2, label: 'Den 2', name: 'Úterý' },
-  { day: 3, label: 'Den 3', name: 'Středa' },
-  { day: 4, label: 'Den 4', name: 'Čtvrtek' },
-  { day: 5, label: 'Den 5', name: 'Pátek' },
-  { day: 6, label: 'Den 6', name: 'Sobota' },
-  { day: 7, label: 'Den 7', name: 'Neděle' },
-];
+import WeekNavigation from '../../../components/tracker/WeekNavigation';
 
 const TrackerPage = () => {
   const { user } = useAuth();
+  const { selectedWeekStart } = useWeek();
   const theme = useTheme();
-  const [completedDays, setCompletedDays] = useState([]);
+  const [completedDates, setCompletedDates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const progress = (completedDays.length / TIME_CONSTANTS.DAYS_IN_WEEK) * 100;
+
+  // Get dates for selected week
+  const weekDates = getWeekDatesForWeek(selectedWeekStart);
+
+  // Generate days array with real dates
+  const days = weekDates.map((date, index) => ({
+    day: index + 1,
+    date,
+    label: formatDateWithDayName(date),
+  }));
+
+  const progress = (completedDates.length / TIME_CONSTANTS.DAYS_IN_WEEK) * 100;
 
   // Load completed days from Supabase
   useEffect(() => {
@@ -48,16 +52,14 @@ const TrackerPage = () => {
 
       try {
         setLoading(true);
-        const weekDates = getWeekDates();
         const entries = await getTimeEntries(user.id);
 
-        // Filter entries to current week and map to day numbers
-        const completedDayNumbers = entries
+        // Filter entries to selected week
+        const completedInWeek = entries
           .filter(entry => weekDates.includes(entry.date))
-          .map(entry => getDayNumber(entry.date))
-          .filter(dayNum => dayNum !== null);
+          .map(entry => entry.date);
 
-        setCompletedDays(completedDayNumbers);
+        setCompletedDates(completedInWeek);
       } catch (err) {
         console.error('Error loading completed days:', err);
       } finally {
@@ -66,7 +68,7 @@ const TrackerPage = () => {
     };
 
     loadCompletedDays();
-  }, [user]);
+  }, [user, selectedWeekStart]);
 
   if (loading) {
     return (
@@ -86,6 +88,9 @@ const TrackerPage = () => {
         </Typography>
       </Stack>
 
+      {/* Week Navigation */}
+      <WeekNavigation />
+
       {/* Progress */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
@@ -94,8 +99,8 @@ const TrackerPage = () => {
               Váš pokrok
             </Typography>
             <Chip
-              label={`${completedDays.length} / ${TIME_CONSTANTS.DAYS_IN_WEEK} dní`}
-              color={completedDays.length === TIME_CONSTANTS.DAYS_IN_WEEK ? 'success' : 'primary'}
+              label={`${completedDates.length} / ${TIME_CONSTANTS.DAYS_IN_WEEK} dní`}
+              color={completedDates.length === TIME_CONSTANTS.DAYS_IN_WEEK ? 'success' : 'primary'}
               size="small"
             />
           </Box>
@@ -111,18 +116,18 @@ const TrackerPage = () => {
               },
             }}
           />
-          {completedDays.length === 0 && (
+          {completedDates.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Zatím nemáte žádné záznamy. Začněte vyplňovat svůj první den.
+              Zatím nemáte žádné záznamy pro tento týden. Začněte vyplňovat svůj první den.
             </Typography>
           )}
-          {completedDays.length > 0 && completedDays.length < TIME_CONSTANTS.DAYS_IN_WEEK && (
+          {completedDates.length > 0 && completedDates.length < TIME_CONSTANTS.DAYS_IN_WEEK && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Super! Ještě {TIME_CONSTANTS.DAYS_IN_WEEK - completedDays.length} dní a budete mít kompletní
+              Super! Ještě {TIME_CONSTANTS.DAYS_IN_WEEK - completedDates.length} dní a budete mít kompletní
               přehled.
             </Typography>
           )}
-          {completedDays.length === TIME_CONSTANTS.DAYS_IN_WEEK && (
+          {completedDates.length === TIME_CONSTANTS.DAYS_IN_WEEK && (
             <Typography variant="body2" color="success.main" sx={{ mt: 2 }}>
               Gratulujeme! Máte kompletní týden. Podívejte se na výsledky.
             </Typography>
@@ -133,7 +138,7 @@ const TrackerPage = () => {
       {/* Days Grid */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         {days.map((day) => {
-          const isCompleted = completedDays.includes(day.day);
+          const isCompleted = completedDates.includes(day.date);
           return (
             <Grid size={{ xs: 6, sm: 4, md: 3, lg: 12 / 7 }} key={day.day}>
               <Card
@@ -161,11 +166,8 @@ const TrackerPage = () => {
                         <Circle size={32} color={COLORS.neutral[400]} />
                       )}
                     </Box>
-                    <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.875rem', lineHeight: 1.2 }}>
                       {day.label}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {day.name}
                     </Typography>
                   </CardContent>
                 </CardActionArea>
@@ -183,11 +185,11 @@ const TrackerPage = () => {
           variant="contained"
           size="large"
           startIcon={<BarChart3 size={20} />}
-          disabled={completedDays.length === 0}
+          disabled={completedDates.length === 0}
         >
-          Zobrazit výsledky
+          Zobrazit výsledky týdne
         </ResponsiveButton>
-        {completedDays.length === 0 && (
+        {completedDates.length === 0 && (
           <Typography
             variant="body2"
             color="text.secondary"

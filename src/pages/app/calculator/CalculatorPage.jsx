@@ -23,6 +23,9 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Select,
+  MenuItem,
+  InputLabel,
 } from '@mui/material';
 import { ArrowLeft, ArrowRight, Calculator, TrendingUp, TrendingDown, Home, Clock, BarChart3 } from 'lucide-react';
 import {
@@ -38,6 +41,11 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../../../contexts/AuthContext';
 import { saveCalculatorResult, getCalculatorResults } from '../../../services/calculatorResults';
+import { getTimeEntries } from '../../../services/timeEntries';
+import { getBillableCategoryKeys } from '../../../services/categorySettings';
+import { getWeekDates } from '../../../utils/dateHelpers';
+import { calculateWeeklyBillableHours } from '../../../utils/billableHoursCalculator';
+import { WORK_CATEGORY_KEYS } from '../../../constants/categories';
 import { ResponsiveButton } from '../../../components/ui';
 import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES, WARNING_CARD_STYLES } from '../../../constants/colors';
 
@@ -82,6 +90,9 @@ const CalculatorPage = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
+  const [trackerDataLoaded, setTrackerDataLoaded] = useState(false);
+  const [trackerDataError, setTrackerDataError] = useState(false);
+  const [manualOverride, setManualOverride] = useState(false);
 
   // Layer 1: Living costs
   const [housingCosts, setHousingCosts] = useState('');
@@ -92,6 +103,7 @@ const CalculatorPage = () => {
   // Layer 2: Real time
   const [weeklyHours, setWeeklyHours] = useState('');
   const [billableHours, setBillableHours] = useState('');
+  const [weeksToTrack, setWeeksToTrack] = useState(1); // Number of weeks to calculate average from
 
   // Layer 3: Market value
   const [experience, setExperience] = useState('0-2');
@@ -122,6 +134,7 @@ const CalculatorPage = () => {
             setSavings(latest.inputs.savings || '');
             setWeeklyHours(latest.inputs.weeklyHours || '');
             setBillableHours(latest.inputs.billableHours || '');
+            setWeeksToTrack(latest.inputs.weeksToTrack || 1);
             setExperience(latest.inputs.experience || '0-2');
             setSpecialization(latest.inputs.specialization || 'generalist');
             setPortfolio(latest.inputs.portfolio || 'none');
@@ -137,6 +150,64 @@ const CalculatorPage = () => {
 
     loadData();
   }, [user]);
+
+  // Load tracker data for Step 2
+  useEffect(() => {
+    const loadTrackerData = async () => {
+      if (!user) return;
+
+      try {
+        // Get all entries
+        const entries = await getTimeEntries(user.id);
+
+        // Get dates for last N weeks
+        let allWeekDates = [];
+        for (let weekOffset = 0; weekOffset < weeksToTrack; weekOffset++) {
+          const weekDates = getWeekDates(new Date(Date.now() - weekOffset * 7 * 24 * 60 * 60 * 1000));
+          allWeekDates = allWeekDates.concat(weekDates);
+        }
+
+        const weekEntries = entries.filter(e => allWeekDates.includes(e.date));
+
+        if (weekEntries.length === 0) {
+          setTrackerDataError(true);
+          return;
+        }
+
+        // Get user's billable categories (only 1:1 work, NOT scalable)
+        const billableKeys = await getBillableCategoryKeys(user.id);
+
+        // Calculate total billable hours across all weeks
+        const totalBillable = calculateWeeklyBillableHours(weekEntries, billableKeys);
+
+        // Calculate total work hours across all weeks
+        const totalWork = WORK_CATEGORY_KEYS.reduce((sum, key) => {
+          return sum + weekEntries.reduce((daySum, entry) => {
+            return daySum + (parseFloat(entry[key]) || 0);
+          }, 0);
+        }, 0);
+
+        // Calculate averages per week
+        const avgBillablePerWeek = totalBillable / weeksToTrack;
+        const avgWorkPerWeek = totalWork / weeksToTrack;
+
+        // Pre-fill form only if not already filled from history
+        if (!billableHours) {
+          setBillableHours(avgBillablePerWeek.toFixed(1));
+        }
+        if (!weeklyHours) {
+          setWeeklyHours(avgWorkPerWeek.toFixed(1));
+        }
+
+        setTrackerDataLoaded(true);
+      } catch (err) {
+        console.error('Error loading tracker data:', err);
+        setTrackerDataError(true);
+      }
+    };
+
+    loadTrackerData();
+  }, [user, weeksToTrack]);
 
   // Handle navigation from menu (state-based step)
   useEffect(() => {
@@ -216,6 +287,7 @@ const CalculatorPage = () => {
           savings,
           weeklyHours,
           billableHours,
+          weeksToTrack,
           experience,
           specialization,
           portfolio,
@@ -333,33 +405,141 @@ const CalculatorPage = () => {
     <Stack spacing={3}>
       <Typography variant="h6">Kolik hodin OPRAVDU fakturujete?</Typography>
       <Typography color="text.secondary">
-        Zadejte svůj skutečný pracovní čas. Ne kolik byste chtěli pracovat, ale kolik
-        reálně fakturujete klientům.
+        {trackerDataLoaded
+          ? 'Data byla načtena z vašeho trackeru. Pokud chcete, můžete je upravit ručně.'
+          : 'Zadejte svůj skutečný pracovní čas. Ne kolik byste chtěli pracovat, ale kolik reálně fakturujete klientům.'}
       </Typography>
 
-      <TextField
-        label="Celkový pracovní čas týdně"
-        helperText="Kolik hodin týdně pracujete celkem (včetně administrativy apod.)"
-        type="number"
-        value={weeklyHours}
-        onChange={(e) => setWeeklyHours(e.target.value)}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">hod/týden</InputAdornment>,
-        }}
-        fullWidth
-      />
+      {/* Weeks to track selector */}
+      <FormControl fullWidth>
+        <InputLabel>Za kolik týdnů počítat průměr?</InputLabel>
+        <Select
+          value={weeksToTrack}
+          onChange={(e) => {
+            setWeeksToTrack(e.target.value);
+            // Clear current values to trigger reload
+            setBillableHours('');
+            setWeeklyHours('');
+            setTrackerDataLoaded(false);
+          }}
+          label="Za kolik týdnů počítat průměr?"
+        >
+          <MenuItem value={1}>1 týden (aktuální stav)</MenuItem>
+          <MenuItem value={2}>2 týdny (přesnější)</MenuItem>
+          <MenuItem value={3}>3 týdny (ještě přesnější)</MenuItem>
+          <MenuItem value={4}>4 týdny (nejpřesnější - celý měsíc)</MenuItem>
+        </Select>
+      </FormControl>
 
-      <TextField
-        label="Fakturovatelné hodiny týdně"
-        helperText="Kolik hodin týdně můžete reálně fakturovat klientům"
-        type="number"
-        value={billableHours}
-        onChange={(e) => setBillableHours(e.target.value)}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">hod/týden</InputAdornment>,
-        }}
-        fullWidth
-      />
+      {/* Tracker data info card */}
+      {trackerDataLoaded && !manualOverride && (
+        <Card
+          sx={{
+            bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+            border: INFO_CARD_STYLES[theme.palette.mode].border,
+          }}
+        >
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Data z vašeho trackeru
+            </Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography>Celkový pracovní čas týdně:</Typography>
+              <Typography fontWeight={600}>{weeklyHours}h</Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Typography>Fakturovatelné hodiny týdně (1:1 práce):</Typography>
+              <Typography fontWeight={600} color="primary">{billableHours}h</Typography>
+            </Box>
+
+            <Typography variant="body2" color="text.secondary">
+              Údaje jsou průměr z posledních {weeksToTrack} {weeksToTrack === 1 ? 'týdne' : weeksToTrack < 5 ? 'týdnů' : 'týdnů'}.{' '}
+              <a
+                href="/app/tracker"
+                onClick={(e) => { e.preventDefault(); navigate('/app/tracker'); }}
+                style={{ color: 'inherit', textDecoration: 'underline' }}
+              >
+                Upravit data v trackeru
+              </a>
+              {' · '}
+              <a
+                href="/app/nastaveni/kategorie"
+                onClick={(e) => { e.preventDefault(); navigate('/app/nastaveni/kategorie'); }}
+                style={{ color: 'inherit', textDecoration: 'underline' }}
+              >
+                Změnit fakturovatelné kategorie
+              </a>
+            </Typography>
+
+            <Box sx={{ mt: 2 }}>
+              <ResponsiveButton
+                variant="outlined"
+                size="small"
+                onClick={() => setManualOverride(true)}
+              >
+                Upravit hodiny manuálně
+              </ResponsiveButton>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Warning if no tracker data */}
+      {!trackerDataLoaded && trackerDataError && (
+        <Alert severity="warning">
+          Nemáte žádná data v trackeru. Vyplňte prosím alespoň jeden týden pro automatické načtení.{' '}
+          <a
+            href="/app/tracker"
+            onClick={(e) => { e.preventDefault(); navigate('/app/tracker'); }}
+            style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}
+          >
+            Začít trackovat čas
+          </a>
+        </Alert>
+      )}
+
+      {/* Manual input fields */}
+      {(manualOverride || !trackerDataLoaded) && (
+        <>
+          <TextField
+            label="Celkový pracovní čas týdně"
+            helperText="Kolik hodin týdně pracujete celkem (včetně administrativy apod.)"
+            type="number"
+            value={weeklyHours}
+            onChange={(e) => setWeeklyHours(e.target.value)}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">hod/týden</InputAdornment>,
+            }}
+            fullWidth
+          />
+
+          <TextField
+            label="Fakturovatelné hodiny týdně"
+            helperText="Kolik hodin týdně můžete reálně fakturovat klientům (pouze 1:1 práce)"
+            type="number"
+            value={billableHours}
+            onChange={(e) => setBillableHours(e.target.value)}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">hod/týden</InputAdornment>,
+            }}
+            fullWidth
+          />
+
+          {manualOverride && trackerDataLoaded && (
+            <Box>
+              <ResponsiveButton
+                variant="text"
+                size="small"
+                onClick={() => setManualOverride(false)}
+              >
+                Zpět na data z trackeru
+              </ResponsiveButton>
+            </Box>
+          )}
+        </>
+      )}
 
       <Alert
         severity="warning"

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { WeekProvider } from './contexts/WeekContext';
 
 // Layouts
 import PublicLayout from './components/layout/PublicLayout';
@@ -20,13 +21,16 @@ import TrackerResultsPage from './pages/app/tracker/TrackerResultsPage';
 import CalculatorPage from './pages/app/calculator/CalculatorPage';
 import CalculatorResultsPage from './pages/app/calculator/CalculatorResultsPage';
 import HistoryPage from './pages/app/HistoryPage';
+import CategorySettingsPage from './pages/app/settings/CategorySettingsPage';
+import ProjectsSettingsPage from './pages/app/settings/ProjectsSettingsPage';
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
+        <WeekProvider>
+          <BrowserRouter>
+            <Routes>
             {/* Root redirect */}
             <Route path="/" element={<RootRedirect />} />
 
@@ -52,6 +56,10 @@ function App() {
               <Route path="tracker/den/:dayNumber" element={<TrackerDayPage />} />
               <Route path="tracker/vysledky" element={<TrackerResultsPage />} />
 
+              {/* Settings routes */}
+              <Route path="nastaveni/kategorie" element={<CategorySettingsPage />} />
+              <Route path="nastaveni/projekty" element={<ProjectsSettingsPage />} />
+
               {/* Calculator routes */}
               <Route path="kalkulacka" element={<CalculatorPage />} />
               <Route path="kalkulacka/vysledky" element={<CalculatorResultsPage />} />
@@ -64,6 +72,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+        </WeekProvider>
       </AuthProvider>
     </ThemeProvider>
   );

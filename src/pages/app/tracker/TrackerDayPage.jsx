@@ -8,15 +8,24 @@ import {
   TextField,
   Stack,
   Alert,
-  InputAdornment,
   CircularProgress,
   useTheme,
+  IconButton,
+  Autocomplete,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import { ResponsiveButton, NumberInput } from '../../../components/ui';
-import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb, Plus, X } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useWeek } from '../../../contexts/WeekContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
-import { getDateForDay } from '../../../utils/dateHelpers';
+import { getProjects, createProject } from '../../../services/projects';
+import { getDateForDayInWeek, formatDateWithDayName } from '../../../utils/dateHelpers';
 import { WORK_CATEGORIES, PERSONAL_CATEGORIES } from '../../../constants/categories';
 import { calculateTotalHours, calculateWorkHours, calculatePersonalHours } from '../../../utils/calculators';
 import { formatHours } from '../../../utils/formatters';
@@ -32,16 +41,51 @@ const TrackerDayPage = () => {
   const { dayNumber } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { selectedWeekStart } = useWeek();
   const theme = useTheme();
   const day = parseInt(dayNumber, 10);
 
+  // Get the actual date for this day in the selected week
+  const actualDate = getDateForDayInWeek(day, selectedWeekStart);
+  const formattedDate = formatDateWithDayName(actualDate);
+
+  // Personal categories still use simple form data (no projects)
   const [formData, setFormData] = useState(
-    categories.reduce((acc, cat) => ({ ...acc, [cat.key]: '' }), {})
+    PERSONAL_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: '' }), {})
   );
+
+  // Work categories use project rows: { categoryKey: [{ projectId: '123', hours: 2 }] }
+  const [categoryProjectRows, setCategoryProjectRows] = useState(
+    WORK_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: [] }), {})
+  );
+
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // New project dialog state
+  const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [createProjectError, setCreateProjectError] = useState('');
+  const [pendingProjectSelection, setPendingProjectSelection] = useState(null); // { categoryKey, rowIndex }
+
+  // Load projects
+  useEffect(() => {
+    const loadProjects = async () => {
+      if (!user) return;
+      try {
+        const data = await getProjects(user.id);
+        setProjects(data);
+      } catch (err) {
+        console.error('Error loading projects:', err);
+      }
+    };
+
+    loadProjects();
+  }, [user]);
 
   // Load existing data for this day
   useEffect(() => {
@@ -53,16 +97,31 @@ const TrackerDayPage = () => {
 
       try {
         setLoading(true);
-        const date = getDateForDay(day);
-        const entry = await getTimeEntry(user.id, date);
+        const entry = await getTimeEntry(user.id, actualDate);
 
         if (entry) {
-          // Populate form with existing data
-          const loadedData = categories.reduce((acc, cat) => {
+          // Load personal categories (simple form data)
+          const loadedData = PERSONAL_CATEGORIES.reduce((acc, cat) => {
             acc[cat.key] = entry[cat.key] || '';
             return acc;
           }, {});
           setFormData(loadedData);
+
+          // Load work categories with project rows
+          const loadedProjectRows = {};
+          WORK_CATEGORIES.forEach(cat => {
+            const categoryKey = cat.key;
+            const projectHours = entry.category_project_hours?.[categoryKey] || {};
+
+            // Convert DB format { projectId: hours } to array [{ projectId, hours }]
+            const rows = Object.entries(projectHours).map(([projectId, hours]) => ({
+              projectId,
+              hours: hours || 0
+            }));
+
+            loadedProjectRows[categoryKey] = rows.length > 0 ? rows : [];
+          });
+          setCategoryProjectRows(loadedProjectRows);
         }
       } catch (err) {
         console.error('Error loading day data:', err);
@@ -73,7 +132,7 @@ const TrackerDayPage = () => {
     };
 
     loadDayData();
-  }, [user, day]);
+  }, [user, day, actualDate, selectedWeekStart]);
 
   // Validate day number
   if (isNaN(day) || day < 1 || day > 7) {
@@ -113,15 +172,26 @@ const TrackerDayPage = () => {
     e.preventDefault();
     setError('');
 
+    // Calculate work category totals from project rows
+    const workCategoryTotals = {};
+    WORK_CATEGORIES.forEach(cat => {
+      const rows = categoryProjectRows[cat.key] || [];
+      const total = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+      workCategoryTotals[cat.key] = total;
+    });
+
+    // Combine work and personal data
+    const allData = { ...workCategoryTotals, ...formData };
+
     // Validate that at least one field has a value
-    const hasData = Object.values(formData).some(val => parseFloat(val) > 0);
+    const hasData = Object.values(allData).some(val => parseFloat(val) > 0);
     if (!hasData) {
       setError('Vyplňte prosím alespoň jednu aktivitu.');
       return;
     }
 
     // Validate total hours doesn't exceed TIME_CONSTANTS.HOURS_IN_DAY
-    const totalHours = calculateTotalHours(formData);
+    const totalHours = calculateTotalHours(allData);
     if (totalHours > TIME_CONSTANTS.HOURS_IN_DAY) {
       setError(`Součet hodin nemůže překročit ${TIME_CONSTANTS.HOURS_IN_DAY} hodin za den. Aktuálně: ${formatHours(totalHours)}h`);
       return;
@@ -130,15 +200,45 @@ const TrackerDayPage = () => {
     setSaving(true);
 
     try {
-      const date = getDateForDay(day);
+      // Convert to DB format
+      const dataToSave = {};
 
-      // Convert form data to numbers
-      const dataToSave = categories.reduce((acc, cat) => {
-        acc[cat.key] = parseFloat(formData[cat.key]) || 0;
-        return acc;
-      }, {});
+      // Add work category totals (calculated from project rows)
+      WORK_CATEGORIES.forEach(cat => {
+        dataToSave[cat.key] = workCategoryTotals[cat.key] || 0;
+      });
 
-      await upsertTimeEntry(user.id, date, dataToSave);
+      // Add personal categories
+      PERSONAL_CATEGORIES.forEach(cat => {
+        dataToSave[cat.key] = parseFloat(formData[cat.key]) || 0;
+      });
+
+      // Convert project rows to DB format
+      const category_projects = {};
+      const category_project_hours = {};
+
+      WORK_CATEGORIES.forEach(cat => {
+        const rows = categoryProjectRows[cat.key] || [];
+        if (rows.length > 0) {
+          const projectIds = rows.map(row => row.projectId).filter(Boolean);
+          const projectHours = {};
+          rows.forEach(row => {
+            if (row.projectId && row.hours > 0) {
+              projectHours[row.projectId] = parseFloat(row.hours);
+            }
+          });
+
+          if (projectIds.length > 0) {
+            category_projects[cat.key] = projectIds;
+            category_project_hours[cat.key] = projectHours;
+          }
+        }
+      });
+
+      dataToSave.category_projects = category_projects;
+      dataToSave.category_project_hours = category_project_hours;
+
+      await upsertTimeEntry(user.id, actualDate, dataToSave);
 
       setSuccess(true);
       setTimeout(() => {
@@ -152,10 +252,108 @@ const TrackerDayPage = () => {
     }
   };
 
-  const totalHours = useMemo(() => calculateTotalHours(formData), [formData]);
-  const workHours = useMemo(() => calculateWorkHours(formData), [formData]);
+  // Calculate totals from both work project rows and personal form data
+  const workHours = useMemo(() => {
+    let total = 0;
+    WORK_CATEGORIES.forEach(cat => {
+      const rows = categoryProjectRows[cat.key] || [];
+      const catTotal = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+      total += catTotal;
+    });
+    return total;
+  }, [categoryProjectRows]);
+
   const personalHours = useMemo(() => calculatePersonalHours(formData), [formData]);
+  const totalHours = useMemo(() => workHours + personalHours, [workHours, personalHours]);
   const sleepHours = useMemo(() => parseFloat(formData.sleep) || 0, [formData.sleep]);
+
+  // Remove project row from category
+  const handleRemoveProjectRow = (categoryKey, rowIndex) => {
+    setCategoryProjectRows(prev => ({
+      ...prev,
+      [categoryKey]: (prev[categoryKey] || []).filter((_, index) => index !== rowIndex)
+    }));
+  };
+
+  // Update project ID in row
+  const handleUpdateProjectId = (categoryKey, rowIndex, projectId) => {
+    setCategoryProjectRows(prev => {
+      const rows = [...(prev[categoryKey] || [])];
+      rows[rowIndex] = { ...rows[rowIndex], projectId };
+      return { ...prev, [categoryKey]: rows };
+    });
+  };
+
+  // Update hours in row
+  const handleUpdateProjectHours = (categoryKey, rowIndex, hours) => {
+    setCategoryProjectRows(prev => {
+      const rows = [...(prev[categoryKey] || [])];
+      rows[rowIndex] = { ...rows[rowIndex], hours: parseFloat(hours) || 0 };
+      return { ...prev, [categoryKey]: rows };
+    });
+  };
+
+  // Calculate total hours for a category
+  const getCategoryTotal = (categoryKey) => {
+    const rows = categoryProjectRows[categoryKey] || [];
+    return rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+  };
+
+  // Handle opening create project dialog
+  const handleOpenCreateProjectDialog = (categoryKey, rowIndex) => {
+    setPendingProjectSelection({ categoryKey, rowIndex });
+    setCreateProjectDialogOpen(true);
+    setNewProjectName('');
+    setCreateProjectError('');
+  };
+
+  // Handle creating new project
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) {
+      setCreateProjectError('Zadejte název projektu');
+      return;
+    }
+
+    setCreatingProject(true);
+    setCreateProjectError('');
+
+    try {
+      const newProject = await createProject(user.id, {
+        name: newProjectName.trim()
+      });
+
+      // Add to projects list
+      setProjects(prev => [...prev, newProject].sort((a, b) => a.name.localeCompare(b.name)));
+
+      // If there was a pending selection, apply it
+      if (pendingProjectSelection) {
+        const { categoryKey, rowIndex } = pendingProjectSelection;
+        const rows = categoryProjectRows[categoryKey] || [];
+        const isEmptyRow = rowIndex === rows.length;
+
+        if (isEmptyRow) {
+          // Add new row with the new project
+          setCategoryProjectRows(prev => ({
+            ...prev,
+            [categoryKey]: [...(prev[categoryKey] || []), { projectId: newProject.id, hours: 0 }]
+          }));
+        } else {
+          // Update existing row
+          handleUpdateProjectId(categoryKey, rowIndex, newProject.id);
+        }
+      }
+
+      // Close dialog
+      setCreateProjectDialogOpen(false);
+      setNewProjectName('');
+      setPendingProjectSelection(null);
+    } catch (err) {
+      console.error('Error creating project:', err);
+      setCreateProjectError(err.message || 'Nepodařilo se vytvořit projekt');
+    } finally {
+      setCreatingProject(false);
+    }
+  };
 
   return (
     <Box>
@@ -168,9 +366,9 @@ const TrackerDayPage = () => {
       </ResponsiveButton>
 
       <Stack spacing={1} sx={{ mb: 4 }}>
-        <Typography variant="h4">Den {day} - {dayNames[day]}</Typography>
+        <Typography variant="h4">{formattedDate}</Typography>
         <Typography color="text.secondary">
-          Zapište, kolik hodin jste dnes strávili jednotlivými činnostmi.
+          Zapište, kolik hodin jste tento den strávili jednotlivými činnostmi.
         </Typography>
       </Stack>
 
@@ -210,50 +408,207 @@ const TrackerDayPage = () => {
         <Stack spacing={2} sx={{ mb: 4 }}>
           {WORK_CATEGORIES.map((category) => {
             const Icon = category.icon;
+            const rows = categoryProjectRows[category.key] || [];
+            const categoryTotal = getCategoryTotal(category.key);
+
             return (
             <Card key={category.key} sx={{ overflow: 'hidden' }}>
-              <CardContent sx={{ py: 1.5, px: 1, overflow: 'hidden', '&:last-child': { pb: 1.5 } }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 0.75,
-                    width: '100%',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      color: category.color || COLORS.neutral[600],
-                      display: 'flex',
-                      alignItems: 'center',
-                      flexShrink: 0,
-                      width: 18,
-                    }}
-                  >
-                    <Icon size={18} />
+              <CardContent sx={{ py: 2, px: 2, '&:last-child': { pb: 2 } }}>
+                {/* Category header */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: rows.length > 0 ? 2 : 0 }}>
+                  <Box sx={{ color: category.color || COLORS.neutral[600], flexShrink: 0 }}>
+                    <Icon size={20} />
                   </Box>
-                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.875rem' }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
                       {category.label}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word', fontSize: '0.75rem', lineHeight: 1.3 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                       {category.description}
                     </Typography>
                   </Box>
-                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 80, ml: 0.5 }}>
-                    <NumberInput
-                      value={formData[category.key]}
-                      onChange={(value) => handleChange(category.key, value)}
-                      placeholder="0"
-                      min={0}
-                      max={TIME_CONSTANTS.HOURS_IN_DAY}
-                      step={0.5}
+                  {categoryTotal > 0 && (
+                    <Chip
+                      label={`${formatHours(categoryTotal)}h`}
                       size="small"
-                      sx={{ width: '100%' }}
-                      disabled={saving || success}
+                      color="primary"
+                      sx={{ fontWeight: 600 }}
                     />
-                  </Box>
+                  )}
                 </Box>
+
+                {/* Project rows - always show filled + one empty row */}
+                <Stack spacing={1}>
+                  {/* Display all rows including the always-present empty row */}
+                  {[...rows, { projectId: '', hours: 0 }].map((row, rowIndex) => {
+                    const isEmptyRow = rowIndex === rows.length; // Last row is always empty
+                    const hasProject = Boolean(row.projectId);
+
+                    return (
+                      <Box
+                        key={rowIndex}
+                        sx={{
+                          display: 'flex',
+                          gap: 1,
+                          alignItems: 'center',
+                          pl: 3.5
+                        }}
+                      >
+                        <Autocomplete
+                          size="small"
+                          value={projects.find(p => p.id === row.projectId) || null}
+                          onChange={(e, newValue) => {
+                            // Check if "Create new" option was selected
+                            if (newValue && newValue.id === '__create_new__') {
+                              handleOpenCreateProjectDialog(category.key, rowIndex);
+                              return;
+                            }
+
+                            if (isEmptyRow && newValue) {
+                              // Adding new row with selected project
+                              setCategoryProjectRows(prev => ({
+                                ...prev,
+                                [category.key]: [...(prev[category.key] || []), { projectId: newValue.id, hours: 0 }]
+                              }));
+                            } else if (!isEmptyRow) {
+                              // Updating existing row
+                              handleUpdateProjectId(category.key, rowIndex, newValue?.id || '');
+                            }
+                          }}
+                          options={[
+                            { id: '__create_new__', name: 'Vytvořit nový projekt' },
+                            ...projects
+                          ]}
+                          getOptionLabel={(option) => option.name || ''}
+                          renderOption={(props, option) => (
+                            <li {...props} style={{
+                              fontWeight: option.id === '__create_new__' ? 600 : 400,
+                              color: option.id === '__create_new__' ? theme.palette.primary.main : 'inherit',
+                              borderBottom: option.id === '__create_new__' ? '1px solid #e0e0e0' : 'none',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 8,
+                            }}>
+                              {option.id === '__create_new__' ? (
+                                <Plus size={16} />
+                              ) : option.logo_url ? (
+                                <Box
+                                  component="img"
+                                  src={option.logo_url}
+                                  alt={option.name}
+                                  sx={{
+                                    width: 20,
+                                    height: 20,
+                                    objectFit: 'contain',
+                                    borderRadius: 0.5,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                              ) : option.color ? (
+                                <Box
+                                  sx={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: '50%',
+                                    backgroundColor: option.color,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                              ) : (
+                                <Box sx={{ width: 12, height: 12, flexShrink: 0 }} />
+                              )}
+                              {option.name}
+                            </li>
+                          )}
+                          renderInput={(params) => {
+                            const selectedProject = projects.find(p => p.id === row.projectId);
+                            return (
+                              <TextField
+                                {...params}
+                                placeholder={isEmptyRow ? "Vybrat" : "Vyberte projekt"}
+                                size="small"
+                                InputProps={{
+                                  ...params.InputProps,
+                                  startAdornment: (
+                                    <>
+                                      {isEmptyRow ? (
+                                        <Plus size={16} style={{ marginLeft: 8, marginRight: 4, color: '#666' }} />
+                                      ) : selectedProject?.logo_url ? (
+                                        <Box
+                                          component="img"
+                                          src={selectedProject.logo_url}
+                                          alt={selectedProject.name}
+                                          sx={{
+                                            width: 16,
+                                            height: 16,
+                                            objectFit: 'contain',
+                                            borderRadius: 0.5,
+                                            ml: 1,
+                                            mr: 0.5,
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                      ) : selectedProject?.color ? (
+                                        <Box
+                                          sx={{
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            backgroundColor: selectedProject.color,
+                                            ml: 1,
+                                            mr: 0.5,
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                      ) : null}
+                                      {params.InputProps.startAdornment}
+                                    </>
+                                  ),
+                                }}
+                              />
+                            );
+                          }}
+                          sx={{ flex: 1 }}
+                          disabled={saving || success}
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <NumberInput
+                            value={isEmptyRow ? '' : row.hours}
+                            onChange={(value) => {
+                              if (!isEmptyRow) {
+                                handleUpdateProjectHours(category.key, rowIndex, value);
+                              }
+                            }}
+                            placeholder="0"
+                            min={0}
+                            max={TIME_CONSTANTS.HOURS_IN_DAY}
+                            step={0.5}
+                            size="small"
+                            sx={{ width: 90 }}
+                            disabled={saving || success || isEmptyRow}
+                          />
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                            h
+                          </Typography>
+                        </Box>
+                        {hasProject && !isEmptyRow && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveProjectRow(category.key, rowIndex)}
+                            disabled={saving || success}
+                            sx={{ color: 'error.main' }}
+                          >
+                            <X size={18} />
+                          </IconButton>
+                        )}
+                        {/* Spacer to keep alignment when no X button */}
+                        {(!hasProject || isEmptyRow) && (
+                          <Box sx={{ width: 34 }} />
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Stack>
               </CardContent>
             </Card>
             );
@@ -432,6 +787,22 @@ const TrackerDayPage = () => {
           </CardContent>
         </Card>
 
+        {/* Info o projektech */}
+        {projects.length === 0 && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              💡 Nemáte žádné projekty. Chcete-li přiřadit práci konkrétnímu klientovi nebo projektu,{' '}
+              <a
+                href="/app/nastaveni/projekty"
+                onClick={(e) => { e.preventDefault(); navigate('/app/nastaveni/projekty'); }}
+                style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}
+              >
+                vytvořte si je v nastavení
+              </a>.
+            </Typography>
+          </Alert>
+        )}
+
         <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
           <ResponsiveButton
             variant="outlined"
@@ -451,6 +822,61 @@ const TrackerDayPage = () => {
         </Box>
       </form>
       )}
+
+      {/* Create Project Dialog */}
+      <Dialog
+        open={createProjectDialogOpen}
+        onClose={() => {
+          if (!creatingProject) {
+            setCreateProjectDialogOpen(false);
+            setNewProjectName('');
+            setCreateProjectError('');
+            setPendingProjectSelection(null);
+          }
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Vytvořit nový projekt</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            label="Název projektu"
+            fullWidth
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !creatingProject) {
+                handleCreateProject();
+              }
+            }}
+            error={Boolean(createProjectError)}
+            helperText={createProjectError}
+            disabled={creatingProject}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setCreateProjectDialogOpen(false);
+              setNewProjectName('');
+              setCreateProjectError('');
+              setPendingProjectSelection(null);
+            }}
+            disabled={creatingProject}
+          >
+            Zrušit
+          </Button>
+          <Button
+            onClick={handleCreateProject}
+            variant="contained"
+            disabled={creatingProject || !newProjectName.trim()}
+          >
+            {creatingProject ? 'Vytvářím...' : 'Vytvořit'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

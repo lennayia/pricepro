@@ -21,6 +21,7 @@ import {
   Circle,
   BarChart3,
   Clock,
+  Package,
 } from 'lucide-react';
 
 // Ikony pro kategorie aktivit
@@ -33,6 +34,7 @@ export const CATEGORY_ICONS = {
   messages: Mail,
   education: GraduationCap,
   billable_work: Briefcase,
+  digital_products: Package,
   other: Coffee,
 
   // Osobní život

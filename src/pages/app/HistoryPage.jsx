@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -7,35 +7,32 @@ import {
   CardContent,
   Stack,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Grid,
   Chip,
-  IconButton,
   Alert,
+  CardActionArea,
+  useTheme,
 } from '@mui/material';
 import { ResponsiveButton } from '../../components/ui';
-import { History, Calculator, Eye, Trash2, TrendingUp, AlertCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Circle, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { getCalculatorResults, deleteCalculatorResult } from '../../services/calculatorResults';
+import { useWeek } from '../../contexts/WeekContext';
+import { getTimeEntries } from '../../services/timeEntries';
+import { getWeekStartDate, formatWeekRange, getWeekDatesForWeek } from '../../utils/dateHelpers';
 import { COLORS } from '../../constants/colors';
 
 const HistoryPage = () => {
   const { user } = useAuth();
+  const { setWeek, isCurrentWeek, selectedWeekStart } = useWeek();
+  const navigate = useNavigate();
+  const theme = useTheme();
   const [loading, setLoading] = useState(true);
-  const [historyItems, setHistoryItems] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const [weeks, setWeeks] = useState([]);
   const [error, setError] = useState('');
 
-  // Load history on mount
+  // Load all weeks from time entries
   useEffect(() => {
-    const loadHistory = async () => {
+    const loadWeeks = async () => {
       if (!user) {
         setLoading(false);
         return;
@@ -43,71 +40,62 @@ const HistoryPage = () => {
 
       try {
         setLoading(true);
-        const results = await getCalculatorResults(user.id);
-        setHistoryItems(results);
+        const entries = await getTimeEntries(user.id);
+
+        if (entries.length === 0) {
+          setWeeks([]);
+          setLoading(false);
+          return;
+        }
+
+        // Group entries by week
+        const weekMap = {};
+        entries.forEach(entry => {
+          const weekStart = getWeekStartDate(entry.date);
+          if (!weekMap[weekStart]) {
+            weekMap[weekStart] = {
+              weekStart,
+              weekRange: formatWeekRange(weekStart),
+              dates: getWeekDatesForWeek(weekStart),
+              completedDates: [],
+              totalHours: 0,
+            };
+          }
+          weekMap[weekStart].completedDates.push(entry.date);
+
+          // Calculate total hours for this entry
+          const entryHours = Object.keys(entry)
+            .filter(key => !['id', 'user_id', 'date', 'created_at', 'updated_at', 'project_name', 'category_projects', 'category_project_hours'].includes(key))
+            .reduce((sum, key) => sum + (parseFloat(entry[key]) || 0), 0);
+
+          weekMap[weekStart].totalHours += entryHours;
+        });
+
+        // Convert to array and sort by week start (newest first)
+        const weeksList = Object.values(weekMap).sort((a, b) =>
+          b.weekStart.localeCompare(a.weekStart)
+        );
+
+        setWeeks(weeksList);
       } catch (err) {
-        console.error('Error loading history:', err);
-        setError('Nepodařilo se načíst historii. Zkuste to prosím znovu.');
+        console.error('Error loading weeks:', err);
+        setError('Nepodařilo se načíst historii týdnů. Zkuste to prosím znovu.');
       } finally {
         setLoading(false);
       }
     };
 
-    loadHistory();
+    loadWeeks();
   }, [user]);
 
-  const handleViewDetail = (item) => {
-    setSelectedItem(item);
-    setDetailOpen(true);
+  const handleSelectWeek = (weekStart) => {
+    setWeek(weekStart);
+    navigate('/app/tracker');
   };
 
-  const handleCloseDetail = () => {
-    setDetailOpen(false);
-    setSelectedItem(null);
-  };
-
-  const handleOpenDeleteConfirm = (item) => {
-    setItemToDelete(item);
-    setDeleteConfirmOpen(true);
-  };
-
-  const handleCloseDeleteConfirm = () => {
-    setDeleteConfirmOpen(false);
-    setItemToDelete(null);
-  };
-
-  const handleDelete = async () => {
-    if (!itemToDelete) return;
-
-    try {
-      setDeleting(true);
-      await deleteCalculatorResult(itemToDelete.id);
-
-      // Remove from list
-      setHistoryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
-
-      handleCloseDeleteConfirm();
-    } catch (err) {
-      console.error('Error deleting item:', err);
-      setError('Nepodařilo se smazat kalkulaci. Zkuste to prosím znovu.');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('cs-CZ', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
-
-  const formatCurrency = (value) => {
-    return value.toLocaleString('cs-CZ', { maximumFractionDigits: 0 });
+  const handleViewResults = (weekStart) => {
+    setWeek(weekStart);
+    navigate('/app/tracker/vysledky');
   };
 
   if (loading) {
@@ -121,9 +109,9 @@ const HistoryPage = () => {
   return (
     <Box>
       <Stack spacing={1} sx={{ mb: 4 }}>
-        <Typography variant="h4">Historie výpočtů</Typography>
+        <Typography variant="h4">Historie týdnů</Typography>
         <Typography color="text.secondary">
-          Přehled vašich předchozích kalkulací hodinovky.
+          Přehled všech týdnů, které jste trackovali.
         </Typography>
       </Stack>
 
@@ -133,7 +121,7 @@ const HistoryPage = () => {
         </Alert>
       )}
 
-      {historyItems.length === 0 ? (
+      {weeks.length === 0 ? (
         <Card>
           <CardContent
             sx={{
@@ -142,298 +130,133 @@ const HistoryPage = () => {
             }}
           >
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
-              <History size={64} color={COLORS.neutral[400]} />
+              <Calendar size={64} color={COLORS.neutral[400]} />
             </Box>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-              Zatím nemáte žádné výpočty
+              Zatím nemáte žádné záznamy
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              Až si spočítáte svou hodinovku, najdete zde historii svých výpočtů.
+              Začněte trackovat svůj čas a tady najdete historii všech týdnů.
             </Typography>
             <ResponsiveButton
-              component={Link}
-              to="/app/kalkulacka"
+              onClick={() => navigate('/app/tracker')}
               variant="contained"
-              startIcon={<Calculator size={20} />}
+              startIcon={<Calendar size={20} />}
             >
-              Spočítat hodinovku
+              Začít trackovat
             </ResponsiveButton>
           </CardContent>
         </Card>
       ) : (
         <Stack spacing={2}>
-          {historyItems.map((item) => (
-            <Card
-              key={item.id}
-              sx={{
-                transition: 'box-shadow 0.2s',
-                '&:hover': {
-                  boxShadow: 3,
-                },
-              }}
-            >
-              <CardContent sx={{ position: 'relative' }}>
-                <Grid container spacing={3}>
-                  <Grid size={{ xs: 12, sm: 6, md: 8, lg: 4 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Datum vytvoření
-                    </Typography>
-                    <Typography variant="h6">
-                      {formatDate(item.created_at)}
-                    </Typography>
-                  </Grid>
+          {weeks.map((week) => {
+            const completionPercentage = (week.completedDates.length / 7) * 100;
+            const isComplete = week.completedDates.length === 7;
+            const isCurrent = week.weekStart === selectedWeekStart;
+            const avgHoursPerDay = week.totalHours / week.completedDates.length;
 
-                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Doporučená hodinovka
-                    </Typography>
-                    <Typography variant="h5" color="success.main" sx={{ fontWeight: 700 }}>
-                      {formatCurrency(item.recommended_hourly)} Kč
-                    </Typography>
-                  </Grid>
+            return (
+              <Card
+                key={week.weekStart}
+                sx={{
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  border: isCurrent ? '2px solid' : 'none',
+                  borderColor: 'primary.main',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: 3,
+                  },
+                }}
+              >
+                <CardContent>
+                  <Grid container spacing={3} alignItems="center">
+                    {/* Week Info */}
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Calendar size={20} color={theme.palette.primary.main} />
+                        <Typography variant="h6">
+                          {week.weekRange}
+                        </Typography>
+                      </Box>
+                      {isCurrent && (
+                        <Chip
+                          label="Vybraný týden"
+                          size="small"
+                          color="primary"
+                          sx={{ mt: 0.5 }}
+                        />
+                      )}
+                      {isCurrentWeek() && week.weekStart === getWeekStartDate(new Date()) && (
+                        <Chip
+                          label="Tento týden"
+                          size="small"
+                          variant="outlined"
+                          sx={{ mt: 0.5, ml: isCurrent ? 1 : 0 }}
+                        />
+                      )}
+                    </Grid>
 
-                  <Grid size={{ xs: 6, sm: 6, md: 4, lg: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Minimální
-                    </Typography>
-                    <Typography variant="body1">
-                      {formatCurrency(item.minimum_hourly)} Kč
-                    </Typography>
-                  </Grid>
+                    {/* Stats */}
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        Dokončeno
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {isComplete ? (
+                          <CheckCircle size={20} color={theme.palette.success.main} />
+                        ) : (
+                          <Circle size={20} color={COLORS.neutral[400]} />
+                        )}
+                        <Typography variant="h6">
+                          {week.completedDates.length}/7 dní
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {completionPercentage.toFixed(0)}% vyplněno
+                      </Typography>
+                    </Grid>
 
-                  <Grid size={{ xs: 6, sm: 6, md: 4, lg: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      Prémiová
-                    </Typography>
-                    <Typography variant="body1">
-                      {formatCurrency(item.premium_hourly)} Kč
-                    </Typography>
-                  </Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        Celkem hodin
+                      </Typography>
+                      <Typography variant="h6">
+                        {week.totalHours.toFixed(1)}h
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Ø {avgHoursPerDay.toFixed(1)}h/den
+                      </Typography>
+                    </Grid>
 
-                  <Grid size={{ xs: 12, sm: 12, md: 4, lg: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, opacity: 0, visibility: { xs: 'hidden', md: 'visible' } }}>
-                      Akce
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: { xs: 1, md: 0 } }}>
-                      <IconButton
-                        onClick={() => handleViewDetail(item)}
-                        size="small"
-                        sx={{
-                          color: COLORS.primary.main,
-                          '&:hover': { bgcolor: COLORS.primary.light + '20' },
-                        }}
-                      >
-                        <Eye size={20} />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleOpenDeleteConfirm(item)}
-                        size="small"
-                        sx={{
-                          color: COLORS.error.main,
-                          '&:hover': { bgcolor: COLORS.error.light + '20' },
-                        }}
-                      >
-                        <Trash2 size={20} />
-                      </IconButton>
-                    </Box>
+                    {/* Actions */}
+                    <Grid size={{ xs: 12, md: 2 }}>
+                      <Stack spacing={1}>
+                        <ResponsiveButton
+                          onClick={() => handleSelectWeek(week.weekStart)}
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                        >
+                          Upravit
+                        </ResponsiveButton>
+                        <ResponsiveButton
+                          onClick={() => handleViewResults(week.weekStart)}
+                          variant="contained"
+                          size="small"
+                          fullWidth
+                          startIcon={<BarChart3 size={16} />}
+                        >
+                          Výsledky
+                        </ResponsiveButton>
+                      </Stack>
+                    </Grid>
                   </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </Stack>
       )}
-
-      {/* Detail Dialog */}
-      <Dialog
-        open={detailOpen}
-        onClose={handleCloseDetail}
-        maxWidth="md"
-        fullWidth
-      >
-        {selectedItem && (
-          <>
-            <DialogTitle>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box
-                  sx={{
-                    bgcolor: COLORS.primary.light + '20',
-                    borderRadius: 2,
-                    p: 1.5,
-                  }}
-                >
-                  <Calculator size={24} color={COLORS.primary.main} />
-                </Box>
-                <Box>
-                  <Typography variant="h6">Detail kalkulace</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatDate(selectedItem.created_at)}
-                  </Typography>
-                </Box>
-              </Box>
-            </DialogTitle>
-            <DialogContent dividers>
-              {/* Price Cards */}
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Výsledné hodinovky
-              </Typography>
-              <Grid container spacing={2} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Card sx={{ bgcolor: COLORS.error.light + '10' }}>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                        <AlertCircle size={32} color={COLORS.error.main} />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        Minimální
-                      </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                        {formatCurrency(selectedItem.minimum_hourly)} Kč
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Card sx={{ bgcolor: COLORS.success.light + '10' }}>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                        <TrendingUp size={32} color={COLORS.success.main} />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        Doporučená
-                      </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 700, color: 'success.main' }}>
-                        {formatCurrency(selectedItem.recommended_hourly)} Kč
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Card sx={{ bgcolor: COLORS.warning.light + '10' }}>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                        <TrendingUp size={32} color={COLORS.warning.main} />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        Prémiová
-                      </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                        {formatCurrency(selectedItem.premium_hourly)} Kč
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-
-              {/* Summary */}
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Shrnutí
-              </Typography>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid size={{ xs: 6 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Minimální měsíční příjem
-                  </Typography>
-                  <Typography variant="h6">
-                    {formatCurrency(selectedItem.minimum_monthly)} Kč
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Fakturovatelné hodiny měsíčně
-                  </Typography>
-                  <Typography variant="h6">
-                    {selectedItem.monthly_billable_hours} hodin
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Tržní koeficient
-                  </Typography>
-                  <Chip
-                    label={`×${selectedItem.coefficients.toFixed(2)}`}
-                    color="primary"
-                    size="small"
-                  />
-                </Grid>
-              </Grid>
-
-              {/* Inputs */}
-              {selectedItem.inputs && (
-                <>
-                  <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                    Zadané údaje
-                  </Typography>
-                  <Stack spacing={1}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Náklady na bydlení: {formatCurrency(selectedItem.inputs.housingCosts || 0)} Kč
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Životní náklady: {formatCurrency(selectedItem.inputs.livingCosts || 0)} Kč
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Náklady na podnikání: {formatCurrency(selectedItem.inputs.businessCosts || 0)} Kč
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Rezerva + spoření: {formatCurrency(selectedItem.inputs.savings || 0)} Kč
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <ResponsiveButton onClick={handleCloseDetail}>
-                Zavřít
-              </ResponsiveButton>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteConfirmOpen}
-        onClose={handleCloseDeleteConfirm}
-      >
-        <DialogTitle>Smazat kalkulaci?</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Opravdu chcete smazat tuto kalkulaci? Tato akce je nevratná.
-          </Typography>
-          {itemToDelete && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                {formatDate(itemToDelete.created_at)}
-              </Typography>
-              <Typography variant="h6" color="success.main">
-                {formatCurrency(itemToDelete.recommended_hourly)} Kč
-              </Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <ResponsiveButton onClick={handleCloseDeleteConfirm} disabled={deleting}>
-            Zrušit
-          </ResponsiveButton>
-          <ResponsiveButton
-            onClick={handleDelete}
-            color="error"
-            variant="contained"
-            disabled={deleting}
-            startIcon={deleting ? <CircularProgress size={20} /> : <Trash2 size={20} />}
-          >
-            {deleting ? 'Mažu...' : 'Smazat'}
-          </ResponsiveButton>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

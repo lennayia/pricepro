@@ -20,8 +20,12 @@ import {
 import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Calculator, Moon, Briefcase, Users, Sparkles, Lightbulb, CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useWeek } from '../../../contexts/WeekContext';
 import { getTimeEntries } from '../../../services/timeEntries';
-import { getWeekDates, formatDayName } from '../../../utils/dateHelpers';
+import { getBillableCategoryKeys, getScalableCategoryKeys } from '../../../services/categorySettings';
+import { getProjects } from '../../../services/projects';
+import { getWeekDatesForWeek, formatDayName } from '../../../utils/dateHelpers';
+import WeekNavigation from '../../../components/tracker/WeekNavigation';
 import { CATEGORY_DEFINITIONS, WORK_CATEGORY_KEYS, PERSONAL_CATEGORY_KEYS, getCategoryLabel } from '../../../constants/categories';
 import { TIME_CONSTANTS } from '../../../constants/healthThresholds';
 import { CHART_COLORS, HEALTH_SCORE_COLORS, INFO_CARD_STYLES, WARNING_CARD_STYLES, getChartColors } from '../../../constants/colors';
@@ -48,11 +52,57 @@ const allCategoryKeys = Object.keys(CATEGORY_DEFINITIONS);
 const TrackerResultsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { selectedWeekStart } = useWeek();
   const theme = useTheme();
   const chartColors = getChartColors(theme.palette.mode);
   const [weekData, setWeekData] = useState([]);
+  const [billableCategoryKeys, setBillableCategoryKeys] = useState(['billable_work']);
+  const [scalableCategoryKeys, setScalableCategoryKeys] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [projectsMap, setProjectsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Load category settings
+  useEffect(() => {
+    const loadCategorySettings = async () => {
+      if (!user) return;
+      try {
+        const billableKeys = await getBillableCategoryKeys(user.id);
+        const scalableKeys = await getScalableCategoryKeys(user.id);
+        setBillableCategoryKeys(billableKeys.length > 0 ? billableKeys : ['billable_work']);
+        setScalableCategoryKeys(scalableKeys);
+      } catch (err) {
+        console.error('Error loading category settings:', err);
+        // Fallback to default
+        setBillableCategoryKeys(['billable_work']);
+        setScalableCategoryKeys([]);
+      }
+    };
+
+    loadCategorySettings();
+  }, [user]);
+
+  // Load projects
+  useEffect(() => {
+    const loadProjects = async () => {
+      if (!user) return;
+      try {
+        const data = await getProjects(user.id);
+        setProjects(data);
+        // Create map for fast lookup
+        const map = data.reduce((acc, project) => {
+          acc[project.id] = project;
+          return acc;
+        }, {});
+        setProjectsMap(map);
+      } catch (err) {
+        console.error('Error loading projects:', err);
+      }
+    };
+
+    loadProjects();
+  }, [user]);
 
   // Load week data from Supabase
   useEffect(() => {
@@ -64,7 +114,7 @@ const TrackerResultsPage = () => {
 
       try {
         setLoading(true);
-        const weekDates = getWeekDates();
+        const weekDates = getWeekDatesForWeek(selectedWeekStart);
         const entries = await getTimeEntries(user.id);
 
         // Filter to current week and transform to chart format
@@ -87,10 +137,14 @@ const TrackerResultsPage = () => {
               messages: parseFloat(entry.messages) || 0,
               client_communication: parseFloat(entry.client_communication) || 0,
               education: parseFloat(entry.education) || 0,
+              digital_products: parseFloat(entry.digital_products) || 0,
               other: parseFloat(entry.other) || 0,
               sleep: parseFloat(entry.sleep) || 0,
               family_time: parseFloat(entry.family_time) || 0,
               personal_time: parseFloat(entry.personal_time) || 0,
+              // CRITICAL: Include project data!
+              category_projects: entry.category_projects || {},
+              category_project_hours: entry.category_project_hours || {},
             };
           }
 
@@ -104,10 +158,13 @@ const TrackerResultsPage = () => {
             messages: 0,
             client_communication: 0,
             education: 0,
+            digital_products: 0,
             other: 0,
             sleep: 0,
             family_time: 0,
             personal_time: 0,
+            category_projects: {},
+            category_project_hours: {},
           };
         });
 
@@ -121,7 +178,7 @@ const TrackerResultsPage = () => {
     };
 
     loadWeekData();
-  }, [user]);
+  }, [user, selectedWeekStart]);
 
   // Calculate totals
   const totals = allCategoryKeys.reduce((acc, key) => {
@@ -130,8 +187,84 @@ const TrackerResultsPage = () => {
   }, {});
 
   const totalHours = Object.values(totals).reduce((sum, val) => sum + val, 0);
-  const billableHours = totals.billable_work || 0;
-  const nonBillableHours = totalHours - billableHours;
+
+  // Calculate hours by category type based on user settings
+  const billableHours = billableCategoryKeys.reduce((sum, key) => sum + (totals[key] || 0), 0);
+  const scalableHours = scalableCategoryKeys.reduce((sum, key) => sum + (totals[key] || 0), 0);
+  const workHoursTotal = WORK_CATEGORY_KEYS.reduce((sum, key) => sum + (totals[key] || 0), 0);
+  const otherWorkHours = workHoursTotal - billableHours - scalableHours;
+
+  // Calculate breakdown by projects
+  const projectBreakdown = {};
+  weekData.forEach(day => {
+    const categoryProjects = day.category_projects || {};
+    const categoryProjectHours = day.category_project_hours || {};
+
+    // First, process split hours (category_project_hours)
+    Object.entries(categoryProjectHours).forEach(([categoryKey, projectHoursMap]) => {
+      Object.entries(projectHoursMap).forEach(([projectId, hours]) => {
+        if (!projectId || !hours) return;
+
+        if (!projectBreakdown[projectId]) {
+          projectBreakdown[projectId] = {
+            projectId,
+            billableHours: 0,
+            scalableHours: 0,
+            otherHours: 0,
+            totalHours: 0,
+          };
+        }
+
+        const hoursValue = parseFloat(hours) || 0;
+
+        // Categorize hours
+        if (billableCategoryKeys.includes(categoryKey)) {
+          projectBreakdown[projectId].billableHours += hoursValue;
+        } else if (scalableCategoryKeys.includes(categoryKey)) {
+          projectBreakdown[projectId].scalableHours += hoursValue;
+        } else {
+          projectBreakdown[projectId].otherHours += hoursValue;
+        }
+        projectBreakdown[projectId].totalHours += hoursValue;
+      });
+    });
+
+    // Then, process simple project assignments (category_projects)
+    // Only for categories that DON'T have split hours
+    Object.entries(categoryProjects).forEach(([categoryKey, projectId]) => {
+      if (!projectId) return;
+
+      // Skip if this category has split hours
+      if (categoryProjectHours[categoryKey]) return;
+
+      const hours = parseFloat(day[categoryKey]) || 0;
+      if (hours === 0) return;
+
+      if (!projectBreakdown[projectId]) {
+        projectBreakdown[projectId] = {
+          projectId,
+          billableHours: 0,
+          scalableHours: 0,
+          otherHours: 0,
+          totalHours: 0,
+        };
+      }
+
+      // Categorize hours
+      if (billableCategoryKeys.includes(categoryKey)) {
+        projectBreakdown[projectId].billableHours += hours;
+      } else if (scalableCategoryKeys.includes(categoryKey)) {
+        projectBreakdown[projectId].scalableHours += hours;
+      } else {
+        projectBreakdown[projectId].otherHours += hours;
+      }
+      projectBreakdown[projectId].totalHours += hours;
+    });
+  });
+
+  // Convert to array and sort by total hours
+  const projectBreakdownArray = Object.values(projectBreakdown)
+    .sort((a, b) => b.totalHours - a.totalHours);
 
   // Count how many days have data
   const completedDays = weekData.filter(day =>
@@ -254,10 +387,12 @@ const TrackerResultsPage = () => {
         Zpět na tracker
       </ResponsiveButton>
 
+      <WeekNavigation />
+
       <Stack spacing={1} sx={{ mb: 4 }}>
         <Typography variant="h4">Výsledky za týden</Typography>
         <Typography color="text.secondary">
-          Tady máte přehled, jak jste strávili svůj čas za posledních {TIME_CONSTANTS.DAYS_IN_WEEK} dní.
+          Přehled vašeho času za vybraný týden.
         </Typography>
       </Stack>
 
@@ -365,25 +500,18 @@ const TrackerResultsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Work Type Breakdown */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" color="primary" sx={{ fontWeight: 700 }}>
-                {formatHours(totalHours)}
-              </Typography>
-              <Typography color="text.secondary">Celkem hodin</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h3" color="primary.main" sx={{ fontWeight: 700 }}>
                 {formatHours(billableHours)}
               </Typography>
-              <Typography color="text.secondary">Fakturovatelných hodin</Typography>
+              <Typography color="text.secondary">💼 Fakturovatelné (1:1)</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
+                Pro kalkulačku hodinovky
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -391,13 +519,133 @@ const TrackerResultsPage = () => {
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h3" color="warning.main" sx={{ fontWeight: 700 }}>
-                {formatHours(nonBillableHours)}
+                {formatHours(scalableHours)}
               </Typography>
-              <Typography color="text.secondary">Nefakturovatelných hodin</Typography>
+              <Typography color="text.secondary">📈 Škálovatelné</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
+                Investice do produktů
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                {formatHours(otherWorkHours)}
+              </Typography>
+              <Typography color="text.secondary">🔧 Ostatní</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.75rem' }}>
+                Režie a administrativa
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+
+      {/* Project Breakdown - MOVED UP for better visibility */}
+      {projectBreakdownArray.length > 0 && (
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography variant="h6">
+                📊 Přehled podle projektů ({projectBreakdownArray.length})
+              </Typography>
+              <ResponsiveButton
+                component={Link}
+                to="/app/nastaveni/projekty"
+                variant="outlined"
+                size="small"
+              >
+                Spravovat projekty
+              </ResponsiveButton>
+            </Box>
+
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Projekt / Klient</strong></TableCell>
+                    <TableCell align="right">💼 Fakturovatelné</TableCell>
+                    <TableCell align="right">📈 Škálovatelné</TableCell>
+                    <TableCell align="right">🔧 Ostatní</TableCell>
+                    <TableCell align="right"><strong>Celkem</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {projectBreakdownArray.map((item) => {
+                    const project = projectsMap[item.projectId];
+                    const projectName = project?.name || 'Neznámý projekt';
+
+                    return (
+                      <TableRow key={item.projectId}>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {project?.color && (
+                              <Box
+                                sx={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: '50%',
+                                  bgcolor: project.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                            )}
+                            <Typography fontWeight={500}>{projectName}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">
+                          {item.billableHours > 0 ? `${formatHours(item.billableHours)}h` : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {item.scalableHours > 0 ? `${formatHours(item.scalableHours)}h` : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {item.otherHours > 0 ? `${formatHours(item.otherHours)}h` : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          <strong>{formatHours(item.totalHours)}h</strong>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Category Settings Info */}
+      <Card
+        sx={{
+          mb: 4,
+          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: INFO_CARD_STYLES[theme.palette.mode].border,
+        }}
+      >
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                ℹ️ Klasifikace kategorií ovlivňuje výpočet fakturovatelných hodin v kalkulačce.
+                {billableHours === 0 && workHoursTotal > 0 && (
+                  <strong> Nemáte žádné fakturovatelné kategorie - nastavte je pro správný výpočet hodinovky.</strong>
+                )}
+              </Typography>
+            </Box>
+            <ResponsiveButton
+              component={Link}
+              to="/app/nastaveni/kategorie"
+              variant="outlined"
+              size="small"
+            >
+              Změnit klasifikaci kategorií
+            </ResponsiveButton>
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

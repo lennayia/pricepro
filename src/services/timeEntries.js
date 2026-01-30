@@ -62,10 +62,14 @@ export const getTimeEntry = async (userId, date) => {
  * @param {number} data.messages - Hours spent on messages
  * @param {number} data.education - Hours spent on education
  * @param {number} data.billable_work - Hours spent on billable work
+ * @param {number} data.digital_products - Hours spent on creating digital products
  * @param {number} data.other - Hours spent on other activities
  * @param {number} data.sleep - Hours spent sleeping
  * @param {number} data.family_time - Hours spent with family and friends
  * @param {number} data.personal_time - Hours spent on personal activities
+ * @param {string} data.project_name - Optional project/client name (deprecated, use category_projects)
+ * @param {Object} data.category_projects - Optional mapping of category keys to project IDs
+ * @param {Object} data.category_project_hours - Optional mapping of category keys to project hours breakdown
  * @returns {Promise<Object>} Saved time entry object
  */
 export const upsertTimeEntry = async (userId, date, data) => {
@@ -81,10 +85,14 @@ export const upsertTimeEntry = async (userId, date, data) => {
       messages: data.messages || 0,
       education: data.education || 0,
       billable_work: data.billable_work || 0,
+      digital_products: data.digital_products || 0,
       other: data.other || 0,
       sleep: data.sleep || 0,
       family_time: data.family_time || 0,
       personal_time: data.personal_time || 0,
+      project_name: data.project_name || null, // Keep for backward compatibility
+      category_projects: data.category_projects || {},
+      category_project_hours: data.category_project_hours || {},
       updated_at: new Date().toISOString()
     };
 
@@ -156,5 +164,33 @@ export const getTimeEntriesInRange = async (userId, startDate, endDate) => {
   } catch (error) {
     console.error('Error fetching time entries in range:', error);
     throw new Error(`Chyba při načítání záznamů: ${error.message}`);
+  }
+};
+
+/**
+ * Get unique project names for user (for autocomplete)
+ * @param {string} userId - User ID
+ * @returns {Promise<Array<string>>} Array of unique project names
+ */
+export const getUserProjects = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('time_entries')
+      .select('project_name')
+      .eq('user_id', userId)
+      .not('project_name', 'is', null)
+      .order('project_name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching projects:', error);
+      return [];
+    }
+
+    // Get unique project names
+    const projects = [...new Set(data.map(e => e.project_name))];
+    return projects;
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    return [];
   }
 };
