@@ -212,12 +212,12 @@ const TrackerDayPage = () => {
             const Icon = category.icon;
             return (
             <Card key={category.key} sx={{ overflow: 'hidden' }}>
-              <CardContent sx={{ py: 2, px: 2, overflow: 'hidden' }}>
+              <CardContent sx={{ py: 2, px: 1.5, overflow: 'hidden' }}>
                 <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: 1.5,
+                    gap: 1,
                     width: '100%',
                   }}
                 >
@@ -227,11 +227,12 @@ const TrackerDayPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       flexShrink: 0,
+                      width: 20,
                     }}
                   >
                     <Icon size={20} />
                   </Box>
-                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden', maxWidth: 'calc(100% - 115px)' }}>
+                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9375rem' }}>
                       {category.label}
                     </Typography>
@@ -239,7 +240,7 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 75 }}>
+                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 75, ml: 1 }}>
                     <NumberInput
                       value={formData[category.key]}
                       onChange={(value) => handleChange(category.key, value)}
@@ -248,7 +249,7 @@ const TrackerDayPage = () => {
                       max={TIME_CONSTANTS.HOURS_IN_DAY}
                       step={0.5}
                       size="small"
-                      sx={{ width: 75 }}
+                      sx={{ width: '100%' }}
                       disabled={saving || success}
                     />
                   </Box>
