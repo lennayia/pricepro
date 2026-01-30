@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   Box,
@@ -14,13 +15,59 @@ import {
 } from '@mui/material';
 import { ArrowLeft, CheckCircle, AlertTriangle, Star, Lightbulb } from 'lucide-react';
 import { ResponsiveButton } from '../../../components/ui';
+import { useAuth } from '../../../contexts/AuthContext';
+import { getLatestCalculatorResult } from '../../../services/calculatorResults';
 
 const CalculatorResultsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const data = location.state;
+  const { user } = useAuth();
+  const [data, setData] = useState(location.state);
+  const [loading, setLoading] = useState(!location.state);
+  const [error, setError] = useState(null);
 
-  if (!data) {
+  // Load latest calculation if not passed via state
+  useEffect(() => {
+    const loadLatestCalculation = async () => {
+      if (data || !user) return;
+
+      try {
+        setLoading(true);
+        const latest = await getLatestCalculatorResult(user.id);
+
+        if (latest) {
+          setData({
+            minimumHourly: latest.minimum_hourly,
+            recommendedHourly: latest.recommended_hourly,
+            premiumHourly: latest.premium_hourly,
+            minimumMonthly: latest.minimum_monthly,
+            monthlyBillableHours: latest.inputs?.monthlyBillableHours || 0,
+          });
+        } else {
+          setError('no_data');
+        }
+      } catch (err) {
+        console.error('Error loading calculation:', err);
+        setError('error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLatestCalculation();
+  }, [user, data]);
+
+  if (loading) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Typography variant="h5" color="text.secondary">
+          Načítám...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!data || error) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
         <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
