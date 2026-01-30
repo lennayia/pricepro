@@ -67,37 +67,37 @@ function NumberInput({
       fullWidth={fullWidth}
       InputProps={{
         endAdornment: (
-          <InputAdornment position="end" sx={{ gap: 0.5, mr: -1 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+          <InputAdornment position="end" sx={{ gap: 0, mr: -1.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.1 }}>
               <IconButton
                 size="small"
                 onClick={handleIncrement}
                 disabled={disabled || parseFloat(value) >= max}
                 sx={{
-                  padding: '2px',
-                  minWidth: 20,
-                  minHeight: 16,
+                  padding: '1px',
+                  minWidth: 16,
+                  minHeight: 14,
                   '&:hover': {
                     bgcolor: 'action.hover',
                   },
                 }}
               >
-                <Plus size={12} />
+                <Plus size={10} />
               </IconButton>
               <IconButton
                 size="small"
                 onClick={handleDecrement}
                 disabled={disabled || parseFloat(value) <= min}
                 sx={{
-                  padding: '2px',
-                  minWidth: 20,
-                  minHeight: 16,
+                  padding: '1px',
+                  minWidth: 16,
+                  minHeight: 14,
                   '&:hover': {
                     bgcolor: 'action.hover',
                   },
                 }}
               >
-                <Minus size={12} />
+                <Minus size={10} />
               </IconButton>
             </Box>
           </InputAdornment>

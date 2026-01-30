@@ -240,7 +240,7 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 70, ml: 0.5 }}>
+                  <Box sx={{ alignSelf: 'flex-end', flexShrink: 0, width: 80, ml: 0.5 }}>
                     <NumberInput
                       value={formData[category.key]}
                       onChange={(value) => handleChange(category.key, value)}
