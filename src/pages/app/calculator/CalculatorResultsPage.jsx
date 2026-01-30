@@ -307,7 +307,7 @@ const CalculatorResultsPage = () => {
             variant="contained"
             size="large"
             component="a"
-            href="https://vibecodingpro.cz/mentoring"
+            href="https://vibecodingpro.cz/#pricing-section"
             target="_blank"
             sx={{
               bgcolor: 'white',
