@@ -14,14 +14,16 @@ import {
   ListItemText,
 } from '@mui/material';
 import { ArrowLeft, CheckCircle, AlertTriangle, Star, Lightbulb } from 'lucide-react';
+import { useTheme } from '@mui/material/styles';
 import { ResponsiveButton } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getLatestCalculatorResult } from '../../../services/calculatorResults';
-import { COLORS } from '../../../constants/colors';
+import { COLORS, GRADIENTS } from '../../../constants/colors';
 
 const CalculatorResultsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const theme = useTheme();
   const { user } = useAuth();
   const [data, setData] = useState(location.state);
   const [loading, setLoading] = useState(!location.state);
@@ -263,19 +265,42 @@ const CalculatorResultsPage = () => {
       {/* CTA */}
       <Card
         sx={{
-          bgcolor: 'primary.main',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, rgba(13, 221, 13, 0.15) 0%, rgba(13, 221, 13, 0.05) 100%)'
+            : GRADIENTS.primary,
+          border: theme.palette.mode === 'dark'
+            ? '2px solid rgba(13, 221, 13, 0.3)'
+            : 'none',
           color: 'white',
           mb: 4,
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: theme.palette.mode === 'dark'
+              ? '0 8px 24px rgba(13, 221, 13, 0.3)'
+              : '0 8px 24px rgba(205, 127, 50, 0.4)',
+          },
         }}
       >
-        <CardContent sx={{ py: 4, textAlign: 'center' }}>
+        <CardContent sx={{ py: 4, textAlign: 'center', position: 'relative', zIndex: 1 }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-            <Lightbulb size={48} color="rgba(255, 255, 255, 0.9)" />
+            <Box
+              sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '50%',
+                p: 2,
+                display: 'inline-flex',
+              }}
+            >
+              <Lightbulb size={48} color="rgba(255, 255, 255, 0.95)" />
+            </Box>
           </Box>
-          <Typography variant="h5" sx={{ mb: 2 }}>
+          <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
             Víte, že spoustu toho času můžete ušetřit?
           </Typography>
-          <Typography sx={{ mb: 3, opacity: 0.9 }}>
+          <Typography sx={{ mb: 3, opacity: 0.95 }}>
             Automatické odpovědi, fakturace, plánování obsahu... To všechno si můžete vytvořit sami – bez programování.
           </Typography>
           <ResponsiveButton
@@ -286,9 +311,13 @@ const CalculatorResultsPage = () => {
             target="_blank"
             sx={{
               bgcolor: 'white',
-              color: 'primary.main',
+              color: theme.palette.mode === 'dark' ? '#0DDD0D' : 'primary.main',
+              fontWeight: 600,
+              px: 4,
+              py: 1.5,
               '&:hover': {
-                bgcolor: 'grey.100',
+                bgcolor: 'rgba(255, 255, 255, 0.9)',
+                transform: 'scale(1.05)',
               },
             }}
           >
