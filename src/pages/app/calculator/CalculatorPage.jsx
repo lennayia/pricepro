@@ -472,27 +472,20 @@ const CalculatorPage = () => {
       </Typography>
 
       {/* Info about billable hours */}
-      <Card
-        sx={{
-          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
-          border: INFO_CARD_STYLES[theme.palette.mode].border,
-        }}
-      >
-        <CardContent>
-          <Typography fontWeight={600} sx={{ mb: 1 }}>
-            💼 Co jsou fakturovatelné hodiny?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            Fakturovatelné hodiny = <strong>POUZE 1:1 práce pro klienty</strong> (konzultace, přípravy, rešerše, follow-upy, specifické vzdělávání pro daného klienta).
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            📈 <strong>Škálovatelná práce</strong> (digiprodukty, kurzy) se <strong>NEPOČÍTÁ</strong> do hodinovky - ta generuje pasivní příjem.
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            🔧 <strong>Režie</strong> (administrativa, networking) se také nepočítá přímo - rozpouští se do hodinovky jako overhead náklady.
-          </Typography>
-        </CardContent>
-      </Card>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        <Typography fontWeight={600} sx={{ mb: 1 }}>
+          💼 Pozor! Fakturovatelné = POUZE přímá práce pro klienty
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          ✅ <strong>POČÍTÁ SE:</strong> Konzultace, přípravy, rešerše, follow-upy, specifické vzdělávání pro daného klienta
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          ❌ <strong>NEPOČÍTÁ SE:</strong> Digiprodukty, kurzy, MLM (to je škálovatelné - generuje pasivní příjem)
+        </Typography>
+        <Typography variant="body2">
+          ❌ <strong>NEPOČÍTÁ SE:</strong> Administrativa, networking, obecné vzdělávání (to je režie - rozpouští se do hodinovky)
+        </Typography>
+      </Alert>
 
       {/* Weeks to track selector */}
       <FormControl fullWidth>
