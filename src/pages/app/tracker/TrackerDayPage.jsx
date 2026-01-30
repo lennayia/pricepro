@@ -12,7 +12,7 @@ import {
   CircularProgress,
   useTheme,
 } from '@mui/material';
-import { ResponsiveButton } from '../../../components/ui';
+import { ResponsiveButton, NumberInput } from '../../../components/ui';
 import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
@@ -237,17 +237,14 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <TextField
-                    type="number"
+                  <NumberInput
                     value={formData[category.key]}
-                    onChange={(e) => handleChange(category.key, e.target.value)}
+                    onChange={(value) => handleChange(category.key, value)}
                     placeholder="0"
-                    inputProps={{ min: 0, max: TIME_CONSTANTS.HOURS_IN_DAY, step: 0.5 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">hod</InputAdornment>
-                      ),
-                    }}
+                    min={0}
+                    max={TIME_CONSTANTS.HOURS_IN_DAY}
+                    step={0.5}
+                    unit="hod"
                     sx={{ width: 120 }}
                     disabled={saving || success}
                   />
@@ -303,17 +300,14 @@ const TrackerDayPage = () => {
                       {category.description}
                     </Typography>
                   </Box>
-                  <TextField
-                    type="number"
+                  <NumberInput
                     value={formData[category.key]}
-                    onChange={(e) => handleChange(category.key, e.target.value)}
+                    onChange={(value) => handleChange(category.key, value)}
                     placeholder="0"
-                    inputProps={{ min: 0, max: TIME_CONSTANTS.HOURS_IN_DAY, step: 0.5 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">hod</InputAdornment>
-                      ),
-                    }}
+                    min={0}
+                    max={TIME_CONSTANTS.HOURS_IN_DAY}
+                    step={0.5}
+                    unit="hod"
                     sx={{ width: 120 }}
                     disabled={saving || success}
                   />

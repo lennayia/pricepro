@@ -38,7 +38,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../../../contexts/AuthContext';
 import { saveCalculatorResult, getCalculatorResults } from '../../../services/calculatorResults';
-import { ResponsiveButton } from '../../../components/ui';
+import { ResponsiveButton, NumberInput } from '../../../components/ui';
 import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES, WARNING_CARD_STYLES } from '../../../constants/colors';
 
 const steps = [
@@ -249,51 +249,47 @@ const CalculatorPage = () => {
         Zadejte své měsíční náklady. Tyto údaje potřebujeme pro výpočet vašeho životního minima.
       </Typography>
 
-      <TextField
+      <NumberInput
         label="Náklady na bydlení"
         helperText="Nájem/hypotéka, energie, internet"
-        type="number"
         value={housingCosts}
-        onChange={(e) => setHousingCosts(e.target.value)}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
-        }}
+        onChange={setHousingCosts}
+        unit="Kč/měsíc"
+        min={0}
+        step={1000}
         fullWidth
       />
 
-      <TextField
+      <NumberInput
         label="Životní náklady"
         helperText="Jídlo, oblečení, doprava, zdraví"
-        type="number"
         value={livingCosts}
-        onChange={(e) => setLivingCosts(e.target.value)}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
-        }}
+        onChange={setLivingCosts}
+        unit="Kč/měsíc"
+        min={0}
+        step={1000}
         fullWidth
       />
 
-      <TextField
+      <NumberInput
         label="Náklady na podnikání"
         helperText="Software, telefon, účetní, vzdělávání, marketing"
-        type="number"
         value={businessCosts}
-        onChange={(e) => setBusinessCosts(e.target.value)}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
-        }}
+        onChange={setBusinessCosts}
+        unit="Kč/měsíc"
+        min={0}
+        step={1000}
         fullWidth
       />
 
-      <TextField
+      <NumberInput
         label="Rezerva + spoření"
         helperText="Kolik si chcete měsíčně odkládat"
-        type="number"
         value={savings}
-        onChange={(e) => setSavings(e.target.value)}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
-        }}
+        onChange={setSavings}
+        unit="Kč/měsíc"
+        min={0}
+        step={1000}
         fullWidth
       />
 
