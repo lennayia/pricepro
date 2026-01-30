@@ -198,9 +198,8 @@ const DashboardPage = () => {
                       variant="contained"
                       color="primary"
                       responsive
-                      startIcon={<Clock size={18} />}
                     >
-                      Přejít na tracker
+                      Tracker
                     </ResponsiveButton>
                     <ResponsiveButton
                       component={Link}
@@ -209,7 +208,7 @@ const DashboardPage = () => {
                       color="primary"
                       responsive
                     >
-                      Dnešní den
+                      Dnešek
                     </ResponsiveButton>
                   </Box>
                 </>
