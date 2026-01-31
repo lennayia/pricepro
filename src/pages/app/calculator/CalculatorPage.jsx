@@ -55,29 +55,40 @@ const steps = [
   { label: 'Tržní hodnota', description: 'Kolik DOOPRAVDY stojíte?', icon: BarChart3 },
 ];
 
+// NOVÉ KOEFICIENTY - Sčítání místo násobení
 const experienceOptions = [
-  { value: '0-2', label: '0-2 roky', coefficient: 1.0 },
-  { value: '3-5', label: '3-5 let', coefficient: 1.2 },
-  { value: '6-10', label: '6-10 let', coefficient: 1.35 },
-  { value: '10+', label: '10+ let', coefficient: 1.5 },
+  { value: '0-2', label: '0-2 roky', coefficient: 0.0 },
+  { value: '3-5', label: '3-5 let', coefficient: 0.3 },
+  { value: '6-10', label: '6-10 let', coefficient: 0.5 },
+  { value: '10+', label: '10+ let', coefficient: 0.7 },
 ];
 
-const specializationOptions = [
-  { value: 'generalist', label: 'Generalista/Generalistka (širší záběr)', coefficient: 1.0 },
-  { value: 'specialist', label: 'Specialista/Specialistka (úzké zaměření)', coefficient: 1.3 },
+const breadthOptions = [
+  { value: 'narrow', label: 'Úzká nabídka (1-2 služby)', coefficient: 0.0 },
+  { value: 'medium', label: 'Střední nabídka (3-4 služby)', coefficient: 0.2 },
+  { value: 'wide', label: 'Široká nabídka (5+ služeb)', coefficient: 0.3 },
+  { value: 'ultra', label: 'Ultra-specializace (jediný v ČR)', coefficient: 0.5 },
+];
+
+const educationOptions = [
+  { value: 'none', label: 'Žádné formální vzdělání v oboru', coefficient: 0.0 },
+  { value: 'courses', label: 'Kurzy a workshopy', coefficient: 0.1 },
+  { value: 'certification', label: 'Certifikace v oboru', coefficient: 0.2 },
+  { value: 'university', label: 'VŠ vzdělání v oboru', coefficient: 0.25 },
+  { value: 'university_plus', label: 'VŠ + specializované certifikace', coefficient: 0.35 },
 ];
 
 const portfolioOptions = [
-  { value: 'none', label: 'Zatím žádné nebo málo', coefficient: 1.0 },
-  { value: 'some', label: 'Mám nějaké reference', coefficient: 1.1 },
-  { value: 'strong', label: 'Silné portfolio a výsledky', coefficient: 1.2 },
+  { value: 'none', label: 'Zatím žádné nebo málo', coefficient: 0.0 },
+  { value: 'some', label: 'Mám nějaké reference', coefficient: 0.15 },
+  { value: 'strong', label: 'Silné portfolio a výsledky', coefficient: 0.3 },
 ];
 
 const demandOptions = [
-  { value: 'low', label: 'Malá poptávka', coefficient: 1.0 },
-  { value: 'medium', label: 'Střední poptávka', coefficient: 1.15 },
-  { value: 'high', label: 'Velká poptávka', coefficient: 1.3 },
-  { value: 'waiting', label: 'Mám čekačku', coefficient: 1.4 },
+  { value: 'low', label: 'Malá poptávka', coefficient: 0.0 },
+  { value: 'medium', label: 'Střední poptávka', coefficient: 0.2 },
+  { value: 'high', label: 'Velká poptávka', coefficient: 0.4 },
+  { value: 'waiting', label: 'Mám čekačku (vybírám si klienty)', coefficient: 0.5 },
 ];
 
 // 2026 wage constants
@@ -119,7 +130,8 @@ const CalculatorPage = () => {
 
   // Layer 3: Market value
   const [experience, setExperience] = useState('0-2');
-  const [specialization, setSpecialization] = useState('generalist');
+  const [breadth, setBreadth] = useState('narrow');
+  const [education, setEducation] = useState('none');
   const [portfolio, setPortfolio] = useState('none');
   const [demand, setDemand] = useState('low');
 
@@ -237,8 +249,13 @@ const CalculatorPage = () => {
     const business = parseFloat(businessCosts) || 0;
     const savingsAmount = parseFloat(savings) || 0;
     const subtotal = housing + living + business + savingsAmount;
-    const taxes = subtotal * 0.15; // 15% for taxes
-    return subtotal + taxes;
+
+    // Odvody: 15% z celku NEBO minimálně 10 000 Kč/měsíc
+    const contributionsByPercent = subtotal * 0.15;
+    const contributionsByMinimum = 10000;
+    const contributions = Math.max(contributionsByPercent, contributionsByMinimum);
+
+    return subtotal + contributions;
   };
 
   // Calculate billable hours per month (Layer 2)
@@ -255,13 +272,16 @@ const CalculatorPage = () => {
     return monthlyMin / monthlyBillable;
   };
 
-  // Calculate coefficients (Layer 3)
+  // Calculate coefficients (Layer 3) - SČÍTÁNÍ místo násobení
   const getCoefficients = () => {
-    const expCoef = experienceOptions.find((o) => o.value === experience)?.coefficient || 1;
-    const specCoef = specializationOptions.find((o) => o.value === specialization)?.coefficient || 1;
-    const portCoef = portfolioOptions.find((o) => o.value === portfolio)?.coefficient || 1;
-    const demandCoef = demandOptions.find((o) => o.value === demand)?.coefficient || 1;
-    return expCoef * specCoef * portCoef * demandCoef;
+    const expCoef = experienceOptions.find((o) => o.value === experience)?.coefficient || 0;
+    const breadthCoef = breadthOptions.find((o) => o.value === breadth)?.coefficient || 0;
+    const eduCoef = educationOptions.find((o) => o.value === education)?.coefficient || 0;
+    const portCoef = portfolioOptions.find((o) => o.value === portfolio)?.coefficient || 0;
+    const demandCoef = demandOptions.find((o) => o.value === demand)?.coefficient || 0;
+
+    // Sčítání: 1 + všechny koeficienty
+    return 1 + expCoef + breadthCoef + eduCoef + portCoef + demandCoef;
   };
 
   // Calculate recommended hourly rate
@@ -289,9 +309,9 @@ const CalculatorPage = () => {
   // Calculate what you should earn monthly (dignity wage × total work hours)
   const getDignityMonthlyEarnings = () => {
     const baseHourly = getBaseHourlyWage();
-    const hourlyWithOSVC = baseHourly * OSVC_COEFFICIENT; // +30% for OSVČ
+    // Hrubá mzda už odvody obsahuje - NEPOUŽÍVAT OSVC koeficient!
     const totalMonthlyHours = (parseFloat(weeklyHours) || 0) * 4;
-    return hourlyWithOSVC * totalMonthlyHours;
+    return baseHourly * totalMonthlyHours;
   };
 
   // Calculate minimum hourly rate needed to achieve dignity wage (Calculation B)
@@ -350,7 +370,8 @@ const CalculatorPage = () => {
           baseWage,
           customWage,
           experience,
-          specialization,
+          breadth,
+          education,
           portfolio,
           demand,
         },
@@ -746,24 +767,41 @@ const CalculatorPage = () => {
               key={option.value}
               value={option.value}
               control={<Radio />}
-              label={`${option.label} (×${option.coefficient})`}
+              label={`${option.label} (+${(option.coefficient * 100).toFixed(0)}%)`}
             />
           ))}
         </RadioGroup>
       </FormControl>
 
       <FormControl component="fieldset">
-        <FormLabel component="legend">Specializace</FormLabel>
+        <FormLabel component="legend">Šíře nabídky</FormLabel>
         <RadioGroup
-          value={specialization}
-          onChange={(e) => setSpecialization(e.target.value)}
+          value={breadth}
+          onChange={(e) => setBreadth(e.target.value)}
         >
-          {specializationOptions.map((option) => (
+          {breadthOptions.map((option) => (
             <FormControlLabel
               key={option.value}
               value={option.value}
               control={<Radio />}
-              label={`${option.label} (×${option.coefficient})`}
+              label={`${option.label} (+${(option.coefficient * 100).toFixed(0)}%)`}
+            />
+          ))}
+        </RadioGroup>
+      </FormControl>
+
+      <FormControl component="fieldset">
+        <FormLabel component="legend">Kvalifikace a vzdělání</FormLabel>
+        <RadioGroup
+          value={education}
+          onChange={(e) => setEducation(e.target.value)}
+        >
+          {educationOptions.map((option) => (
+            <FormControlLabel
+              key={option.value}
+              value={option.value}
+              control={<Radio />}
+              label={`${option.label} (+${(option.coefficient * 100).toFixed(0)}%)`}
             />
           ))}
         </RadioGroup>
@@ -780,7 +818,7 @@ const CalculatorPage = () => {
               key={option.value}
               value={option.value}
               control={<Radio />}
-              label={`${option.label} (×${option.coefficient})`}
+              label={`${option.label} (+${(option.coefficient * 100).toFixed(0)}%)`}
             />
           ))}
         </RadioGroup>
@@ -794,7 +832,7 @@ const CalculatorPage = () => {
               key={option.value}
               value={option.value}
               control={<Radio />}
-              label={`${option.label} (×${option.coefficient})`}
+              label={`${option.label} (+${(option.coefficient * 100).toFixed(0)}%)`}
             />
           ))}
         </RadioGroup>
@@ -810,9 +848,9 @@ const CalculatorPage = () => {
           <Stack spacing={1}>
             <Box>
               <Typography variant="body2" color="text.secondary">
-                Celkový koeficient
+                Celkový tržní koeficient
               </Typography>
-              <Typography variant="h5">×{getCoefficients().toFixed(2)}</Typography>
+              <Typography variant="h5">+{((getCoefficients() - 1) * 100).toFixed(0)}%</Typography>
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -855,7 +893,8 @@ const CalculatorPage = () => {
       { key: 'weeklyHours', label: 'Celkový pracovní čas týdně' },
       { key: 'billableHours', label: 'Fakturovatelné hodiny týdně' },
       { key: 'experience', label: 'Zkušenosti' },
-      { key: 'specialization', label: 'Specializace' },
+      { key: 'breadth', label: 'Šíře nabídky' },
+      { key: 'education', label: 'Kvalifikace a vzdělání' },
       { key: 'portfolio', label: 'Portfolio' },
       { key: 'demand', label: 'Poptávka' },
     ];

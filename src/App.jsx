@@ -8,6 +8,7 @@ import PublicLayout from './components/layout/PublicLayout';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import RootRedirect from './components/common/RootRedirect';
+import { ScrollToTop } from './components/layout/ScrollToTop';
 
 // Public Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -32,6 +33,7 @@ function App() {
       <AuthProvider>
         <WeekProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
             {/* Root redirect */}
             <Route path="/" element={<RootRedirect />} />
