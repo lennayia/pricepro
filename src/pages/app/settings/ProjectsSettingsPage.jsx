@@ -364,9 +364,9 @@ const ProjectsSettingsPage = () => {
           />
         </Box>
 
-        <Typography variant="h4">Správa projektů a klientů</Typography>
+        <Typography variant="h4">Správa projektů</Typography>
         <Typography color="text.secondary">
-          Vytvořte si seznam projektů a klientů pro lepší organizaci vašeho času.
+          Vytvořte si seznam projektů pro lepší organizaci vašeho času.
         </Typography>
       </Stack>
 
@@ -398,7 +398,7 @@ const ProjectsSettingsPage = () => {
                 Jak to funguje?
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                • Vytvořte si projekty nebo klienty (např. "Klient Anna", "Můj kurz XY")
+                • Vytvořte si projekty (např. "Projekt pro Annu", "Můj kurz XY", "Můj marketing")
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 • V trackeru pak u každé kategorie můžete vybrat, pro který projekt jste pracovali
@@ -431,7 +431,7 @@ const ProjectsSettingsPage = () => {
           startIcon={<Plus size={20} />}
           onClick={() => handleOpenDialog()}
         >
-          Přidat projekt/klienta
+          Přidat projekt
         </ResponsiveButton>
 
         <FormControlLabel
@@ -449,7 +449,7 @@ const ProjectsSettingsPage = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Moje projekty a klienti ({projects.filter(p => showEnded || (p.status !== 'completed' && p.status !== 'cancelled')).length})
+            Moje projekty ({projects.filter(p => showEnded || (p.status !== 'completed' && p.status !== 'cancelled')).length})
           </Typography>
 
           {projects.filter(p => showEnded || (p.status !== 'completed' && p.status !== 'cancelled')).length === 0 ? (
@@ -458,7 +458,7 @@ const ProjectsSettingsPage = () => {
                 {showEnded ? 'Zatím nemáte žádné projekty' : 'Zatím nemáte žádné aktivní projekty'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Klikněte na tlačítko výše a přidejte svůj první projekt nebo klienta
+                Klikněte na tlačítko výše a přidejte svůj první projekt
               </Typography>
             </Box>
           ) : (
@@ -560,17 +560,17 @@ const ProjectsSettingsPage = () => {
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingProject ? 'Upravit projekt' : 'Přidat projekt/klienta'}
+          {editingProject ? 'Upravit projekt' : 'Přidat projekt'}
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
             <TextField
-              label="Název projektu/klienta"
+              label="Název projektu"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               fullWidth
               autoFocus
-              placeholder="např. Klient Anna, Kurz XYZ..."
+              placeholder="např. Projekt pro Annu, Kurz XYZ, Můj marketing..."
             />
 
             {/* Logo Upload Section */}
