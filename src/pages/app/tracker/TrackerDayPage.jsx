@@ -592,9 +592,10 @@ const TrackerDayPage = () => {
                 {/* Project rows - always show filled + one empty row */}
                 <Stack spacing={1}>
                   {/* Display all rows including the always-present empty row */}
-                  {[...rows, { projectId: '', hours: 0 }].map((row, rowIndex) => {
+                  {[...rows, { projectId: '', clientId: '', hours: 0 }].map((row, rowIndex) => {
                     const isEmptyRow = rowIndex === rows.length; // Last row is always empty
                     const hasProject = Boolean(row.projectId);
+                    const hasData = hasProject || (parseFloat(row.hours) || 0) > 0; // Has project OR hours
 
                     return (
                       <Box
@@ -874,7 +875,7 @@ const TrackerDayPage = () => {
                             h
                           </Typography>
                         </Box>
-                        {hasProject && !isEmptyRow && (
+                        {hasData && !isEmptyRow && (
                           <IconButton
                             size="small"
                             onClick={() => handleRemoveProjectRow(category.key, rowIndex)}
@@ -885,7 +886,7 @@ const TrackerDayPage = () => {
                           </IconButton>
                         )}
                         {/* Spacer to keep alignment when no X button */}
-                        {(!hasProject || isEmptyRow) && (
+                        {(!hasData || isEmptyRow) && (
                           <Box sx={{ width: 34 }} />
                         )}
                       </Box>
