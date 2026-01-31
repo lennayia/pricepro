@@ -296,6 +296,12 @@ const ThemesSettingsPage = () => {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
+            {error && (
+              <Alert severity="error" onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
+
             <TextField
               label="Název tématu"
               value={themeName}

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS pricepro.project_themes (
   color TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, name)
+  CONSTRAINT unique_user_theme_name UNIQUE(user_id, name)
 );
 
 -- Create index
