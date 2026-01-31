@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -25,6 +25,7 @@ const CategorySettingsPage = () => {
   const { user } = useAuth();
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
@@ -125,6 +126,35 @@ const CategorySettingsPage = () => {
             Zpět na tracker
           </ResponsiveButton>
         </Box>
+
+        {/* Settings Navigation */}
+        <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Chip
+            label="Kategorie"
+            onClick={() => navigate('/app/nastaveni/kategorie')}
+            color={location.pathname.includes('kategorie') ? 'primary' : 'default'}
+            sx={{ fontWeight: location.pathname.includes('kategorie') ? 600 : 400 }}
+          />
+          <Chip
+            label="Projekty"
+            onClick={() => navigate('/app/nastaveni/projekty')}
+            color={location.pathname.includes('projekty') ? 'primary' : 'default'}
+            sx={{ fontWeight: location.pathname.includes('projekty') ? 600 : 400 }}
+          />
+          <Chip
+            label="Klienti"
+            onClick={() => navigate('/app/nastaveni/klienti')}
+            color={location.pathname.includes('klienti') ? 'primary' : 'default'}
+            sx={{ fontWeight: location.pathname.includes('klienti') ? 600 : 400 }}
+          />
+          <Chip
+            label="Témata"
+            onClick={() => navigate('/app/nastaveni/temata')}
+            color={location.pathname.includes('temata') ? 'primary' : 'default'}
+            sx={{ fontWeight: location.pathname.includes('temata') ? 600 : 400 }}
+          />
+        </Box>
+
         <Typography variant="h4">Nastavení kategorií</Typography>
         <Typography color="text.secondary">
           Klasifikujte své pracovní aktivity podle typu. Toto nastavení ovlivňuje výpočet
