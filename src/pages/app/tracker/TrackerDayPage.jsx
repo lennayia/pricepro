@@ -187,6 +187,10 @@ const TrackerDayPage = () => {
             loadedProjectRows[categoryKey] = rows;
           });
           setCategoryProjectRows(loadedProjectRows);
+        } else {
+          // No entry for this day - clear state to show empty form
+          setFormData(PERSONAL_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: '' }), {}));
+          setCategoryProjectRows(WORK_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: [] }), {}));
         }
       } catch (err) {
         console.error('Error loading day data:', err);
