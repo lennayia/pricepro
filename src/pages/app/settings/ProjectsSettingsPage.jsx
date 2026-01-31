@@ -667,19 +667,22 @@ const ProjectsSettingsPage = () => {
                 renderInput={(params) => (
                   <TextField {...params} label="Téma (volitelné)" />
                 )}
-                renderOption={(props, option) => (
-                  <li {...props}>
-                    <Chip
-                      label={option.name}
-                      size="small"
-                      sx={{
-                        bgcolor: option.color || 'primary.main',
-                        color: 'white',
-                        fontWeight: 500,
-                      }}
-                    />
-                  </li>
-                )}
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <li key={key} {...otherProps}>
+                      <Chip
+                        label={option.name}
+                        size="small"
+                        sx={{
+                          bgcolor: option.color || 'primary.main',
+                          color: 'white',
+                          fontWeight: 500,
+                        }}
+                      />
+                    </li>
+                  );
+                }}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
                     <Chip

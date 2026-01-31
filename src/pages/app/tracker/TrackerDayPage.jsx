@@ -565,41 +565,44 @@ const TrackerDayPage = () => {
                           }}
                           options={clients}
                           getOptionLabel={(option) => option.name || ''}
-                          renderOption={(props, option) => (
-                            <li {...props} style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 8,
-                            }}>
-                              {option.logo_url ? (
-                                <Box
-                                  component="img"
-                                  src={option.logo_url}
-                                  alt={option.name}
-                                  sx={{
-                                    width: 20,
-                                    height: 20,
-                                    objectFit: 'contain',
-                                    borderRadius: 0.5,
-                                    flexShrink: 0,
-                                  }}
-                                />
-                              ) : option.color ? (
-                                <Box
-                                  sx={{
-                                    width: 12,
-                                    height: 12,
-                                    borderRadius: '50%',
-                                    backgroundColor: option.color,
-                                    flexShrink: 0,
-                                  }}
-                                />
-                              ) : (
-                                <Box sx={{ width: 12, height: 12, flexShrink: 0 }} />
-                              )}
-                              {option.name}
-                            </li>
-                          )}
+                          renderOption={(props, option) => {
+                            const { key, ...otherProps } = props;
+                            return (
+                              <li key={key} {...otherProps} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                              }}>
+                                {option.logo_url ? (
+                                  <Box
+                                    component="img"
+                                    src={option.logo_url}
+                                    alt={option.name}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      objectFit: 'contain',
+                                      borderRadius: 0.5,
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                ) : option.color ? (
+                                  <Box
+                                    sx={{
+                                      width: 12,
+                                      height: 12,
+                                      borderRadius: '50%',
+                                      backgroundColor: option.color,
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                ) : (
+                                  <Box sx={{ width: 12, height: 12, flexShrink: 0 }} />
+                                )}
+                                {option.name}
+                              </li>
+                            );
+                          }}
                           renderInput={(params) => {
                             const selectedClient = clients.find(c => c.id === row.clientId);
                             return (
@@ -677,46 +680,49 @@ const TrackerDayPage = () => {
                             ...projects
                           ]}
                           getOptionLabel={(option) => option.name || ''}
-                          renderOption={(props, option) => (
-                            <li {...props} style={{
-                              fontWeight: option.id === '__create_new__' ? 600 : 400,
-                              color: option.id === '__create_new__' ? theme.palette.primary.main : 'inherit',
-                              borderBottom: option.id === '__create_new__' ? '1px solid #e0e0e0' : 'none',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 8,
-                            }}>
-                              {option.id === '__create_new__' ? (
-                                <Plus size={16} />
-                              ) : option.logo_url ? (
-                                <Box
-                                  component="img"
-                                  src={option.logo_url}
-                                  alt={option.name}
-                                  sx={{
-                                    width: 20,
-                                    height: 20,
-                                    objectFit: 'contain',
-                                    borderRadius: 0.5,
-                                    flexShrink: 0,
-                                  }}
-                                />
-                              ) : option.color ? (
-                                <Box
-                                  sx={{
-                                    width: 12,
-                                    height: 12,
-                                    borderRadius: '50%',
-                                    backgroundColor: option.color,
-                                    flexShrink: 0,
-                                  }}
-                                />
-                              ) : (
-                                <Box sx={{ width: 12, height: 12, flexShrink: 0 }} />
-                              )}
-                              {option.name}
-                            </li>
-                          )}
+                          renderOption={(props, option) => {
+                            const { key, ...otherProps } = props;
+                            return (
+                              <li key={key} {...otherProps} style={{
+                                fontWeight: option.id === '__create_new__' ? 600 : 400,
+                                color: option.id === '__create_new__' ? theme.palette.primary.main : 'inherit',
+                                borderBottom: option.id === '__create_new__' ? '1px solid #e0e0e0' : 'none',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                              }}>
+                                {option.id === '__create_new__' ? (
+                                  <Plus size={16} />
+                                ) : option.logo_url ? (
+                                  <Box
+                                    component="img"
+                                    src={option.logo_url}
+                                    alt={option.name}
+                                    sx={{
+                                      width: 20,
+                                      height: 20,
+                                      objectFit: 'contain',
+                                      borderRadius: 0.5,
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                ) : option.color ? (
+                                  <Box
+                                    sx={{
+                                      width: 12,
+                                      height: 12,
+                                      borderRadius: '50%',
+                                      backgroundColor: option.color,
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                ) : (
+                                  <Box sx={{ width: 12, height: 12, flexShrink: 0 }} />
+                                )}
+                                {option.name}
+                              </li>
+                            );
+                          }}
                           renderInput={(params) => {
                             const selectedProject = projects.find(p => p.id === row.projectId);
                             return (
