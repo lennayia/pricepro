@@ -29,7 +29,7 @@ import { ResponsiveButton, NumberInput } from '../../../components/ui';
 import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb, Plus, X, Image } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useWeek } from '../../../contexts/WeekContext';
-import { getTimeEntry, upsertTimeEntry, getTimeEntries } from '../../../services/timeEntries';
+import { getTimeEntry, upsertTimeEntry, getTimeEntries, deleteTimeEntry } from '../../../services/timeEntries';
 import { getProjects, createProject, uploadProjectLogo } from '../../../services/projects';
 import { getClients } from '../../../services/clients';
 import { supabase } from '../../../services/supabase';
@@ -248,11 +248,25 @@ const TrackerDayPage = () => {
     // Combine work and personal data
     const allData = { ...workCategoryTotals, ...formData };
 
-    // Validate that at least one field has a value
+    // Check if there's any data
     const hasData = Object.values(allData).some(val => parseFloat(val) > 0);
+
+    // If no data, delete the entry from database
     if (!hasData) {
-      setError('Vyplňte prosím alespoň jednu aktivitu.');
-      return;
+      setSaving(true);
+      try {
+        await deleteTimeEntry(user.id, actualDate);
+        setSuccess(true);
+        setTimeout(() => {
+          navigate('/app/tracker');
+        }, 1500);
+        return;
+      } catch (err) {
+        console.error('Error deleting entry:', err);
+        setError('Nepodařilo se smazat záznam.');
+        setSaving(false);
+        return;
+      }
     }
 
     // Validate total hours doesn't exceed TIME_CONSTANTS.HOURS_IN_DAY (only if tracking personal time)
