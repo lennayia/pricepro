@@ -772,6 +772,22 @@ const TrackerDayPage = () => {
                           sx={{ flex: 1 }}
                           disabled={saving || success}
                         />
+
+                        {/* Theme chip - show when project has a theme */}
+                        {!isEmptyRow && projects.find(p => p.id === row.projectId)?.theme && (
+                          <Chip
+                            label={projects.find(p => p.id === row.projectId).theme.name}
+                            size="small"
+                            sx={{
+                              bgcolor: projects.find(p => p.id === row.projectId).theme.color || 'primary.main',
+                              color: 'white',
+                              fontWeight: 500,
+                              fontSize: '0.7rem',
+                              height: 20,
+                            }}
+                          />
+                        )}
+
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <NumberInput
                             value={isEmptyRow ? '' : row.hours}
