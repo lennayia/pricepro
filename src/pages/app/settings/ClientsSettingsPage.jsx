@@ -20,6 +20,7 @@ import {
   useTheme,
   FormControlLabel,
   Checkbox,
+  Chip,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Plus, Edit2, Trash2, Users, Image, X } from 'lucide-react';
