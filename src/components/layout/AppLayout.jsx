@@ -401,6 +401,24 @@ const AppLayout = () => {
               </ListItemIcon>
               Správa projektů
             </MenuItem>
+            <MenuItem onClick={() => {
+              handleMenuClose();
+              navigate('/app/nastaveni/klienti');
+            }}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              Správa klientů
+            </MenuItem>
+            <MenuItem onClick={() => {
+              handleMenuClose();
+              navigate('/app/nastaveni/temata');
+            }}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              Správa témat
+            </MenuItem>
             <Divider />
             <MenuItem onClick={handleSignOut}>
               <ListItemIcon>

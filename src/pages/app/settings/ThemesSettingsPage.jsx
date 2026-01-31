@@ -88,7 +88,14 @@ const ThemesSettingsPage = () => {
   };
 
   const handleSave = async () => {
+    console.log('=== handleSave called ===');
+    console.log('themeName:', themeName);
+    console.log('themeColor:', themeColor);
+    console.log('editingTheme:', editingTheme);
+    console.log('user:', user);
+
     if (!themeName.trim()) {
+      console.log('ERROR: themeName is empty!');
       setError('Vyplňte název tématu.');
       return;
     }
@@ -96,20 +103,25 @@ const ThemesSettingsPage = () => {
     try {
       setSaving(true);
       setError('');
+      console.log('Starting save...');
 
       if (editingTheme) {
         // Update existing theme
+        console.log('Updating theme:', editingTheme.id);
         await updateProjectTheme(editingTheme.id, {
           name: themeName.trim(),
           color: themeColor || null,
         });
+        console.log('Theme updated successfully');
         setSuccess('Téma bylo úspěšně aktualizováno.');
       } else {
         // Create new theme
-        await createProjectTheme(user.id, {
+        console.log('Creating new theme for user:', user.id);
+        const result = await createProjectTheme(user.id, {
           name: themeName.trim(),
           color: themeColor || null,
         });
+        console.log('Theme created successfully:', result);
         setSuccess('Téma bylo úspěšně vytvořeno.');
       }
 
@@ -117,9 +129,12 @@ const ThemesSettingsPage = () => {
       loadThemes();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      console.error('Error saving theme:', err);
+      console.error('!!! Error saving theme:', err);
+      console.error('Error message:', err.message);
+      console.error('Error details:', err);
       setError(err.message || 'Nepodařilo se uložit téma.');
     } finally {
+      console.log('handleSave finished, saving:', false);
       setSaving(false);
     }
   };
