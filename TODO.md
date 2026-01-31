@@ -578,6 +578,53 @@ const theme = useTheme();
 
 ---
 
+---
+
+## 🐛 BUG - Scroll position při navigaci
+
+### Problém:
+Když uživatel klikne na položku v menu, stránka se zobrazí odshora, ale scroll position zůstane dole → vidí konec stránky místo začátku.
+
+### Řešení:
+Přidat ScrollToTop komponentu, která scrolluje nahoru při každé změně route.
+
+**Soubor:** `/src/components/layout/ScrollToTop.jsx` (NOVÝ)
+
+```javascript
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+export function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+```
+
+**Použití v App.jsx:**
+```javascript
+import { ScrollToTop } from './components/layout/ScrollToTop';
+
+function App() {
+  return (
+    <Router>
+      <ScrollToTop /> {/* Přidat hned za <Router> */}
+      <Routes>
+        ...
+      </Routes>
+    </Router>
+  );
+}
+```
+
+**Priorita:** 🟡 STŘEDNÍ (UX problém, ale neblokující)
+
+---
+
 ## ✅ Hotové
 
 - ✅ Přidat client_id do projects tabulky (FK na clients)
