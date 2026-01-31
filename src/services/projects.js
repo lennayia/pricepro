@@ -12,7 +12,8 @@ export const getProjects = async (userId, includeArchived = false, includeEnded 
     .from('projects')
     .select(`
       *,
-      theme:project_themes(id, name, color)
+      theme:project_themes(id, name, color),
+      client:clients(id, name, logo_url, color)
     `)
     .eq('user_id', userId);
 

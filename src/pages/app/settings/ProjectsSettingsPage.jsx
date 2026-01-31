@@ -43,6 +43,7 @@ import {
   deleteProjectLogo,
 } from '../../../services/projects';
 import { getProjectThemes, createProjectTheme } from '../../../services/projectThemes';
+import { getClients } from '../../../services/clients';
 import { INFO_CARD_STYLES } from '../../../constants/colors';
 
 const ProjectsSettingsPage = () => {
@@ -53,6 +54,7 @@ const ProjectsSettingsPage = () => {
 
   const [projects, setProjects] = useState([]);
   const [themes, setThemes] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -63,6 +65,7 @@ const ProjectsSettingsPage = () => {
   const [editingProject, setEditingProject] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [projectType, setProjectType] = useState('other');
+  const [projectClient, setProjectClient] = useState(null);
   const [projectTheme, setProjectTheme] = useState(null);
   const [projectStatus, setProjectStatus] = useState('active');
   const [projectColor, setProjectColor] = useState('');
@@ -92,12 +95,14 @@ const ProjectsSettingsPage = () => {
 
     try {
       setLoading(true);
-      const [projectsData, themesData] = await Promise.all([
+      const [projectsData, themesData, clientsData] = await Promise.all([
         getProjects(user.id, false, true), // includeArchived=false, includeEnded=true
         getProjectThemes(user.id),
+        getClients(user.id),
       ]);
       setProjects(projectsData);
       setThemes(themesData);
+      setClients(clientsData);
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Nepodařilo se načíst data.');
@@ -110,6 +115,7 @@ const ProjectsSettingsPage = () => {
     setEditingProject(project);
     setProjectName(project?.name || '');
     setProjectType(project?.type || 'other');
+    setProjectClient(project?.client || null);
     setProjectTheme(project?.theme || null);
     setProjectStatus(project?.status || 'active');
     setProjectColor(project?.color || '');
@@ -127,6 +133,7 @@ const ProjectsSettingsPage = () => {
     setEditingProject(null);
     setProjectName('');
     setProjectType('other');
+    setProjectClient(null);
     setProjectTheme(null);
     setProjectStatus('active');
     setProjectColor('');
@@ -245,6 +252,7 @@ const ProjectsSettingsPage = () => {
         await updateProject(editingProject.id, {
           name: projectName.trim(),
           type: projectType,
+          client_id: projectClient?.id || null,
           theme_id: projectTheme?.id || null,
           status: projectStatus,
           color: projectColor || null,
@@ -258,6 +266,7 @@ const ProjectsSettingsPage = () => {
         const newProject = await createProject(user.id, {
           name: projectName.trim(),
           type: projectType,
+          client_id: projectClient?.id || null,
           theme_id: projectTheme?.id || null,
           status: projectStatus,
           color: projectColor || null,
@@ -637,6 +646,55 @@ const ProjectsSettingsPage = () => {
                 </ResponsiveButton>
               </label>
             </Box>
+
+            {/* Client Selection */}
+            <Autocomplete
+              value={projectClient}
+              onChange={(e, newValue) => setProjectClient(newValue)}
+              options={clients}
+              getOptionLabel={(option) => option.name || ''}
+              renderInput={(params) => (
+                <TextField {...params} label="Klient (volitelné)" />
+              )}
+              renderOption={(props, option) => {
+                const { key, ...otherProps } = props;
+                return (
+                  <li key={key} {...otherProps} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}>
+                    {option.logo_url ? (
+                      <Box
+                        component="img"
+                        src={option.logo_url}
+                        alt={option.name}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          objectFit: 'contain',
+                          borderRadius: 0.5,
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : option.color ? (
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: option.color,
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <Box sx={{ width: 12, height: 12, flexShrink: 0 }} />
+                    )}
+                    {option.name}
+                  </li>
+                );
+              }}
+            />
 
             {/* Project Type */}
             <FormControl fullWidth>
