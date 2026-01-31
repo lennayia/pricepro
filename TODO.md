@@ -145,86 +145,161 @@ DROP FUNCTION IF EXISTS pricepro.initialize_category_settings() CASCADE;
 
 ---
 
-## 🐛 KRITICKÁ CHYBA - Kalkulačka hodinovky
+## 🐛 KRITICKÁ CHYBA - Kalkulačka hodinovky a odvody
 
 ### Problém:
 **Soubor:** `/src/pages/app/calculator/CalculatorPage.jsx`
 
-**Současný výpočet (ŠPATNĚ):**
-```javascript
-const getMinimumMonthly = () => {
-  const housing = parseFloat(housingCosts) || 0;
-  const living = parseFloat(livingCosts) || 0;
-  const business = parseFloat(businessCosts) || 0;
-  const savingsAmount = parseFloat(savings) || 0;
-  const subtotal = housing + living + business + savingsAmount;
-  const taxes = subtotal * 0.15; // ❌ CHYBA! Jen 15% daně, ale OSVČ platí 35-45%!
-  return subtotal + taxes;
-};
-```
+Kalkulačka nemá samostatný krok pro odvody a daně specifický pro OSVČ v ČR.
 
 ### Co je špatně:
 
-1. **Nedostatečné odvody:**
-   - Počítá se pouze 15% na daně
-   - Ale OSVČ v ČR platí celkem ~35-45%:
-     - Zdravotní pojištění: ~13,5%
-     - Sociální pojištění: ~29,2%
-     - Daň z příjmu: 15% (nebo 23% nad limit)
-   - **Celkem: ~35-45% odvodů!**
+**Současná struktura kroků:**
+1. Životní náklady
+2. Reálný čas (fakturovatelné hodiny)
+3. Tržní hodnota (koeficienty)
 
-2. **Špatný vzorec:**
-   - Současný vzorec: `Potřebné náklady + (náklady × 0,15) = minimální měsíční příjem`
-   - Ale odvody se platí z **HRUBÉHO příjmu**, ne z nákladů!
-   - Správný vzorec: `Hrubý příjem = Čisté náklady / (1 - sazba odvodů)`
+**Chybějící:** Samostatný krok pro ODVODY A DANĚ mezi krokem 1 a 2!
 
-### Správný výpočet:
+### Správná struktura kroků:
 
-**Příklad:**
-- Potřebuji pokrýt náklady: 50 000 Kč/měsíc (bydlení + živobytí + byznys + úspory)
-- Odvody celkem: 35% (konzervativní odhad)
+1. **Životní náklady** (bydlení, živobytí, byznys, úspory)
+2. **Reálný čas** (fakturovatelné hodiny)
+3. **Odvody a daně** (NOVÝ KROK - specifický pro OSVČ v ČR)
+4. **Tržní hodnota** (koeficienty zkušenosti, specializace atd.)
 
-**Špatně (současný stav):**
-```
-Minimální příjem = 50 000 + (50 000 × 0,15) = 57 500 Kč
-→ Po odvodech 35% zbyde jen: 41 875 Kč ❌ (nestačí na náklady 50k!)
-```
+### Nový krok 3: Odvody a daně
 
-**Správně:**
-```
-Minimální hrubý příjem = 50 000 / (1 - 0,35) = 76 923 Kč
-→ Po odvodech 35% zbude přesně: 50 000 Kč ✅
-```
+**Logika pro ČR:**
+- V ČR mají OSVČ specifický systém odvodů
+- Zálohy na zdravotní a sociální pojištění jsou minimálně fixní částky (cca 10 000 Kč/měsíc)
+- Plus daň z příjmu
+- Počítáme z **mezivýpočtu** (životní náklady ÷ fakturovatelné hodiny)
 
-### Co opravit:
-
+**Výpočet (hodinovka):**
 ```javascript
-const getMinimumMonthly = () => {
-  const housing = parseFloat(housingCosts) || 0;
-  const living = parseFloat(livingCosts) || 0;
-  const business = parseFloat(businessCosts) || 0;
-  const savingsAmount = parseFloat(savings) || 0;
+// Z kroku 1 a 2
+const lifeCosts = housing + living + business + savings; // např. 50 000 Kč/měsíc
+const billableHoursMonthly = billableHoursWeekly * 4; // např. 80 hodin/měsíc
 
-  const netCosts = housing + living + business + savingsAmount;
+// MEZIVÝPOČET - minimální hodinovka BEZ odvodů
+const baseHourlyRate = lifeCosts / billableHoursMonthly; // 50 000 / 80 = 625 Kč/h
 
-  // OSVČ odvody: zdravotní (~13.5%) + sociální (~29.2%) + daň (15-23%)
-  // Používáme konzervativní odhad 35% (může být až 45%)
-  const contributionRate = 0.35;
+// ODVODY - koeficient 1.3 (30% na odvody a daně)
+const contributionsPerHour = baseHourlyRate * 0.3; // 625 × 0.3 = 187,5 Kč/h
 
-  // Správný vzorec: Hrubý příjem = Čisté náklady / (1 - sazba odvodů)
-  const grossIncome = netCosts / (1 - contributionRate);
+// ALE minimálně 10 000 Kč/měsíc
+const minContributionsPerHour = 10000 / billableHoursMonthly; // 10 000 / 80 = 125 Kč/h
 
-  return grossIncome;
+// Použijeme větší z obou
+const finalContributionsPerHour = Math.max(contributionsPerHour, minContributionsPerHour); // 187,5 Kč/h
+
+// HODINOVKA S ODVODY (před koeficienty tržní hodnoty)
+const hourlyRateWithContributions = baseHourlyRate + finalContributionsPerHour; // 625 + 187,5 = 812,5 Kč/h
+```
+
+**Příklad 1 (běžný případ):**
+- Životní náklady: 50 000 Kč/měsíc
+- Fakturovatelné hodiny: 80 h/měsíc
+- **Mezivýpočet (BEZ odvodů):** 50 000 / 80 = **625 Kč/h**
+- Odvody 30%: 625 × 0.3 = 187,5 Kč/h
+- Minimum odvodů: 10 000 / 80 = 125 Kč/h
+- **Odvody:** 187,5 Kč/h (větší než minimum)
+- **Hodinovka S odvody:** 625 + 187,5 = **812,5 Kč/h**
+
+**Příklad 2 (nízké náklady, hodně hodin):**
+- Životní náklady: 25 000 Kč/měsíc
+- Fakturovatelné hodiny: 120 h/měsíc
+- **Mezivýpočet (BEZ odvodů):** 25 000 / 120 = **208 Kč/h**
+- Odvody 30%: 208 × 0.3 = 62,5 Kč/h
+- Minimum odvodů: 10 000 / 120 = 83,3 Kč/h
+- **Odvody:** 83,3 Kč/h (minimum je větší)
+- **Hodinovka S odvody:** 208 + 83,3 = **291,3 Kč/h**
+
+### Co implementovat:
+
+1. **Přidat nový krok do `steps` array (jako krok 3):**
+```javascript
+const steps = [
+  { label: 'Životní náklady', description: 'Kolik MUSÍTE vydělat?', icon: Home },
+  { label: 'Reálný čas', description: 'Kolik hodin OPRAVDU fakturujete?', icon: Clock },
+  { label: 'Odvody a daně', description: 'OSVČ v ČR - kolik odvádíte?', icon: FileText }, // NOVÝ KROK 3
+  { label: 'Tržní hodnota', description: 'Kolik DOOPRAVDY stojíte?', icon: BarChart3 },
+];
+```
+
+2. **Vytvořit UI pro NOVÝ krok 3 (Odvody a daně):**
+
+**Zobrazit:**
+- **Mezivýpočet (read-only, info card):**
+  - "Minimální hodinovka BEZ odvodů: XXX Kč/h"
+  - Vypočteno: Životní náklady ÷ Fakturovatelné hodiny
+  - Např. 50 000 / 80 = 625 Kč/h
+
+- **Výpočet odvodů (automaticky):**
+  - Odvody 30%: 625 × 0.3 = 187,5 Kč/h
+  - Minimum: 10 000 / 80 = 125 Kč/h
+  - **Použito:** 187,5 Kč/h (větší hodnota)
+
+- **Výsledek (zvýrazněný):**
+  - "Hodinovka S odvody: 812,5 Kč/h"
+  - Toto jde do dalšího kroku (Tržní hodnota)
+
+- **Helper text:**
+  "V ČR platí OSVČ minimálně cca 10 000 Kč měsíčně na odvody (zdravotní + sociální pojištění + daň z příjmu). U vyšších příjmů počítáme s koeficientem 1.3 (30% navíc na odvody a daně)."
+
+**Breakdown card (volitelně):**
+```
+Životní náklady:        50 000 Kč/měsíc
+Fakturovatelné hodiny:  80 h/měsíc
+─────────────────────────────────────
+Základní hodinovka:     625 Kč/h
++ Odvody a daně:        +187,5 Kč/h (30%)
+═════════════════════════════════════
+Hodinovka s odvody:     812,5 Kč/h
+```
+
+3. **Upravit výpočet:**
+```javascript
+// Nová helper funkce
+const getBaseHourlyRate = () => {
+  const lifeCosts = getLifeCosts(); // z kroku 1
+  const monthlyBillable = getMonthlyBillableHours(); // z kroku 2
+  if (monthlyBillable === 0) return 0;
+  return lifeCosts / monthlyBillable;
+};
+
+// Nová helper funkce
+const getContributionsPerHour = () => {
+  const baseRate = getBaseHourlyRate();
+  const monthlyBillable = getMonthlyBillableHours();
+  if (monthlyBillable === 0) return 0;
+
+  // 30% z hodinovky NEBO minimálně 10 000 Kč/měsíc
+  const contributionsByPercent = baseRate * 0.3;
+  const contributionsByMinimum = 10000 / monthlyBillable;
+
+  return Math.max(contributionsByPercent, contributionsByMinimum);
+};
+
+// Upravená funkce - hodinovka S odvody (před koeficienty)
+const getHourlyRateWithContributions = () => {
+  return getBaseHourlyRate() + getContributionsPerHour();
+};
+
+// Minimální hodinovka = hodinovka s odvody (před koeficienty tržní hodnoty)
+const getMinimumHourly = () => {
+  return getHourlyRateWithContributions();
+};
+
+// Doporučená hodinovka = s odvody × koeficienty
+const getRecommendedHourly = () => {
+  return getHourlyRateWithContributions() * getCoefficients();
 };
 ```
 
-### Dopad na uživatele:
-- **Současný stav:** Uživatelům vychází **podhodnocená hodinovka**
-- Po zaplacení skutečných odvodů (35-45%) nemají dost na pokrytí nákladů
-- Výsledek: Neudržitelný byznys model, práce pod hodnotou
-
 ### Priorita: 🚨 VYSOKÁ
-Toto přímo ovlivňuje správnost doporučené hodinovky. Uživatelé s touto chybou účtují příliš málo a nemohou pokrýt své náklady.
+Toto přímo ovlivňuje správnost doporučené hodinovky pro OSVČ v ČR. Bez správného výpočtu odvodů vychází podhodnocená hodinovka.
 
 ---
 
