@@ -62,7 +62,10 @@ const TrackerDayPage = () => {
     PERSONAL_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: '' }), {})
   );
 
-  // Work categories use project rows: { categoryKey: [{ projectId: '123', hours: 2 }] }
+  // Work categories: base hours (without project) + optional project rows
+  const [categoryBaseHours, setCategoryBaseHours] = useState(
+    WORK_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: '' }), {})
+  );
   const [categoryProjectRows, setCategoryProjectRows] = useState(
     WORK_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: [] }), {})
   );
@@ -163,12 +166,15 @@ const TrackerDayPage = () => {
           }, {});
           setFormData(loadedData);
 
-          // Load work categories with project rows
+          // Load work categories: base hours + project rows
+          const loadedBaseHours = {};
           const loadedProjectRows = {};
+
           WORK_CATEGORIES.forEach(cat => {
             const categoryKey = cat.key;
             const projectHours = entry.category_project_hours?.[categoryKey] || {};
             const projectClients = entry.category_project_clients?.[categoryKey] || {};
+            const totalCategoryHours = entry[categoryKey] || 0;
 
             // Convert DB format { projectId: hours } to array [{ projectId, clientId, hours }]
             const rows = Object.entries(projectHours).map(([projectId, hours]) => ({
@@ -177,8 +183,17 @@ const TrackerDayPage = () => {
               hours: hours || 0
             }));
 
+            // Calculate project hours sum
+            const projectHoursSum = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+
+            // Base hours = total - project hours (hours without project)
+            const baseHours = totalCategoryHours - projectHoursSum;
+
+            loadedBaseHours[categoryKey] = baseHours > 0 ? baseHours : '';
             loadedProjectRows[categoryKey] = rows.length > 0 ? rows : [];
           });
+
+          setCategoryBaseHours(loadedBaseHours);
           setCategoryProjectRows(loadedProjectRows);
         }
       } catch (err) {
@@ -209,6 +224,7 @@ const TrackerDayPage = () => {
     );
   }
 
+  // Handle personal category hours change
   const handleChange = (key, value) => {
     // Only allow positive numbers between 0 and TIME_CONSTANTS.HOURS_IN_DAY
     if (value === '' || value === null || value === undefined) {
@@ -224,18 +240,34 @@ const TrackerDayPage = () => {
     setFormData((prev) => ({ ...prev, [key]: numValue }));
   };
 
+  // Handle work category base hours change (hours without project)
+  const handleBaseHoursChange = (categoryKey, value) => {
+    if (value === '' || value === null || value === undefined) {
+      setCategoryBaseHours((prev) => ({ ...prev, [categoryKey]: '' }));
+      return;
+    }
+    const parsed = parseFloat(value);
+    if (isNaN(parsed)) {
+      setCategoryBaseHours((prev) => ({ ...prev, [categoryKey]: '' }));
+      return;
+    }
+    const numValue = Math.max(0, Math.min(TIME_CONSTANTS.HOURS_IN_DAY, parsed));
+    setCategoryBaseHours((prev) => ({ ...prev, [categoryKey]: numValue }));
+  };
+
   // Výpočty jsou nyní v utils/calculators.js
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Calculate work category totals from project rows
+    // Calculate work category totals: base hours + project hours
     const workCategoryTotals = {};
     WORK_CATEGORIES.forEach(cat => {
+      const baseHours = parseFloat(categoryBaseHours[cat.key]) || 0;
       const rows = categoryProjectRows[cat.key] || [];
-      const total = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
-      workCategoryTotals[cat.key] = total;
+      const projectHours = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+      workCategoryTotals[cat.key] = baseHours + projectHours;
     });
 
     // Combine work and personal data
@@ -330,16 +362,17 @@ const TrackerDayPage = () => {
     }
   };
 
-  // Calculate totals from both work project rows and personal form data
+  // Calculate totals from base hours + project rows + personal form data
   const workHours = useMemo(() => {
     let total = 0;
     WORK_CATEGORIES.forEach(cat => {
+      const baseHours = parseFloat(categoryBaseHours[cat.key]) || 0;
       const rows = categoryProjectRows[cat.key] || [];
-      const catTotal = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
-      total += catTotal;
+      const projectHours = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+      total += baseHours + projectHours;
     });
     return total;
-  }, [categoryProjectRows]);
+  }, [categoryBaseHours, categoryProjectRows]);
 
   const personalHours = useMemo(() => {
     return trackPersonalTime ? calculatePersonalHours(formData) : 0;
@@ -384,8 +417,10 @@ const TrackerDayPage = () => {
 
   // Calculate total hours for a category
   const getCategoryTotal = (categoryKey) => {
+    const baseHours = parseFloat(categoryBaseHours[categoryKey]) || 0;
     const rows = categoryProjectRows[categoryKey] || [];
-    return rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+    const projectHours = rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
+    return baseHours + projectHours;
   };
 
   // Handle opening create project dialog
@@ -580,6 +615,21 @@ const TrackerDayPage = () => {
                       sx={{ fontWeight: 600 }}
                     />
                   )}
+                </Box>
+
+                {/* Base hours input (hours without project) */}
+                <Box sx={{ pl: 3.5, mb: rows.length > 0 || categoryBaseHours[category.key] ? 1.5 : 0 }}>
+                  <NumberInput
+                    value={categoryBaseHours[category.key]}
+                    onChange={(value) => handleBaseHoursChange(category.key, value)}
+                    placeholder="Hodiny (bez projektu)"
+                    disabled={saving || success}
+                    fullWidth
+                    size="small"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">h</InputAdornment>,
+                    }}
+                  />
                 </Box>
 
                 {/* Project rows - always show filled + one empty row */}
