@@ -32,3 +32,4 @@ dist-ssr
 .supabase/
 .vercel
 .env*.local
+dist/
