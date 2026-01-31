@@ -481,6 +481,103 @@ const hourlyWithOSVC = baseHourly; // 291 Kč/h (BEZ koeficientu!)
 
 ---
 
+---
+
+## ⚠️ KRITICKÁ PRAVIDLA PRO IMPLEMENTACI
+
+### 🎨 Dark/Light Mode
+**POVINNÉ:**
+- ✅ Používat `useTheme()` hook z Material-UI
+- ✅ Používat konstanty z `/src/constants/colors.js`:
+  - `INFO_CARD_STYLES[theme.palette.mode]` pro info karty
+  - `CARD_ICON_STYLES[theme.palette.mode]` pro ikony
+  - `WARNING_CARD_STYLES[theme.palette.mode]` pro varování
+- ✅ Testovat OBOJÍ módy před commitem
+- ❌ NIKDY nepoužívat hardcoded barvy (např. `bgcolor: '#fff'`)
+
+**Příklad správně:**
+```javascript
+import { useTheme } from '@mui/material/styles';
+import { INFO_CARD_STYLES } from '../../../constants/colors';
+
+const theme = useTheme();
+
+<Card sx={{
+  bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+  border: INFO_CARD_STYLES[theme.palette.mode].border
+}}>
+```
+
+---
+
+### 🧩 Modularita
+**POVINNÉ:**
+- ✅ Vytvářet **separátní komponenty** pro složité UI části
+- ✅ Komponenty max. 300 řádků - pokud víc, rozdělit
+- ✅ Využívat existing komponenty z `/src/components/`
+- ✅ Nové komponenty dávat do správných složek:
+  - `/src/components/calculator/` - pro kalkulačku
+  - `/src/components/ui/` - pro obecné UI komponenty
+  - `/src/components/tracker/` - pro tracker
+- ❌ NIKDY nedělat monolitické soubory 1000+ řádků
+
+**Příklad modularizace pro nové koeficienty:**
+```
+/src/components/calculator/
+├── CoefficientAccordion.jsx       (obecný accordion wrapper)
+├── ExperienceCoefficient.jsx      (zkušenosti)
+├── BreadthCoefficient.jsx         (šíře nabídky)
+├── EducationCoefficient.jsx       (vzdělání)
+├── PortfolioCoefficient.jsx       (portfolio)
+├── DemandCoefficient.jsx          (poptávka)
+└── CoefficientSummary.jsx         (souhrn + live přepočet)
+```
+
+---
+
+### 🛡️ Zachování funkčností
+**POVINNÉ - NESMÍ ZMIZET:**
+
+#### Kalkulačka:
+- ✅ Historie výpočtů (ukládání do DB, zobrazení minulých výsledků)
+- ✅ Načítání dat z trackeru (integrace s time entries)
+- ✅ Výpočet A i výpočet B (oba přístupy)
+- ✅ Porovnání s průměrnými mzdami (2026 wage constants)
+- ✅ Graf porovnání (LineChart - recommended vs. premium)
+- ✅ Export výsledků / sdílení
+- ✅ Navigace mezi kroky (step stepper)
+- ✅ Ukládání rozdělaných výpočtů (draft state)
+
+#### Tracker:
+- ✅ Zadávání času po kategoriích
+- ✅ Přiřazení klient → projekt → téma
+- ✅ Zobrazení témat jako chips
+- ✅ Validace (max 24h denně)
+- ✅ Týdenní/měsíční přehledy
+- ✅ Filtry (podle klienta, projektu, kategorie)
+
+#### Nastavení:
+- ✅ Správa klientů (CRUD)
+- ✅ Správa projektů (CRUD + typy: billable/scalable/other)
+- ✅ Správa témat (CRUD)
+- ✅ Navigace mezi settings pages (chips)
+
+---
+
+### 📝 Checklist před commitem
+
+**PŘED KAŽDÝM COMMITEM zkontrolovat:**
+- [ ] Dark mode funguje ✅
+- [ ] Light mode funguje ✅
+- [ ] Žádné console.error nebo warnings ✅
+- [ ] Všechny existující funkce fungují ✅
+- [ ] Komponenty jsou modulární (max. 300 řádků) ✅
+- [ ] Používám konstanty z colors.js ✅
+- [ ] Testoval jsem mobile responsiveness ✅
+- [ ] České texty (žádná angličtina v UI) ✅
+
+---
+
 ## ✅ Hotové
 
 - ✅ Přidat client_id do projects tabulky (FK na clients)
