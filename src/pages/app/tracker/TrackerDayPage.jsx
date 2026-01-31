@@ -29,7 +29,7 @@ import { ResponsiveButton, NumberInput } from '../../../components/ui';
 import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb, Plus, X, Image } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useWeek } from '../../../contexts/WeekContext';
-import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
+import { getTimeEntry, upsertTimeEntry, getTimeEntries } from '../../../services/timeEntries';
 import { getProjects, createProject, uploadProjectLogo } from '../../../services/projects';
 import { getClients } from '../../../services/clients';
 import { supabase } from '../../../services/supabase';
@@ -70,6 +70,7 @@ const TrackerDayPage = () => {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [trackPersonalTime, setTrackPersonalTime] = useState(true); // Default true
+  const [filledDaysCount, setFilledDaysCount] = useState(0); // Count of days with tracked hours
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -117,6 +118,29 @@ const TrackerDayPage = () => {
     };
 
     loadProjectsAndClientsAndSettings();
+  }, [user]);
+
+  // Count filled days for smart alert logic
+  useEffect(() => {
+    const countFilledDays = async () => {
+      if (!user) return;
+      try {
+        const allEntries = await getTimeEntries(user.id);
+
+        // Count entries that have at least some hours tracked
+        const filled = allEntries.filter(entry => {
+          const totalHours = WORK_CATEGORIES.reduce((sum, cat) => sum + (parseFloat(entry[cat.key]) || 0), 0) +
+                            PERSONAL_CATEGORIES.reduce((sum, cat) => sum + (parseFloat(entry[cat.key]) || 0), 0);
+          return totalHours > 0;
+        });
+
+        setFilledDaysCount(filled.length);
+      } catch (err) {
+        console.error('Error counting filled days:', err);
+      }
+    };
+
+    countFilledDays();
   }, [user]);
 
   // Load existing data for this day
@@ -285,6 +309,14 @@ const TrackerDayPage = () => {
       dataToSave.category_project_clients = category_project_clients;
 
       await upsertTimeEntry(user.id, actualDate, dataToSave);
+
+      // Update filled days count (increment if this was a new entry with data)
+      if (hasData) {
+        setFilledDaysCount(prev => {
+          // Simple increment - actual count will be recalculated on next load
+          return prev + 1;
+        });
+      }
 
       setSuccess(true);
       setTimeout(() => {
@@ -997,42 +1029,62 @@ const TrackerDayPage = () => {
               </Box>
             </Box>
 
-            {/* Smart feedback */}
+            {/* Smart feedback - New logic: extreme alerts immediately, general alerts after 5+ days */}
             {totalHours > TIME_CONSTANTS.HOURS_IN_DAY ? (
+              // VALIDATION ERROR - always show
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AlertTriangle size={16} color="white" />
                 <Typography variant="body2" sx={{ color: 'white' }}>
                   Pozor! Den má pouze {TIME_CONSTANTS.HOURS_IN_DAY} hodin. Zkontrolujte prosím své údaje.
                 </Typography>
               </Box>
-            ) : sleepHours < 6 && sleepHours > 0 ? (
+            ) : sleepHours < 5 && sleepHours > 0 ? (
+              // EXTREME ALERT - show immediately (even on day 1)
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AlertTriangle size={16} color="white" />
                 <Typography variant="body2" sx={{ color: 'white' }}>
-                  Pozor! Spíte méně než 6 hodin - riziko vyhoření!
+                  KRITICKY! Spíte méně než 5 hodin - vysoké riziko vyhoření!
                 </Typography>
               </Box>
-            ) : workHours > 10 ? (
+            ) : workHours > 12 ? (
+              // EXTREME ALERT - show immediately (even on day 1)
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AlertTriangle size={16} color="white" />
                 <Typography variant="body2" sx={{ color: 'white' }}>
-                  Hodně práce dnes ({formatHours(workHours)}h). Najděte si čas na odpočinek!
+                  KRITICKY! Pracujete více než 12 hodin - riziko vyhoření!
                 </Typography>
               </Box>
-            ) : sleepHours >= 7 && sleepHours <= 8 && personalHours >= 2 && workHours <= 10 ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CheckCircle size={16} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
-                <Typography variant="body2">
-                  Skvělý balanc! Spánek i osobní čas v pořádku.
-                </Typography>
-              </Box>
-            ) : sleepHours === 0 && personalHours === 0 && workHours > 0 ? (
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Lightbulb size={16} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
-                <Typography variant="body2">
-                  Nezapomeňte vyplnit spánek a osobní čas pro kompletní přehled!
-                </Typography>
-              </Box>
+            ) : filledDaysCount >= 5 ? (
+              // GENERAL ALERTS - only show after 5+ filled days
+              sleepHours < 6 && sleepHours > 0 ? (
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AlertTriangle size={16} color="white" />
+                  <Typography variant="body2" sx={{ color: 'white' }}>
+                    Pozor! Spíte méně než 6 hodin - riziko vyhoření!
+                  </Typography>
+                </Box>
+              ) : workHours > 10 ? (
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AlertTriangle size={16} color="white" />
+                  <Typography variant="body2" sx={{ color: 'white' }}>
+                    Hodně práce dnes ({formatHours(workHours)}h). Najděte si čas na odpočinek!
+                  </Typography>
+                </Box>
+              ) : sleepHours >= 7 && sleepHours <= 8 && personalHours >= 2 && workHours <= 10 ? (
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircle size={16} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
+                  <Typography variant="body2">
+                    Skvělý balanc! Spánek i osobní čas v pořádku.
+                  </Typography>
+                </Box>
+              ) : sleepHours === 0 && personalHours === 0 && workHours > 0 ? (
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Lightbulb size={16} color={INFO_CARD_STYLES[theme.palette.mode].iconColor} />
+                  <Typography variant="body2">
+                    Nezapomeňte vyplnit spánek a osobní čas pro kompletní přehled!
+                  </Typography>
+                </Box>
+              ) : null
             ) : null}
           </CardContent>
         </Card>
