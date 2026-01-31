@@ -128,6 +128,11 @@ const CalculatorPage = () => {
   const [baseWage, setBaseWage] = useState('average_prague'); // Base wage selection for calculation B
   const [customWage, setCustomWage] = useState(''); // Custom hourly wage if selected
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeStep]);
+
   // Layer 3: Market value
   const [experience, setExperience] = useState('0-2');
   const [breadth, setBreadth] = useState('narrow');
