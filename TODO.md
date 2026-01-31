@@ -625,6 +625,504 @@ function App() {
 
 ---
 
+---
+
+## 📦 BACKLOG - Budoucí rozšíření
+
+### ⚠️ KONFLIKTY S AKTUÁLNÍM TODO - NUTNÉ PROBRAŤ!
+
+#### 🔴 KONFLIKT 1: Dvě hodinovky (minimální vs. fakturační)
+**Z materiálů:**
+- **Minimální orientační (interní)** = celkové náklady / všechny hodiny
+- **Fakturační (pro klienta)** = celkové náklady / jen fakturovatelné hodiny
+
+**Současné TODO:** Máme pouze JEDNU minimální hodinovku (náklady / fakturovatelné)
+
+**OTÁZKA:** Chceme zobrazovat OBĚ vedle sebe? To změní UI kalkulačky!
+
+---
+
+#### 🟡 KONFLIKT 2: Uživatelská stránka (diplomy, certifikace)
+**Tvůj nápad:**
+- Stránka kde uživatel zadá diplomy, certifikace, počet klientů, konkurenční výhody
+- Aby viděla pohromadě, jak je dobrá
+
+**Současné TODO:** Máme nové koeficienty s kategorií "Kvalifikace a vzdělání"
+
+**OTÁZKA:**
+- Chceš PROPOJIT? (uživatel zadá diplomy na profilu → automaticky se nastaví koeficient?)
+- Nebo samostatně? (profil = psychologická podpora, koeficienty = výpočet?)
+
+---
+
+#### 🟡 KONFLIKT 3: Tracker - rozšíření osobního času
+**Tvůj nápad:**
+- Přidat: zvířata, zábava
+- Možnost vypnout sledování osobního času úplně
+
+**Současné TODO:** Upravujeme TrackerDayPage (klient→projekt→téma)
+
+**OTÁZKA:** Máme to udělat TEĎKA společně s úpravami, nebo až pak?
+
+---
+
+#### 🟡 KONFLIKT 4: Expresní termíny (+50% cena)
+**Tvůj nápad:**
+- Pro práci 1:1 zahrnout možnost expresního termínu
+- Automaticky zvednout cenu o 50%+
+
+**Současné TODO:** Přepracováváme kalkulačku (nové koeficienty, odvody)
+
+**OTÁZKA:** Má to být další koeficient? Nebo samostatný přepínač "Je to expresní zakázka"?
+
+---
+
+#### 🟢 KONFLIKT 5: Alerty v trackeru - jen když relevantní
+**Tvůj nápad:**
+- NE alert po 1 vyplněném dni ("pracuješ málo/moc")
+- ANO alert při extrémech (3h spánek, 15h práce) hned ten den
+
+**Současné TODO:** Upravujeme tracker
+
+**POZNÁMKA:** Toto můžeme udělat klidně teď, je to jen úprava validace.
+
+---
+
+### 🎨 DESIGN PRAVIDLA (přidat do TODO)
+
+#### ❌ EMOJI → ✅ Lucide ikony
+- Odstranit všechny emoji z aplikace
+- Používat POUZE Lucide ikony
+- Neplýtvat s ikonami - "ať to není jak v cirkuse"
+- Ikony jen tam, kde dávají smysl (navigace, akce, ilustrace konceptu)
+
+**Soubory k prohledání:**
+- Všechny .jsx soubory
+- Hledat emoji znaky (🎯, 💼, 📈, atd.)
+- Nahradit Lucide ikonami nebo odstranit
+
+---
+
+### 🔥 VYSOKÁ PRIORITA (ovlivňují kalkulačku)
+
+#### 1. Náklady na asistentku/tým
+**Kde:** Krok 1 "Životní náklady" → přidat do "Náklady na podnikání"
+
+**Současný stav:**
+- Bydlení
+- Živobytí
+- Byznys náklady (general)
+- Úspory
+
+**Nový stav:**
+- Bydlení
+- Živobytí
+- **Náklady na podnikání:**
+  - Software, nástroje
+  - Marketing
+  - Asistentka, tým
+  - Účetní
+  - Ostatní
+- Úspory
+
+**Poznámka:** Toto můžeme přidat snadno, neovlivňuje výpočet.
+
+---
+
+#### 2. Realistická kapacita (44 týdnů, ne 52)
+**Z materiálů:**
+- Pracovní rok má reálně 44 týdnů (po odečtení dovolené, svátků, nemocí)
+- 52 - 8 = 44 pracovních týdnů
+
+**Implementace:**
+- Přidat do kalkulačky vstup: "Kolik týdnů dovolené/volna plánujete?" (default 8)
+- Přepočítat měsíční kapacitu: (52 - volno) / 12 × týdenní hodiny
+
+**Příklad:**
+- Týdenní hodiny: 40h
+- Volno: 8 týdnů
+- Měsíční kapacita: (52 - 8) / 12 × 40 = **147h/měsíc** (místo 160h)
+
+---
+
+#### 3. Finanční rezerva v nákladech
+**Z materiálů:**
+- Cena musí pokrýt nejen aktuální náklady, ale i budoucnost
+- Finanční rezervu na 3-6 měsíců
+- Spoření na důchod (OSVČ má nízký státní důchod)
+- Investice do budoucnosti
+
+**Implementace:**
+Do kroku "Životní náklady" přidat sekci **"Platby budoucímu já"**:
+- Měsíční tvorba rezervy (Kč)
+- Spoření na důchod (Kč)
+- Investice (Kč)
+
+**Bonus:** Zobrazit progress bar "Kolik měsíců rezervy už máš?"
+- Uživatel zadá: Aktuální rezerva (Kč)
+- Výpočet: Aktuální rezerva / Měsíční náklady = X měsíců
+
+---
+
+### 🟡 STŘEDNÍ PRIORITA (nové funkce)
+
+#### 4. Reality Check - skutečná hodinovka (zpětná kontrola)
+**Z materiálů:**
+- Vzorec: Vydělané peníze / Celkový počet hodin (včetně režie)
+- "Test pravdy" - uživí mě to, nebo budu ve stresu?
+
+**Implementace:**
+Nová stránka/sekce **"Reality Check"**
+
+**Vstup:**
+- Kolik jsi vydělala za poslední 3 měsíce? (Kč)
+- Kolik hodin celkem jsi pracovala? (z trackeru nebo odhad)
+
+**Výstup:**
+- Skutečná hodinovka: XX Kč/h
+- Porovnání:
+  - Minimální doporučená: YY Kč/h (z kalkulačky)
+  - Rozdíl: +/- ZZ Kč/h
+- **Verdikt:**
+  - ✅ "Super! Vyděláváš nad minimální hodinovkou"
+  - ⚠️ "Pozor! Vyděláváš MÉNĚ než minimální - čas zdražit nebo zefektivnit"
+
+---
+
+#### 5. Kalkulátor zdražení
+**Z materiálů:**
+- Příklad: Zdražíš o 40% → odejde 30% klientů → vyděláš STEJNĚ, ale máš o 30% více času
+- Vzorec: 10 klientů × 700 Kč = 7000 Kč → po zdražení na 1000 Kč stačí 7 klientů
+
+**Implementace:**
+Nová sekce **"Kalkulátor zdražení"**
+
+**Vstup:**
+- Aktuální cena za službu: Kč
+- Počet klientů/zakázek měsíčně: X
+- Nová cena (plánovaná): Kč
+
+**Výstup:**
+- Aktuální příjem: X klientů × Y Kč = Z Kč
+- Po zdražení:
+  - Kolik klientů můžeš ztratit a stále vydělat stejně: W klientů
+  - Kolik % klientů to je: P%
+  - Kolik času ušetříš: Q hodin
+
+**Příklad:**
+```
+Aktuálně: 10 klientů × 700 Kč = 7 000 Kč
+Nová cena: 1 000 Kč (+43%)
+
+Potřebuješ jen: 7 klientů (můžeš ztratit 3, tedy 30%)
+Ušetříš: 30% času = cca 12 hodin měsíčně
+```
+
+---
+
+#### 6. Signály pro zdražení (diagnostika)
+**Z materiálů:**
+Čas zdražit je, když:
+- Máš hodně práce, ale málo peněz
+- Máš plnou kapacitu (vybíráš si mezi poptávkami)
+- Nemáš radost z nových poptávek
+- Klienti si neváží tvého času
+
+**Implementace:**
+Dotazník **"Měla bych zdražit?"**
+
+**Otázky:**
+1. Máš plnou kapacitu? (ANO/NE)
+2. Odmítáš nové poptávky kvůli nedostatku času? (ANO/NE)
+3. Cítíš se přepracovaná, ale peníze nestačí? (ANO/NE)
+4. Klienti očekávají nepřiměřené změny zdarma? (ANO/NE)
+5. Dostáváš hodně poptávek? (ANO/NE)
+6. Bojíš se říct cenu nahlas? (ANO/NE)
+
+**Výstup:**
+- **5-6 ANO:** "🔥 Určitě zdraž! Máš všechny signály."
+- **3-4 ANO:** "⚠️ Zvažuj zdražení - máš na to prostor."
+- **0-2 ANO:** "✅ Zatím OK, ale sleduj situaci."
+
+---
+
+### 🟢 NIŽŠÍ PRIORITA (nice to have)
+
+#### 7. Generátor balíčků (variantní nabídky)
+**Z materiálů:**
+- Nabídni 3 varianty (Základní, Oblíbený, Prémiový)
+- Dražší varianta slouží jako "kotva" - prostřední pak vypadá rozumně
+
+**Implementace:**
+Generátor **"3 cenové varianty"**
+
+**Vstup:**
+- Vypočtená hodinovka: X Kč/h
+- Typ služby: (koučink, design, copywriting...)
+
+**Výstup:**
+```
+┌─────────────────────────────────────────────┐
+│ ZÁKLADNÍ          OBLÍBENÝ ⭐      PRÉMIOVÝ │
+├─────────────────────────────────────────────┤
+│ X Kč              1.5×X Kč          2×X Kč  │
+│                                             │
+│ Co zahrnuje:      Co zahrnuje:    Co zahr.: │
+│ - Feature A       - Vše ze Zákl.  - Vše z O.│
+│ - Feature B       - Feature C     - Feature D│
+│                   - Feature E     - Priorita │
+└─────────────────────────────────────────────┘
+```
+
+**Tipy co zahrnout** (podle typu služby)
+
+---
+
+#### 8. SWOT analýza pro obhajobu ceny
+**Z materiálů:**
+- Silné stránky = proč má klient platit víc
+- Příležitosti = vzdělání, reference, prezentace
+- Hrozby = konkurence (ale nekopírovat její ceny)
+- Slabé stránky = mindset, strach
+
+**Implementace:**
+Interaktivní **SWOT zaměřený na cenotvorbu**
+
+Uživatel vyplní:
+- **Strengths (Silné stránky):** Co umím nejlép? Jaké mám výsledky?
+- **Weaknesses (Slabé stránky):** Co mi brání účtovat víc? (mindset, strach...)
+- **Opportunities (Příležitosti):** Co můžu využít? (vzdělání, reference, nový trh...)
+- **Threats (Hrozby):** Co mi hrozí? (levnější konkurence, AI...)
+
+**Výstup:**
+- "Tvé 3 hlavní argumenty pro vyšší cenu"
+- Doporučení jak ošetřit slabé stránky
+
+---
+
+#### 9. Šablony odpovědí na námitky
+**Z materiálů:**
+- "Je to drahé" → neomlouvat se, vysvětlit hodnotu
+- "Konkurence to má levněji" → zdůraznit unikátnost
+- "Nemáme rozpočet" → upravit rozsah, ne cenu
+
+**Implementace:**
+Sekce **"Jak reagovat na námitky"**
+
+Připravené šablony podle námitky:
+- Námitka: "Je to drahé"
+  - ❌ Špatně: "Omlouvám se, můžu dát slevu"
+  - ✅ Dobře: "Chápu. Pojďme se podívat na hodnotu, kterou to přinese..."
+
+- Námitka: "Konkurence má 500 Kč/h"
+  - ❌ Špatně: "OK, taky to můžu za 500"
+  - ✅ Dobře: "Ano, existují levnější varianty. Rozdíl je v [tvá unikátnost]..."
+
+**Bonus:** Personalizace podle SWOT analýzy
+
+---
+
+#### 10. Neplacené aktivity - detailní breakdown
+**Z materiálů:**
+Do nefakturovatelné práce patří:
+- Administrativa a účetnictví
+- Marketing a tvorba obsahu
+- Vzdělávání (kurzy, čtení)
+- Komunikace s neklienty (poptávky, co nedopadnou)
+
+**Implementace:**
+Rozšířit tracker o **podkategorie režijní práce**
+
+**Současné kategorie:**
+- Komunikace s klienty
+- Tvorba obsahu
+- Sociální sítě
+- Administrativa
+- Zprávy
+- Vzdělávání
+- Billable work (fakturovatelná)
+- Ostatní
+
+**Rozšíření:**
+Každá kategorie může mít **tagy**:
+- Komunikace: [Klient] / [Poptávka] / [Network]
+- Administrativa: [Účetnictví] / [Email] / [Plánování]
+- Vzdělávání: [Kurz] / [Kniha] / [Research]
+
+**Výstup:**
+"Tento měsíc jsi strávila 8 hodin komunikací, které nedopadly → čas zefektivnit kvalifikaci leadů?"
+
+---
+
+### 💎 LENČINY NÁPADY
+
+#### 11. Uživatelská stránka - "Jsem skvělá!"
+**Účel:**
+- Psychologická podpora
+- Vidět pohromadě své úspěchy
+- Přestat se podhodnocovat
+
+**Co tam uživatel zadá:**
+- **Diplomy a certifikace** (s možností uploadu PDF/fotky)
+- **Počet klientů celkem** (rukama prošlo)
+- **Počet kurzů/produktů** (prodáno, vytvořeno)
+- **Unikátnosti** (co umím, co nikdo jiný)
+- **Konkurenční výhody** (proč si vybrat mě)
+- **Superpower** (co mě nejvíc baví, v čem jsem expert)
+- **Testimonials** (reference od klientů - text nebo screenshot)
+
+**Výstup:**
+Hezká stránka typu "portfolio", ale PRO SEBE (ne pro klienty)
+
+**Bonus:**
+- Sdílitelný link "Moje achievementy"
+- Export do PDF
+- **Propojení s koeficienty?** (pokud zadá VŠ diplom → automaticky +25% v Kvalifikaci)
+
+---
+
+#### 12. Meditace pro ukotvení ceny
+**Účel:**
+- Pomoci ženě si ukotvit svou hodnotu
+- Překonat mindsetové bloky kolem ceny
+
+**Implementace:**
+- Upload audio souboru (.mp3, .wav)
+- Přehrávač přímo v aplikaci
+- Případně více meditací (podle tématu):
+  - "Jsem hodnotná"
+  - "Moje cena odráží mou hodnotu"
+  - "Zasloužím si dobře vydělávat"
+
+**Kam umístit:**
+- Sekce "Mindset a sebehodnota"
+- Nebo přímo v kalkulačce jako "Potřebuješ si ukotvit cenu? Poslechni si meditaci"
+
+---
+
+#### 13. Edukace: Cena - Hodnota - Sebehodnota
+**Účel:**
+- Vysvětlit souvislost
+- Proč podhodnocená cena = podhodnocená sebehodnota
+- Jak na tom pracovat
+
+**Implementace:**
+Sekce **"Proč je cena o tobě"**
+
+**Obsah:**
+- Krátký článek/infografika
+- Video?
+- Kvíz na sebereflexi
+- Cvičení na posílení sebehodnoty
+
+**Kam umístit:**
+- Dashboard (přivítání nových uživatelek)
+- Nebo samostatná sekce "Vzdělávání"
+
+---
+
+#### 14. Tracker - rozšíření osobního času
+**Tvůj požadavek:**
+- Přidat: Čas se zvířaty, Zábava
+- Možnost **NESLEDOVAT osobní čas vůbec** (jen pracovní)
+
+**Současné osobní kategorie:**
+- Spánek
+- Rodinný čas
+- Osobní čas
+
+**Nové:**
+- Spánek
+- Rodinný čas
+- Čas se zvířaty
+- Zábava/Koníčky
+- Osobní péče
+
+**Nastavení:**
+```
+[ ] Chci sledovat osobní čas
+    (Pokud NE → zobrazovat jen pracovní kategorie)
+```
+
+**Dopad na kalkulačky:**
+- Pokud uživatel NESLEDUJE osobní čas → nepočítat validaci "24h max"
+- Počítat jen s pracovními hodinami
+
+---
+
+#### 15. Alerty v trackeru - jen když relevantní
+**Současný stav:**
+- Alert už po 1 vyplněném dni ("pracuješ moc/málo")
+
+**Nový stav:**
+- **NE alert po 1 dni** (není relevantní)
+- **ANO alert při extrémech:**
+  - Spánek < 5h → "⚠️ Dnes jsi spala jen Xh. Nezapomeň na odpočinek!"
+  - Práce > 12h → "⚠️ Dnes jsi pracovala Xh. Dej si pauzu!"
+  - 0h celkem → (ticho, možná volno)
+
+**Kdy zobrazit celkové alerty:**
+- Po vyplnění **alespoň 5 dní** (nebo celý týden)
+- Pak teprve říct "Tento týden jsi měla průměrně X fakturovatelných hodin"
+
+---
+
+#### 16. Gamifikace, motivace, oslavy
+**Tvůj požadavek:**
+- Něco vtipného
+- Vizuály nebo oslavy
+- Sbírání bodů
+- Motivace
+
+**Nápady:**
+- **Achievementy:**
+  - "První vyplněný týden!" 🏆
+  - "Zdražila jsi poprvé!" 🎉
+  - "Máš 3měsíční rezervu!" 💰
+  - "Prvních 10 klientů!" 🌟
+
+- **Progress tracking:**
+  - "Jsi na 60% cesty k minimální hodinovce"
+  - "Vyplnila jsi už 20 dní v trackeru - skvělé!"
+
+- **Vizuální motivace:**
+  - Confetti animace při dokončení kalkulačky
+  - Progress bar pro rezervu
+  - "Level up" při dosažení milníků
+
+- **Týdenní recap:**
+  - "Tento týden jsi dokázala X, Y, Z - paráda!"
+
+**Důležité:** Neinvazivní, pozitivní, ne "gaming" ale "empowering"
+
+---
+
+### 🎯 SHRNUTÍ PRIORIT (můj návrh)
+
+| Priorita | Funkce | Proč | Konflikt s TODO? |
+|----------|--------|------|------------------|
+| 🔴 KRITICKÉ | Dvě hodinovky (minimální vs. fakturační) | Základní koncept kalkulace | ✅ ANO - ovlivňuje výpočet A |
+| 🔴 KRITICKÉ | Expresní termíny (+50%) | Zásadní pro 1:1 práci | ✅ ANO - ovlivňuje kalkulačku |
+| 🔴 KRITICKÉ | Emoji → Lucide ikony | Design pravidlo | ✅ ANO - ovlivňuje celou UI |
+| 🔥 VYSOKÁ | Náklady na asistentku/tým | Chybějící položka v nákladech | ❌ NE |
+| 🔥 VYSOKÁ | Realistická kapacita (44 týdnů) | Zásadně mění výpočet | ✅ ANO - ovlivňuje kalkulačku |
+| 🔥 VYSOKÁ | Finanční rezerva | Klíčové pro udržitelnost | ❌ NE - jen rozšíření kroku 1 |
+| 🔥 VYSOKÁ | Alerty jen když relevantní | UX problém | ✅ ANO - upravujeme tracker |
+| 🟡 STŘEDNÍ | Reality Check | Kontrola zpětně | ❌ NE - nová sekce |
+| 🟡 STŘEDNÍ | Kalkulátor zdražení | Praktický nástroj | ❌ NE - nová sekce |
+| 🟡 STŘEDNÍ | Signály pro zdražení | Diagnostika | ❌ NE - nová sekce |
+| 🟡 STŘEDNÍ | Uživatelská stránka "Jsem skvělá" | Mindset | ⚠️ MOŽNÁ - propojit s koeficienty? |
+| 🟡 STŘEDNÍ | Tracker - zvířata, zábava, volba nesledovat | Rozšíření trackeru | ✅ ANO - upravujeme tracker |
+| 🟢 NIŽŠÍ | Generátor balíčků | Nice to have | ❌ NE |
+| 🟢 NIŽŠÍ | SWOT analýza | Podpora mindsetu | ❌ NE |
+| 🟢 NIŽŠÍ | Šablony na námitky | Edukace | ❌ NE |
+| 🟢 NIŽŠÍ | Neplacené aktivity breakdown | Detailní tracking | ❌ NE |
+| 🟢 NIŽŠÍ | Meditace pro ukotvení | Mindset | ❌ NE |
+| 🟢 NIŽŠÍ | Edukace cena-hodnota | Mindset | ❌ NE |
+| 🟢 NIŽŠÍ | Gamifikace | Motivace | ❌ NE |
+
+---
+
 ## ✅ Hotové
 
 - ✅ Přidat client_id do projects tabulky (FK na clients)
