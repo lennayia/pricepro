@@ -776,7 +776,14 @@ const TrackerDayPage = () => {
                           <NumberInput
                             value={isEmptyRow ? '' : row.hours}
                             onChange={(value) => {
-                              if (!isEmptyRow) {
+                              const numValue = parseFloat(value) || 0;
+                              if (isEmptyRow && numValue > 0) {
+                                // Create new row when user enters hours in empty row
+                                setCategoryProjectRows(prev => ({
+                                  ...prev,
+                                  [category.key]: [...(prev[category.key] || []), { clientId: '', projectId: '', hours: numValue }]
+                                }));
+                              } else if (!isEmptyRow) {
                                 handleUpdateProjectHours(category.key, rowIndex, value);
                               }
                             }}
@@ -786,7 +793,7 @@ const TrackerDayPage = () => {
                             step={0.5}
                             size="small"
                             sx={{ width: 90 }}
-                            disabled={saving || success || isEmptyRow}
+                            disabled={saving || success}
                           />
                           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
                             h
