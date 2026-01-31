@@ -50,7 +50,7 @@ import { ResponsiveButton } from '../../../components/ui';
 import { COLORS, INFO_CARD_STYLES, CARD_ICON_STYLES, WARNING_CARD_STYLES } from '../../../constants/colors';
 
 const steps = [
-  { label: 'Životní náklady', description: 'Kolik MUSÍTE vydělat?', icon: Home },
+  { label: 'Náklady', description: 'Kolik MUSÍTE vydělat?', icon: Home },
   { label: 'Reálný čas', description: 'Kolik hodin OPRAVDU fakturujete?', icon: Clock },
   { label: 'Tržní hodnota', description: 'Kolik DOOPRAVDY stojíte?', icon: BarChart3 },
 ];
@@ -115,11 +115,12 @@ const CalculatorPage = () => {
   const [trackerDataError, setTrackerDataError] = useState(false);
   const [manualOverride, setManualOverride] = useState(false);
 
-  // Layer 1: Living costs
+  // Layer 1: Costs
   const [housingCosts, setHousingCosts] = useState('');
   const [livingCosts, setLivingCosts] = useState('');
   const [businessCosts, setBusinessCosts] = useState('');
   const [savings, setSavings] = useState('');
+  const [contributions, setContributions] = useState('10000'); // Default 10k for OSVČ in CZ
 
   // Layer 2: Real time
   const [weeklyHours, setWeeklyHours] = useState('');
@@ -161,13 +162,15 @@ const CalculatorPage = () => {
             setLivingCosts(latest.inputs.livingCosts || '');
             setBusinessCosts(latest.inputs.businessCosts || '');
             setSavings(latest.inputs.savings || '');
+            setContributions(latest.inputs.contributions || '10000');
             setWeeklyHours(latest.inputs.weeklyHours || '');
             setBillableHours(latest.inputs.billableHours || '');
             setWeeksToTrack(latest.inputs.weeksToTrack || 1);
             setBaseWage(latest.inputs.baseWage || 'average_prague');
             setCustomWage(latest.inputs.customWage || '');
             setExperience(latest.inputs.experience || '0-2');
-            setSpecialization(latest.inputs.specialization || 'generalist');
+            setBreadth(latest.inputs.breadth || 'narrow');
+            setEducation(latest.inputs.education || 'none');
             setPortfolio(latest.inputs.portfolio || 'none');
             setDemand(latest.inputs.demand || 'low');
           }
@@ -253,14 +256,10 @@ const CalculatorPage = () => {
     const living = parseFloat(livingCosts) || 0;
     const business = parseFloat(businessCosts) || 0;
     const savingsAmount = parseFloat(savings) || 0;
-    const subtotal = housing + living + business + savingsAmount;
+    const contributionsAmount = parseFloat(contributions) || 0;
 
-    // Odvody: 15% z celku NEBO minimálně 10 000 Kč/měsíc
-    const contributionsByPercent = subtotal * 0.15;
-    const contributionsByMinimum = 10000;
-    const contributions = Math.max(contributionsByPercent, contributionsByMinimum);
-
-    return subtotal + contributions;
+    // Celkové měsíční náklady = A + B + C
+    return housing + living + savingsAmount + business + contributionsAmount;
   };
 
   // Calculate billable hours per month (Layer 2)
@@ -369,6 +368,7 @@ const CalculatorPage = () => {
           livingCosts,
           businessCosts,
           savings,
+          contributions,
           weeklyHours,
           billableHours,
           weeksToTrack,
@@ -403,9 +403,14 @@ const CalculatorPage = () => {
 
   const renderStep1 = () => (
     <Stack spacing={3}>
-      <Typography variant="h6">Kolik MUSÍTE vydělat?</Typography>
+      <Typography variant="h6">Kolik MUSÍTE vydělat měsíčně?</Typography>
       <Typography color="text.secondary">
-        Zadejte své měsíční náklady. Tyto údaje potřebujeme pro výpočet vašeho životního minima.
+        Zadejte všechny své měsíční náklady včetně odvodů. To je minimum, které musíte vydělat, abyste neprodělávali.
+      </Typography>
+
+      {/* SEKCE A: Životní náklady */}
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 2 }}>
+        A) Životní náklady
       </Typography>
 
       <TextField
@@ -421,23 +426,11 @@ const CalculatorPage = () => {
       />
 
       <TextField
-        label="Životní náklady"
+        label="Živobytí"
         helperText="Jídlo, oblečení, doprava, zdraví"
         type="number"
         value={livingCosts}
         onChange={(e) => setLivingCosts(e.target.value)}
-        InputProps={{
-          endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
-        }}
-        fullWidth
-      />
-
-      <TextField
-        label="Náklady na podnikání"
-        helperText="Software, telefon, účetní, vzdělávání, marketing"
-        type="number"
-        value={businessCosts}
-        onChange={(e) => setBusinessCosts(e.target.value)}
         InputProps={{
           endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
         }}
@@ -456,32 +449,71 @@ const CalculatorPage = () => {
         fullWidth
       />
 
-      <Card
-        sx={{
-          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
-          border: INFO_CARD_STYLES[theme.palette.mode].border,
-          mb: 2,
+      {/* SEKCE B: Podnikatelské náklady */}
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 3 }}>
+        B) Podnikatelské náklady
+      </Typography>
+
+      <TextField
+        label="Náklady na podnikání"
+        helperText="Software, marketing, účetní, asistentka, vzdělávání"
+        type="number"
+        value={businessCosts}
+        onChange={(e) => setBusinessCosts(e.target.value)}
+        InputProps={{
+          endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
         }}
-      >
-        <CardContent sx={{ py: 1.5 }}>
-          <Typography variant="body2" color="text.secondary">
-            K vašim nákladům automaticky přičteme 15% na daně a odvody OSVČ.
-          </Typography>
-        </CardContent>
-      </Card>
+        fullWidth
+      />
+
+      {/* SEKCE C: Odvody a daně */}
+      <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 3 }}>
+        C) Odvody a daně
+      </Typography>
+
+      <TextField
+        label="Měsíční odvody a daně"
+        helperText="Minimálně cca 10 000 Kč pro OSVČ v ČR (zdravotní + sociální pojištění + daň z příjmu)"
+        type="number"
+        value={contributions}
+        onChange={(e) => setContributions(e.target.value)}
+        InputProps={{
+          endAdornment: <InputAdornment position="end">Kč/měsíc</InputAdornment>,
+        }}
+        fullWidth
+      />
 
       <Card
         sx={{
           bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
           border: INFO_CARD_STYLES[theme.palette.mode].border,
+          mt: 2,
+        }}
+      >
+        <CardContent sx={{ py: 1.5 }}>
+          <Typography variant="body2" color="text.secondary">
+            ℹ️ V ČR platí OSVČ minimálně cca 10 000 Kč měsíčně na odvody. U vyšších příjmů to může být více (cca 30% z příjmu).
+          </Typography>
+        </CardContent>
+      </Card>
+
+      {/* Celkový souhrn */}
+      <Card
+        sx={{
+          bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor,
+          border: INFO_CARD_STYLES[theme.palette.mode].border,
+          mt: 2,
         }}
       >
         <CardContent>
-          <Typography variant="body2" color="text.secondary">
-            Vaše minimální měsíční příjmy
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Vaše celkové měsíční náklady
           </Typography>
           <Typography variant="h4" color="primary">
             {getMinimumMonthly().toLocaleString('cs-CZ')} Kč
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            = {housingCosts || 0} (bydlení) + {livingCosts || 0} (živobytí) + {savings || 0} (úspory) + {businessCosts || 0} (podnikání) + {contributions || 0} (odvody)
           </Typography>
         </CardContent>
       </Card>
