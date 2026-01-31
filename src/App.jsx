@@ -11,6 +11,7 @@ import RootRedirect from './components/common/RootRedirect';
 import { ScrollToTop } from './components/layout/ScrollToTop';
 
 // Public Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 
@@ -35,8 +36,8 @@ function App() {
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
-            {/* Root redirect */}
-            <Route path="/" element={<RootRedirect />} />
+            {/* Landing page */}
+            <Route path="/" element={<LandingPage />} />
 
             {/* Public routes */}
             <Route element={<PublicLayout />}>
