@@ -65,6 +65,7 @@ const TrackerResultsPage = () => {
   const [clientsMap, setClientsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filledDaysCount, setFilledDaysCount] = useState(0);
 
   // Load category settings
   useEffect(() => {
@@ -186,6 +187,14 @@ const TrackerResultsPage = () => {
         });
 
         setWeekData(transformedData);
+
+        // Count filled days (entries with at least some hours) for smart alerts
+        const filled = entries.filter(entry => {
+          const totalHours = WORK_CATEGORY_KEYS.reduce((sum, key) => sum + (parseFloat(entry[key]) || 0), 0) +
+                            PERSONAL_CATEGORY_KEYS.reduce((sum, key) => sum + (parseFloat(entry[key]) || 0), 0);
+          return totalHours > 0;
+        });
+        setFilledDaysCount(filled.length);
       } catch (err) {
         console.error('Error loading week data:', err);
         setError('Nepodařilo se načíst data. Zkuste to prosím znovu.');
@@ -911,8 +920,8 @@ const TrackerResultsPage = () => {
         </Grid>
       </Grid>
 
-      {/* Personalized Recommendations - nyní z utils/healthScore.js */}
-      {(() => {
+      {/* Personalized Recommendations - pouze po 5+ vyplněných dnech */}
+      {filledDaysCount >= 5 && (() => {
         const recommendations = generateRecommendations({ avgSleep, avgWork, avgPersonal, avgFamily });
         if (recommendations.length === 0) return null;
 
@@ -943,8 +952,8 @@ const TrackerResultsPage = () => {
         );
       })()}
 
-      {/* Insight Card */}
-      {biggestTimeSink.value > 0 && (
+      {/* Insight Card - pouze po 5+ vyplněných dnech */}
+      {filledDaysCount >= 5 && biggestTimeSink.value > 0 && (
         <Card
           sx={{
             mb: 4,
