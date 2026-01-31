@@ -145,6 +145,89 @@ DROP FUNCTION IF EXISTS pricepro.initialize_category_settings() CASCADE;
 
 ---
 
+## 🐛 KRITICKÁ CHYBA - Kalkulačka hodinovky
+
+### Problém:
+**Soubor:** `/src/pages/app/calculator/CalculatorPage.jsx`
+
+**Současný výpočet (ŠPATNĚ):**
+```javascript
+const getMinimumMonthly = () => {
+  const housing = parseFloat(housingCosts) || 0;
+  const living = parseFloat(livingCosts) || 0;
+  const business = parseFloat(businessCosts) || 0;
+  const savingsAmount = parseFloat(savings) || 0;
+  const subtotal = housing + living + business + savingsAmount;
+  const taxes = subtotal * 0.15; // ❌ CHYBA! Jen 15% daně, ale OSVČ platí 35-45%!
+  return subtotal + taxes;
+};
+```
+
+### Co je špatně:
+
+1. **Nedostatečné odvody:**
+   - Počítá se pouze 15% na daně
+   - Ale OSVČ v ČR platí celkem ~35-45%:
+     - Zdravotní pojištění: ~13,5%
+     - Sociální pojištění: ~29,2%
+     - Daň z příjmu: 15% (nebo 23% nad limit)
+   - **Celkem: ~35-45% odvodů!**
+
+2. **Špatný vzorec:**
+   - Současný vzorec: `Potřebné náklady + (náklady × 0,15) = minimální měsíční příjem`
+   - Ale odvody se platí z **HRUBÉHO příjmu**, ne z nákladů!
+   - Správný vzorec: `Hrubý příjem = Čisté náklady / (1 - sazba odvodů)`
+
+### Správný výpočet:
+
+**Příklad:**
+- Potřebuji pokrýt náklady: 50 000 Kč/měsíc (bydlení + živobytí + byznys + úspory)
+- Odvody celkem: 35% (konzervativní odhad)
+
+**Špatně (současný stav):**
+```
+Minimální příjem = 50 000 + (50 000 × 0,15) = 57 500 Kč
+→ Po odvodech 35% zbyde jen: 41 875 Kč ❌ (nestačí na náklady 50k!)
+```
+
+**Správně:**
+```
+Minimální hrubý příjem = 50 000 / (1 - 0,35) = 76 923 Kč
+→ Po odvodech 35% zbude přesně: 50 000 Kč ✅
+```
+
+### Co opravit:
+
+```javascript
+const getMinimumMonthly = () => {
+  const housing = parseFloat(housingCosts) || 0;
+  const living = parseFloat(livingCosts) || 0;
+  const business = parseFloat(businessCosts) || 0;
+  const savingsAmount = parseFloat(savings) || 0;
+
+  const netCosts = housing + living + business + savingsAmount;
+
+  // OSVČ odvody: zdravotní (~13.5%) + sociální (~29.2%) + daň (15-23%)
+  // Používáme konzervativní odhad 35% (může být až 45%)
+  const contributionRate = 0.35;
+
+  // Správný vzorec: Hrubý příjem = Čisté náklady / (1 - sazba odvodů)
+  const grossIncome = netCosts / (1 - contributionRate);
+
+  return grossIncome;
+};
+```
+
+### Dopad na uživatele:
+- **Současný stav:** Uživatelům vychází **podhodnocená hodinovka**
+- Po zaplacení skutečných odvodů (35-45%) nemají dost na pokrytí nákladů
+- Výsledek: Neudržitelný byznys model, práce pod hodnotou
+
+### Priorita: 🚨 VYSOKÁ
+Toto přímo ovlivňuje správnost doporučené hodinovky. Uživatelé s touto chybou účtují příliš málo a nemohou pokrýt své náklady.
+
+---
+
 ## ✅ Hotové
 
 - ✅ Přidat client_id do projects tabulky (FK na clients)
