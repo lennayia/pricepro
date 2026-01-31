@@ -147,7 +147,7 @@ const TrackerDayPage = () => {
   // Load existing data for this day
   useEffect(() => {
     const loadDayData = async () => {
-      if (!user || isNaN(day) || day < 1 || day > 7) {
+      if (!user || isNaN(day) || day < 1 || day > 7 || success || saving) {
         setLoading(false);
         return;
       }
@@ -256,6 +256,11 @@ const TrackerDayPage = () => {
       setSaving(true);
       try {
         await deleteTimeEntry(user.id, actualDate);
+
+        // Clear all state to prevent re-loading deleted data
+        setFormData(PERSONAL_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: '' }), {}));
+        setCategoryProjectRows(WORK_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.key]: [] }), {}));
+
         setSuccess(true);
         setTimeout(() => {
           navigate('/app/tracker');
