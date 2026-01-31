@@ -15,6 +15,8 @@ import {
   Moon,
   Users,
   Sparkles,
+  PawPrint,
+  Smile,
   ArrowLeft,
   Save,
   CheckCircle2,
@@ -40,6 +42,8 @@ export const CATEGORY_ICONS = {
   // Osobní život
   sleep: Moon,
   family_time: Users,
+  pets: PawPrint,
+  fun: Smile,
   personal_time: Sparkles,
 };
 
