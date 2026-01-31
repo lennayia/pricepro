@@ -32,6 +32,7 @@ import { useWeek } from '../../../contexts/WeekContext';
 import { getTimeEntry, upsertTimeEntry } from '../../../services/timeEntries';
 import { getProjects, createProject, uploadProjectLogo } from '../../../services/projects';
 import { getClients } from '../../../services/clients';
+import { supabase } from '../../../services/supabase';
 import { getDateForDayInWeek, formatDateWithDayName } from '../../../utils/dateHelpers';
 import { WORK_CATEGORIES, PERSONAL_CATEGORIES } from '../../../constants/categories';
 import { calculateTotalHours, calculateWorkHours, calculatePersonalHours } from '../../../utils/calculators';
@@ -68,6 +69,7 @@ const TrackerDayPage = () => {
 
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
+  const [trackPersonalTime, setTrackPersonalTime] = useState(true); // Default true
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -84,23 +86,37 @@ const TrackerDayPage = () => {
   const [createProjectError, setCreateProjectError] = useState('');
   const [pendingProjectSelection, setPendingProjectSelection] = useState(null); // { categoryKey, rowIndex }
 
-  // Load projects and clients
+  // Load projects, clients, and user settings
   useEffect(() => {
-    const loadProjectsAndClients = async () => {
+    const loadProjectsAndClientsAndSettings = async () => {
       if (!user) return;
       try {
+        // Load projects and clients
         const [projectsData, clientsData] = await Promise.all([
           getProjects(user.id),
           getClients(user.id)
         ]);
         setProjects(projectsData);
         setClients(clientsData);
+
+        // Load user settings (track_personal_time)
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('track_personal_time')
+          .eq('id', user.id)
+          .single();
+
+        if (userError) {
+          console.error('Error loading user settings:', userError);
+        } else if (userData) {
+          setTrackPersonalTime(userData.track_personal_time ?? true);
+        }
       } catch (err) {
-        console.error('Error loading projects and clients:', err);
+        console.error('Error loading data:', err);
       }
     };
 
-    loadProjectsAndClients();
+    loadProjectsAndClientsAndSettings();
   }, [user]);
 
   // Load existing data for this day
@@ -208,11 +224,13 @@ const TrackerDayPage = () => {
       return;
     }
 
-    // Validate total hours doesn't exceed TIME_CONSTANTS.HOURS_IN_DAY
-    const totalHours = calculateTotalHours(allData);
-    if (totalHours > TIME_CONSTANTS.HOURS_IN_DAY) {
-      setError(`Součet hodin nemůže překročit ${TIME_CONSTANTS.HOURS_IN_DAY} hodin za den. Aktuálně: ${formatHours(totalHours)}h`);
-      return;
+    // Validate total hours doesn't exceed TIME_CONSTANTS.HOURS_IN_DAY (only if tracking personal time)
+    if (trackPersonalTime) {
+      const totalHours = calculateTotalHours(allData);
+      if (totalHours > TIME_CONSTANTS.HOURS_IN_DAY) {
+        setError(`Součet hodin nemůže překročit ${TIME_CONSTANTS.HOURS_IN_DAY} hodin za den. Aktuálně: ${formatHours(totalHours)}h`);
+        return;
+      }
     }
 
     setSaving(true);
@@ -291,7 +309,9 @@ const TrackerDayPage = () => {
     return total;
   }, [categoryProjectRows]);
 
-  const personalHours = useMemo(() => calculatePersonalHours(formData), [formData]);
+  const personalHours = useMemo(() => {
+    return trackPersonalTime ? calculatePersonalHours(formData) : 0;
+  }, [formData, trackPersonalTime]);
   const totalHours = useMemo(() => workHours + personalHours, [workHours, personalHours]);
   const sleepHours = useMemo(() => parseFloat(formData.sleep) || 0, [formData.sleep]);
 
@@ -839,71 +859,75 @@ const TrackerDayPage = () => {
           })}
         </Stack>
 
-        {/* Personal Life Section */}
-        <Typography
-          variant="h6"
-          sx={{
-            mb: 2,
-            textTransform: 'uppercase',
-            fontWeight: 700,
-            letterSpacing: 0.5,
-            color: 'text.primary'
-          }}
-        >
-          Osobní život (v hodinách)
-        </Typography>
-        <Stack spacing={2} sx={{ mb: 4 }}>
-          {PERSONAL_CATEGORIES.map((category) => {
-            const Icon = category.icon;
-            return (
-            <Card
-              key={category.key}
+        {/* Personal Life Section - only show if user wants to track personal time */}
+        {trackPersonalTime && (
+          <>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 2,
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                letterSpacing: 0.5,
+                color: 'text.primary'
+              }}
             >
-              <CardContent sx={{ py: 2 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 2,
-                  }}
+              Osobní život (v hodinách)
+            </Typography>
+            <Stack spacing={2} sx={{ mb: 4 }}>
+              {PERSONAL_CATEGORIES.map((category) => {
+                const Icon = category.icon;
+                return (
+                <Card
+                  key={category.key}
                 >
-                  <Box
-                    sx={{
-                      color: category.color || COLORS.neutral[600],
-                      display: 'flex',
-                      alignItems: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon size={24} />
-                  </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {category.label}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
-                      {category.description}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ alignSelf: 'flex-end' }}>
-                    <NumberInput
-                      value={formData[category.key]}
-                      onChange={(value) => handleChange(category.key, value)}
-                      placeholder="0"
-                      min={0}
-                      max={TIME_CONSTANTS.HOURS_IN_DAY}
-                      step={0.5}
-                      size="small"
-                      sx={{ width: 75 }}
-                      disabled={saving || success}
-                    />
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-            );
-          })}
-        </Stack>
+                  <CardContent sx={{ py: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 2,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          color: category.color || COLORS.neutral[600],
+                          display: 'flex',
+                          alignItems: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon size={24} />
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {category.label}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                          {category.description}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ alignSelf: 'flex-end' }}>
+                        <NumberInput
+                          value={formData[category.key]}
+                          onChange={(value) => handleChange(category.key, value)}
+                          placeholder="0"
+                          min={0}
+                          max={TIME_CONSTANTS.HOURS_IN_DAY}
+                          step={0.5}
+                          size="small"
+                          sx={{ width: 75 }}
+                          disabled={saving || success}
+                        />
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+                );
+              })}
+            </Stack>
+          </>
+        )}
 
         {/* Summary */}
         <Card
@@ -953,14 +977,16 @@ const TrackerDayPage = () => {
                   {formatHours(workHours)}h
                 </Typography>
               </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Osobní život
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {formatHours(personalHours)}h
-                </Typography>
-              </Box>
+              {trackPersonalTime && (
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Osobní život
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {formatHours(personalHours)}h
+                  </Typography>
+                </Box>
+              )}
               <Box>
                 <Typography variant="body2" color="text.secondary">
                   Zbývá
