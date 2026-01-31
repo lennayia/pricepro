@@ -29,6 +29,7 @@ import {
   Chip,
   FormControlLabel,
   Checkbox,
+  Collapse,
 } from '@mui/material';
 import { ResponsiveButton } from '../../../components/ui';
 import { ArrowLeft, Plus, Edit2, Trash2, Briefcase, Image, X } from 'lucide-react';
@@ -41,7 +42,7 @@ import {
   uploadProjectLogo,
   deleteProjectLogo,
 } from '../../../services/projects';
-import { getProjectThemes } from '../../../services/projectThemes';
+import { getProjectThemes, createProjectTheme } from '../../../services/projectThemes';
 import { INFO_CARD_STYLES } from '../../../constants/colors';
 
 const ProjectsSettingsPage = () => {
@@ -71,6 +72,12 @@ const ProjectsSettingsPage = () => {
   const [logoPreview, setLogoPreview] = useState('');
   const [removeLogo, setRemoveLogo] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Inline theme creation
+  const [showCreateTheme, setShowCreateTheme] = useState(false);
+  const [newThemeName, setNewThemeName] = useState('');
+  const [newThemeColor, setNewThemeColor] = useState('');
+  const [creatingTheme, setCreatingTheme] = useState(false);
 
   // Load projects and themes on mount
   useEffect(() => {
@@ -128,7 +135,43 @@ const ProjectsSettingsPage = () => {
     setLogoFile(null);
     setLogoPreview('');
     setRemoveLogo(false);
+    setShowCreateTheme(false);
+    setNewThemeName('');
+    setNewThemeColor('');
     setError('');
+  };
+
+  const handleCreateTheme = async () => {
+    if (!newThemeName.trim()) {
+      setError('Vyplňte název tématu.');
+      return;
+    }
+
+    try {
+      setCreatingTheme(true);
+      setError('');
+
+      const newTheme = await createProjectTheme(user.id, {
+        name: newThemeName.trim(),
+        color: newThemeColor || null,
+      });
+
+      // Add to themes list and select it
+      setThemes(prev => [...prev, newTheme]);
+      setProjectTheme(newTheme);
+
+      // Reset form
+      setNewThemeName('');
+      setNewThemeColor('');
+      setShowCreateTheme(false);
+      setSuccess('Téma bylo vytvořeno a vybráno.');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error creating theme:', err);
+      setError(err.message || 'Nepodařilo se vytvořit téma.');
+    } finally {
+      setCreatingTheme(false);
+    }
   };
 
   const handleLogoChange = async (e) => {
@@ -615,42 +658,111 @@ const ProjectsSettingsPage = () => {
             </FormControl>
 
             {/* Theme Selection */}
-            <Autocomplete
-              value={projectTheme}
-              onChange={(e, newValue) => setProjectTheme(newValue)}
-              options={themes}
-              getOptionLabel={(option) => option.name || ''}
-              renderInput={(params) => (
-                <TextField {...params} label="Téma (volitelné)" />
+            <Box>
+              <Autocomplete
+                value={projectTheme}
+                onChange={(e, newValue) => setProjectTheme(newValue)}
+                options={themes}
+                getOptionLabel={(option) => option.name || ''}
+                renderInput={(params) => (
+                  <TextField {...params} label="Téma (volitelné)" />
+                )}
+                renderOption={(props, option) => (
+                  <li {...props}>
+                    <Chip
+                      label={option.name}
+                      size="small"
+                      sx={{
+                        bgcolor: option.color || 'primary.main',
+                        color: 'white',
+                        fontWeight: 500,
+                      }}
+                    />
+                  </li>
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      {...getTagProps({ index })}
+                      key={option.id}
+                      label={option.name}
+                      size="small"
+                      sx={{
+                        bgcolor: option.color || 'primary.main',
+                        color: 'white',
+                      }}
+                    />
+                  ))
+                }
+              />
+
+              {/* Create new theme inline */}
+              {!showCreateTheme && (
+                <Button
+                  onClick={() => setShowCreateTheme(true)}
+                  startIcon={<Plus size={16} />}
+                  size="small"
+                  sx={{ mt: 1 }}
+                >
+                  Vytvořit nové téma
+                </Button>
               )}
-              renderOption={(props, option) => (
-                <li {...props}>
-                  <Chip
-                    label={option.name}
-                    size="small"
-                    sx={{
-                      bgcolor: option.color || 'primary.main',
-                      color: 'white',
-                      fontWeight: 500,
-                    }}
-                  />
-                </li>
-              )}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    {...getTagProps({ index })}
-                    key={option.id}
-                    label={option.name}
-                    size="small"
-                    sx={{
-                      bgcolor: option.color || 'primary.main',
-                      color: 'white',
-                    }}
-                  />
-                ))
-              }
-            />
+
+              <Collapse in={showCreateTheme}>
+                <Card sx={{ mt: 2, bgcolor: 'action.hover' }}>
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                      Rychlé vytvoření tématu
+                    </Typography>
+                    <Stack spacing={2}>
+                      <TextField
+                        label="Název tématu"
+                        value={newThemeName}
+                        onChange={(e) => setNewThemeName(e.target.value)}
+                        size="small"
+                        fullWidth
+                        placeholder="např. marketing, fitness..."
+                      />
+                      <TextField
+                        label="Barva (volitelné)"
+                        value={newThemeColor}
+                        onChange={(e) => {
+                          let value = e.target.value;
+                          if (value && !value.startsWith('#') && /^[0-9A-Fa-f]+$/.test(value)) {
+                            value = '#' + value;
+                          }
+                          setNewThemeColor(value);
+                        }}
+                        size="small"
+                        fullWidth
+                        placeholder="#3B82F6"
+                      />
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Button
+                          onClick={() => {
+                            setShowCreateTheme(false);
+                            setNewThemeName('');
+                            setNewThemeColor('');
+                          }}
+                          size="small"
+                        >
+                          Zrušit
+                        </Button>
+                        <Button
+                          onClick={handleCreateTheme}
+                          variant="contained"
+                          size="small"
+                          disabled={creatingTheme}
+                          startIcon={creatingTheme ? <CircularProgress size={14} color="inherit" /> : null}
+                        >
+                          {creatingTheme ? 'Vytvářím...' : 'Vytvořit'}
+                        </Button>
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Collapse>
+            </Box>
 
             {/* Status */}
             <FormControl fullWidth>
