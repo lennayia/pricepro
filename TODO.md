@@ -580,6 +580,175 @@ const theme = useTheme();
 
 ---
 
+---
+
+## 🆕 NOVÉ TODO - Z vyřešených konfliktů
+
+### 1. ❌ Expresní termíny v kalkulačce
+**Soubor:** `/src/pages/app/calculator/CalculatorPage.jsx`
+
+**Implementace:**
+- Přidat checkbox v kroku 1 (Životní náklady): `[ ] Je to expresní zakázka?`
+- Pokud zaškrtnuto → navýšit cenu o 50% (nebo uživatelsky nastavitelné %)
+- V tabulce výsledků přidat sloupec/řádek s expresní cenou (nenápadně)
+
+**Příklad výsledků:**
+```
+Doporučená hodinovka: 1 500 Kč/h
+Expresní zakázka: 2 250 Kč/h (+50%)
+```
+
+**Priorita:** 🟡 STŘEDNÍ (součást úprav kalkulačky)
+
+---
+
+### 2. ❌ Uživatelská stránka "Můj profil" + propojení s koeficienty
+**Nová sekce:** `/app/nastaveni/profil`
+
+**Co implementovat:**
+
+#### A) Databázová tabulka `user_profile`
+```sql
+CREATE TABLE pricepro.user_profile (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+
+  -- Vzdělání a certifikace
+  education JSONB DEFAULT '[]'::jsonb,
+  -- [{ type: 'vs'|'certifikace'|'kurz', name: '', year: '', file_url: '' }]
+
+  -- Statistiky
+  total_clients INTEGER DEFAULT 0,
+  total_courses INTEGER DEFAULT 0,
+  total_products INTEGER DEFAULT 0,
+
+  -- Unikátnosti
+  unique_selling_points TEXT[],
+  competitive_advantages TEXT[],
+  superpower TEXT,
+
+  -- Testimonials
+  testimonials JSONB DEFAULT '[]'::jsonb,
+  -- [{ client: '', text: '', date: '', image_url: '' }]
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### B) UI komponenta `ProfileSettingsPage.jsx`
+**Sekce:**
+1. **Vzdělání a certifikace**
+   - Upload PDF/fotky diplomů
+   - Automatické navržení koeficientu vzdělání (+0-35%)
+
+2. **Čísla, která imponují**
+   - Kolik klientů celkem
+   - Kolik kurzů/produktů
+   - Kolik let v oboru
+
+3. **Moje unikátnosti**
+   - Co umím, co nikdo jiný
+   - Konkurenční výhody
+   - Superpower
+
+4. **Reference**
+   - Testimonials od klientů
+   - Screenshot nebo text
+
+#### C) Propojení s kalkulačkou
+- Pokud má uživatel VŠ diplom → automaticky předvybrat "VŠ vzdělání v oboru" (+25%) v koeficientech
+- MOŽNOST EDITACE: Uživatel může změnit v kalkulačce (např. VŠ má, ale není v oboru → -25%)
+
+**Priorita:** 🟡 STŘEDNÍ (nová sekce, neblokuje současné TODO)
+
+---
+
+### 3. ❌ Tracker - rozšíření osobního času + volba sledování
+**Soubory:**
+- `/src/pages/app/tracker/TrackerDayPage.jsx`
+- `/src/constants/categories.js`
+- `/src/pages/app/settings/TrackerSettingsPage.jsx` (NOVÝ)
+
+**Co implementovat:**
+
+#### A) Nové osobní kategorie
+```javascript
+const PERSONAL_CATEGORIES = [
+  { key: 'sleep', name: 'Spánek', icon: Moon, color: '#9333ea' },
+  { key: 'family_time', name: 'Rodinný čas', icon: Users, color: '#ec4899' },
+  { key: 'pets', name: 'Čas se zvířaty', icon: Dog, color: '#f59e0b' }, // NOVÉ
+  { key: 'fun', name: 'Zábava/Koníčky', icon: Smile, color: '#10b981' }, // NOVÉ
+  { key: 'personal_time', name: 'Osobní péče', icon: Heart, color: '#8b5cf6' },
+];
+```
+
+#### B) Nastavení sledování
+**Nová stránka:** `/app/nastaveni/tracker`
+
+```javascript
+<FormControlLabel
+  control={<Switch checked={trackPersonalTime} onChange={handleToggle} />}
+  label="Chci sledovat osobní čas (spánek, rodina, zvířata...)"
+/>
+```
+
+**Pokud vypnuto:**
+- Nezobrazovat osobní kategorie v TrackerDayPage
+- Validace max 24h se NEVZTAHUJE (počítat jen pracovní hodiny)
+- Výsledky zobrazují jen pracovní breakdown
+
+#### C) Databáze - uživatelské nastavení
+```sql
+ALTER TABLE pricepro.users
+ADD COLUMN IF NOT EXISTS track_personal_time BOOLEAN DEFAULT true;
+```
+
+**Priorita:** 🔥 VYSOKÁ (upravujeme tracker TEĎ)
+
+---
+
+### 4. ❌ Alerty - logika validace (jen když relevantní)
+**Soubor:** `/src/pages/app/tracker/TrackerDayPage.jsx`
+
+**Současná logika:**
+- Alert po každém uložení (i po 1 dni)
+
+**Nová logika:**
+
+#### A) Okamžité alerty (ten den)
+```javascript
+// Po uložení dne - kontrolovat EXTRÉMY
+if (sleep < 5) {
+  showAlert('warning', `⚠️ Dnes jsi spala jen ${sleep}h. Nezapomeň na odpočinek!`);
+}
+
+if (totalWorkHours > 12) {
+  showAlert('warning', `⚠️ Dnes jsi pracovala ${totalWorkHours}h. Dej si pauzu!`);
+}
+
+// Pokud je vše OK → žádný alert (ticho)
+```
+
+#### B) Celkové alerty (po 5+ dnech)
+```javascript
+// Kontrola počtu vyplněných dní
+const filledDays = timeEntries.filter(e => e.total_hours > 0).length;
+
+if (filledDays >= 5) {
+  // TEPRVE TEĎ zobrazit celkové statistiky
+  const avgBillablePerWeek = calculateAverage(timeEntries);
+
+  if (avgBillablePerWeek < 20) {
+    showAlert('info', `Tento týden máš průměrně ${avgBillablePerWeek}h fakturovatelných hodin.`);
+  }
+}
+```
+
+**Priorita:** 🔥 VYSOKÁ (upravujeme tracker TEĎ, snadná změna)
+
+---
+
 ## 🐛 BUG - Scroll position při navigaci
 
 ### Problém:
@@ -629,62 +798,44 @@ function App() {
 
 ## 📦 BACKLOG - Budoucí rozšíření
 
-### ⚠️ KONFLIKTY S AKTUÁLNÍM TODO - NUTNÉ PROBRAŤ!
+### ✅ ROZHODNUTO - Konflikty vyřešeny
 
-#### 🔴 KONFLIKT 1: Dvě hodinovky (minimální vs. fakturační)
-**Z materiálů:**
-- **Minimální orientační (interní)** = celkové náklady / všechny hodiny
-- **Fakturační (pro klienta)** = celkové náklady / jen fakturovatelné hodiny
+#### 1. ~~Dvě hodinovky~~ → ZATÍM NE
+**Rozhodnutí:** Necháme jen jednu hodinovku (fakturační).
+**Pro budoucnost:** Pokud budeme chtít zobrazovat OBĚ (minimální orientační + fakturační), je to možné - poznámka v backlogu.
 
-**Současné TODO:** Máme pouze JEDNU minimální hodinovku (náklady / fakturovatelné)
+#### 2. Expresní termíny → SAMOSTATNÝ PŘEPÍNAČ ✅
+**Rozhodnutí:**
+- Přidat checkbox/přepínač "Je to expresní zakázka?" (+50% nebo více)
+- Zobrazit expresní cenu v tabulce výsledků (nenápadně, ne příliš výrazně)
+- **TODO:** Implementovat jako součást úprav kalkulačky
 
-**OTÁZKA:** Chceme zobrazovat OBĚ vedle sebe? To změní UI kalkulačky!
+#### 3. Emoji → Lucide ikony → POSTUPNĚ ✅
+**Rozhodnutí:**
+- Já už nové emoji NEPOUŽÍVAT
+- Současné emoji Lenka odstraní sama + požádá o náhradu Lucide ikonami
+- **TODO:** Design pravidlo dodržovat od teď
 
----
+#### 4. Uživatelská stránka → PROPOJIT S KOEFICIENTY ✅
+**Rozhodnutí:**
+- Vytvořit uživatelskou stránku "Můj profil" (diplomy, certifikace, úspěchy...)
+- PROPOJIT s koeficienty (zadá VŠ → automaticky +25% v Kvalifikaci)
+- Možnost editovat OBĚ (profil i koeficienty) - jako ostatní nastavení
+- **TODO:** Nová sekce v nastavení + propojení s kalkulačkou
 
-#### 🟡 KONFLIKT 2: Uživatelská stránka (diplomy, certifikace)
-**Tvůj nápad:**
-- Stránka kde uživatel zadá diplomy, certifikace, počet klientů, konkurenční výhody
-- Aby viděla pohromadě, jak je dobrá
+#### 5. Tracker rozšíření → UDĚLAT TEĎ ✅
+**Rozhodnutí:**
+- Přidat osobní kategorie: Čas se zvířaty, Zábava
+- Přidat možnost VYPNOUT sledování osobního času úplně
+- Implementovat TEĎ společně s úpravami TrackerDayPage
+- **TODO:** Rozšířit tracker categories + settings
 
-**Současné TODO:** Máme nové koeficienty s kategorií "Kvalifikace a vzdělání"
-
-**OTÁZKA:**
-- Chceš PROPOJIT? (uživatel zadá diplomy na profilu → automaticky se nastaví koeficient?)
-- Nebo samostatně? (profil = psychologická podpora, koeficienty = výpočet?)
-
----
-
-#### 🟡 KONFLIKT 3: Tracker - rozšíření osobního času
-**Tvůj nápad:**
-- Přidat: zvířata, zábava
-- Možnost vypnout sledování osobního času úplně
-
-**Současné TODO:** Upravujeme TrackerDayPage (klient→projekt→téma)
-
-**OTÁZKA:** Máme to udělat TEĎKA společně s úpravami, nebo až pak?
-
----
-
-#### 🟡 KONFLIKT 4: Expresní termíny (+50% cena)
-**Tvůj nápad:**
-- Pro práci 1:1 zahrnout možnost expresního termínu
-- Automaticky zvednout cenu o 50%+
-
-**Současné TODO:** Přepracováváme kalkulačku (nové koeficienty, odvody)
-
-**OTÁZKA:** Má to být další koeficient? Nebo samostatný přepínač "Je to expresní zakázka"?
-
----
-
-#### 🟢 KONFLIKT 5: Alerty v trackeru - jen když relevantní
-**Tvůj nápad:**
-- NE alert po 1 vyplněném dni ("pracuješ málo/moc")
-- ANO alert při extrémech (3h spánek, 15h práce) hned ten den
-
-**Současné TODO:** Upravujeme tracker
-
-**POZNÁMKA:** Toto můžeme udělat klidně teď, je to jen úprava validace.
+#### 6. Alerty logika → UDĚLAT TEĎ ✅
+**Rozhodnutí:**
+- NE alert po 1 vyplněném dni
+- ANO alert při extrémech (spánek <5h, práce >12h) ten den
+- Celkové alerty až po 5+ vyplněných dnech
+- **TODO:** Upravit validační logiku v trackeru
 
 ---
 
