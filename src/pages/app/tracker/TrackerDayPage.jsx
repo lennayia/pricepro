@@ -947,7 +947,7 @@ const TrackerDayPage = () => {
                           {category.description}
                         </Typography>
                       </Box>
-                      <Box sx={{ alignSelf: 'flex-end' }}>
+                      <Box sx={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: 1 }}>
                         <NumberInput
                           value={formData[category.key]}
                           onChange={(value) => handleChange(category.key, value)}
@@ -959,6 +959,16 @@ const TrackerDayPage = () => {
                           sx={{ width: 75 }}
                           disabled={saving || success}
                         />
+                        {formData[category.key] && parseFloat(formData[category.key]) > 0 && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleChange(category.key, '')}
+                            disabled={saving || success}
+                            sx={{ color: 'error.main' }}
+                          >
+                            <X size={18} />
+                          </IconButton>
+                        )}
                       </Box>
                     </Box>
                   </CardContent>
