@@ -24,6 +24,7 @@ import {
   FormControlLabel,
   Radio,
   InputAdornment,
+  LinearProgress,
 } from '@mui/material';
 import { ResponsiveButton, NumberInput } from '../../../components/ui';
 import { ArrowLeft, Save, AlertTriangle, CheckCircle, Lightbulb, Plus, X, Image } from 'lucide-react';
@@ -72,10 +73,30 @@ const TrackerDayPage = () => {
   const [clients, setClients] = useState([]);
   const [trackPersonalTime, setTrackPersonalTime] = useState(true); // Default true
   const [filledDaysCount, setFilledDaysCount] = useState(0); // Count of days with tracked hours
+
+  // Timeframe selection with localStorage persistence
+  const [timeframe, setTimeframe] = useState(() => {
+    const saved = localStorage.getItem('tracker_timeframe');
+    return saved || 'week';
+  });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Save timeframe to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('tracker_timeframe', timeframe);
+  }, [timeframe]);
+
+  // Calculate timeframe-specific settings
+  const timeframeDays = {
+    'week': 7,
+    '2weeks': 14,
+    '3weeks': 21,
+    'month': 30
+  }[timeframe];
 
   // New project dialog state
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
@@ -87,6 +108,7 @@ const TrackerDayPage = () => {
   const [creatingProject, setCreatingProject] = useState(false);
   const [createProjectError, setCreateProjectError] = useState('');
   const [pendingProjectSelection, setPendingProjectSelection] = useState(null); // { categoryKey, rowIndex }
+  const [dropdownOpen, setDropdownOpen] = useState(false); // Track if any dropdown is open for blur effect
 
   // Load projects, clients, and user settings
   useEffect(() => {
@@ -121,15 +143,26 @@ const TrackerDayPage = () => {
     loadProjectsAndClientsAndSettings();
   }, [user]);
 
-  // Count filled days for smart alert logic
+  // Count filled days for smart alert logic - only within current timeframe
   useEffect(() => {
     const countFilledDays = async () => {
       if (!user) return;
       try {
         const allEntries = await getTimeEntries(user.id);
 
-        // Count entries that have at least some hours tracked
+        // Calculate date range for current timeframe
+        const timeframeDateRange = [];
+        for (let i = 0; i < timeframeDays; i++) {
+          const date = new Date(selectedWeekStart);
+          date.setDate(date.getDate() + i);
+          timeframeDateRange.push(date.toISOString().split('T')[0]);
+        }
+
+        // Count entries that have at least some hours tracked within current timeframe
         const filled = allEntries.filter(entry => {
+          // Check if entry is within timeframe
+          if (!timeframeDateRange.includes(entry.date)) return false;
+
           const totalHours = WORK_CATEGORIES.reduce((sum, cat) => sum + (parseFloat(entry[cat.key]) || 0), 0) +
                             PERSONAL_CATEGORIES.reduce((sum, cat) => sum + (parseFloat(entry[cat.key]) || 0), 0);
           return totalHours > 0;
@@ -142,7 +175,7 @@ const TrackerDayPage = () => {
     };
 
     countFilledDays();
-  }, [user]);
+  }, [user, timeframe, timeframeDays, selectedWeekStart]);
 
   // Load existing data for this day
   useEffect(() => {
@@ -531,7 +564,28 @@ const TrackerDayPage = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ maxWidth: '100%', overflowX: 'hidden', position: 'relative' }}>
+      {/* Blur Overlay - shows when any dropdown is open */}
+      {dropdownOpen && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1300,
+            backdropFilter: 'blur(3px) saturate(120%)',
+            WebkitBackdropFilter: 'blur(3px) saturate(120%)',
+            backgroundColor: theme.palette.mode === 'dark'
+              ? 'rgba(0, 0, 0, 0.2)'
+              : 'rgba(245, 241, 232, 0.3)',
+            transition: 'all 0.2s ease-in-out',
+          }}
+          onClick={() => setDropdownOpen(false)}
+        />
+      )}
+
       <ResponsiveButton
         startIcon={<ArrowLeft size={20} />}
         onClick={() => navigate('/app/tracker')}
@@ -540,9 +594,40 @@ const TrackerDayPage = () => {
         Zpět na přehled
       </ResponsiveButton>
 
+      {/* Progress bar */}
+      <Card sx={{ mb: 3, bgcolor: INFO_CARD_STYLES[theme.palette.mode].bgcolor, border: INFO_CARD_STYLES[theme.palette.mode].border }}>
+        <CardContent sx={{ px: 'clamp(12px, 3vw, 16px)', py: 'clamp(12px, 3vw, 16px)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="body2" fontWeight={600} sx={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
+              Vyplněno {filledDaysCount}/{timeframeDays} dní
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
+              {Math.round((filledDaysCount / timeframeDays) * 100)}%
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={(filledDaysCount / timeframeDays) * 100}
+            sx={{
+              height: 8,
+              borderRadius: 1,
+              bgcolor: 'action.hover',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 1,
+              }
+            }}
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontSize: 'clamp(0.65rem, 1.8vw, 0.75rem)' }}>
+            Období můžete změnit na hlavní stránce trackeru
+          </Typography>
+        </CardContent>
+      </Card>
+
       <Stack spacing={1} sx={{ mb: 4 }}>
-        <Typography variant="h4">{formattedDate}</Typography>
-        <Typography color="text.secondary">
+        <Typography variant="h4" sx={{ fontSize: 'clamp(1.25rem, 4vw, 2.125rem)' }}>
+          {formattedDate}
+        </Typography>
+        <Typography color="text.secondary" sx={{ fontSize: 'clamp(0.85rem, 2.5vw, 1rem)' }}>
           Zapište, kolik hodin jste tento den strávili jednotlivými činnostmi.
         </Typography>
       </Stack>
@@ -575,7 +660,8 @@ const TrackerDayPage = () => {
             textTransform: 'uppercase',
             fontWeight: 700,
             letterSpacing: 0.5,
-            color: 'primary.main'
+            color: 'primary.main',
+            fontSize: 'clamp(0.95rem, 2.5vw, 1.25rem)'
           }}
         >
           Pracovní čas (v hodinách)
@@ -587,8 +673,8 @@ const TrackerDayPage = () => {
             const categoryTotal = getCategoryTotal(category.key);
 
             return (
-            <Card key={category.key} sx={{ overflow: 'hidden' }}>
-              <CardContent sx={{ py: 2, px: 2, '&:last-child': { pb: 2 } }}>
+            <Card key={category.key} sx={{ overflow: 'visible' }}>
+              <CardContent sx={{ py: 'clamp(12px, 2vw, 16px)', px: 'clamp(12px, 3vw, 16px)', '&:last-child': { pb: 'clamp(12px, 2vw, 16px)' } }}>
                 {/* Category header */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: rows.length > 0 ? 2 : 0 }}>
                   <Box sx={{ color: category.color || COLORS.neutral[600], flexShrink: 0 }}>
@@ -625,15 +711,19 @@ const TrackerDayPage = () => {
                         key={rowIndex}
                         sx={{
                           display: 'flex',
-                          gap: 1,
-                          alignItems: 'center',
-                          pl: 3.5
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          gap: { xs: 1.5, sm: 1 },
+                          alignItems: { xs: 'stretch', sm: 'center' },
+                          pl: { xs: 0, sm: 3.5 },
+                          mb: { xs: 2, sm: 0 }
                         }}
                       >
                         {/* Client Autocomplete */}
                         <Autocomplete
                           size="small"
                           value={clients.find(c => c.id === row.clientId) || null}
+                          onOpen={() => setDropdownOpen(true)}
+                          onClose={() => setDropdownOpen(false)}
                           onChange={(e, newValue) => {
                             if (isEmptyRow && newValue) {
                               // Adding new row with selected client
@@ -648,6 +738,28 @@ const TrackerDayPage = () => {
                           }}
                           options={clients}
                           getOptionLabel={(option) => option.name || ''}
+                          slotProps={{
+                            popper: {
+                              sx: { zIndex: 1400 }
+                            },
+                            paper: {
+                              elevation: 8,
+                              sx: {
+                                mt: 1,
+                                borderRadius: 1,
+                                '& .MuiAutocomplete-listbox': {
+                                  '& .MuiAutocomplete-option': {
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    minHeight: 48,
+                                    '&:last-child': {
+                                      borderBottom: 'none'
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }}
                           renderOption={(props, option) => {
                             const { key, ...otherProps } = props;
                             return (
@@ -732,7 +844,35 @@ const TrackerDayPage = () => {
                               />
                             );
                           }}
-                          sx={{ flex: 1 }}
+                          slotProps={{
+                            popper: {
+                              sx: { zIndex: 1400 }
+                            },
+                            paper: {
+                              elevation: 8,
+                              sx: {
+                                mt: 1,
+                                borderRadius: 1,
+                                '& .MuiAutocomplete-listbox': {
+                                  '& .MuiAutocomplete-option': {
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    minHeight: 48,
+                                    '&:last-child': {
+                                      borderBottom: 'none'
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }}
+                          sx={{
+                            flex: { xs: '1 1 100%', sm: 1 },
+                            width: { xs: '100%', sm: 'auto' },
+                            '& .MuiInputBase-root': {
+                              minHeight: { xs: 48, sm: 40 }
+                            }
+                          }}
                           disabled={saving || success}
                         />
 
@@ -740,6 +880,8 @@ const TrackerDayPage = () => {
                         <Autocomplete
                           size="small"
                           value={projects.find(p => p.id === row.projectId) || null}
+                          onOpen={() => setDropdownOpen(true)}
+                          onClose={() => setDropdownOpen(false)}
                           onChange={(e, newValue) => {
                             // Check if "Create new" option was selected
                             if (newValue && newValue.id === '__create_new__') {
@@ -852,7 +994,35 @@ const TrackerDayPage = () => {
                               />
                             );
                           }}
-                          sx={{ flex: 1 }}
+                          slotProps={{
+                            popper: {
+                              sx: { zIndex: 1400 }
+                            },
+                            paper: {
+                              elevation: 8,
+                              sx: {
+                                mt: 1,
+                                borderRadius: 1,
+                                '& .MuiAutocomplete-listbox': {
+                                  '& .MuiAutocomplete-option': {
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    minHeight: 48,
+                                    '&:last-child': {
+                                      borderBottom: 'none'
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }}
+                          sx={{
+                            flex: { xs: '1 1 100%', sm: 1 },
+                            width: { xs: '100%', sm: 'auto' },
+                            '& .MuiInputBase-root': {
+                              minHeight: { xs: 48, sm: 40 }
+                            }
+                          }}
                           disabled={saving || success}
                         />
 
@@ -871,47 +1041,55 @@ const TrackerDayPage = () => {
                           />
                         )}
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <NumberInput
-                            value={isEmptyRow ? '' : row.hours}
-                            onChange={(value) => {
-                              const numValue = parseFloat(value) || 0;
-                              if (isEmptyRow && numValue > 0) {
-                                // Create new row when user enters hours in empty row
-                                setCategoryProjectRows(prev => ({
-                                  ...prev,
-                                  [category.key]: [...(prev[category.key] || []), { clientId: '', projectId: '', hours: numValue }]
-                                }));
-                              } else if (!isEmptyRow) {
-                                handleUpdateProjectHours(category.key, rowIndex, value);
-                              }
-                            }}
-                            placeholder="0"
-                            min={0}
-                            max={TIME_CONSTANTS.HOURS_IN_DAY}
-                            step={0.5}
-                            size="small"
-                            sx={{ width: 90 }}
-                            disabled={saving || success}
-                          />
-                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                            h
-                          </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: { xs: '1 1 100%', sm: '0 0 auto' }, justifyContent: { xs: 'space-between', sm: 'flex-start' } }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: { xs: 1, sm: '0 0 auto' } }}>
+                            <NumberInput
+                              value={isEmptyRow ? '' : row.hours}
+                              onChange={(value) => {
+                                const numValue = parseFloat(value) || 0;
+                                if (isEmptyRow && numValue > 0) {
+                                  // Create new row when user enters hours in empty row
+                                  setCategoryProjectRows(prev => ({
+                                    ...prev,
+                                    [category.key]: [...(prev[category.key] || []), { clientId: '', projectId: '', hours: numValue }]
+                                  }));
+                                } else if (!isEmptyRow) {
+                                  handleUpdateProjectHours(category.key, rowIndex, value);
+                                }
+                              }}
+                              placeholder="0"
+                              min={0}
+                              max={TIME_CONSTANTS.HOURS_IN_DAY}
+                              step={0.5}
+                              size="small"
+                              sx={{
+                                flex: { xs: 1, sm: '0 0 auto' },
+                                width: { xs: '100%', sm: 90 },
+                                '& .MuiInputBase-root': {
+                                  minHeight: { xs: 48, sm: 40 }
+                                }
+                              }}
+                              disabled={saving || success}
+                            />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: 500 }}>
+                              h
+                            </Typography>
+                          </Box>
+                          {hasData && !isEmptyRow && (
+                            <IconButton
+                              size="small"
+                              onClick={() => handleRemoveProjectRow(category.key, rowIndex)}
+                              disabled={saving || success}
+                              sx={{
+                                color: 'error.main',
+                                minWidth: { xs: 44, sm: 34 },
+                                minHeight: { xs: 44, sm: 34 }
+                              }}
+                            >
+                              <X size={20} />
+                            </IconButton>
+                          )}
                         </Box>
-                        {hasData && !isEmptyRow && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleRemoveProjectRow(category.key, rowIndex)}
-                            disabled={saving || success}
-                            sx={{ color: 'error.main' }}
-                          >
-                            <X size={18} />
-                          </IconButton>
-                        )}
-                        {/* Spacer to keep alignment when no X button */}
-                        {(!hasData || isEmptyRow) && (
-                          <Box sx={{ width: 34 }} />
-                        )}
                       </Box>
                     );
                   })}
@@ -932,7 +1110,8 @@ const TrackerDayPage = () => {
                 textTransform: 'uppercase',
                 fontWeight: 700,
                 letterSpacing: 0.5,
-                color: 'text.primary'
+                color: 'text.primary',
+                fontSize: 'clamp(0.95rem, 2.5vw, 1.25rem)'
               }}
             >
               Osobní život (v hodinách)
@@ -944,52 +1123,70 @@ const TrackerDayPage = () => {
                 <Card
                   key={category.key}
                 >
-                  <CardContent sx={{ py: 2 }}>
+                  <CardContent sx={{ py: 'clamp(12px, 2vw, 16px)', px: 'clamp(12px, 3vw, 16px)' }}>
                     <Box
                       sx={{
                         display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 2,
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'stretch', sm: 'center' },
+                        gap: { xs: 1.5, sm: 2 }
                       }}
                     >
-                      <Box
-                        sx={{
-                          color: category.color || COLORS.neutral[600],
-                          display: 'flex',
-                          alignItems: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Icon size={24} />
+                      <Box sx={{ display: 'flex', gap: 2, flex: { xs: '1 1 100%', sm: 1 }, minWidth: 0 }}>
+                        <Box
+                          sx={{
+                            color: category.color || COLORS.neutral[600],
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon size={24} />
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 500, fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
+                            {category.label}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
+                            {category.description}
+                          </Typography>
+                        </Box>
                       </Box>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {category.label}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
-                          {category.description}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <NumberInput
-                          value={formData[category.key]}
-                          onChange={(value) => handleChange(category.key, value)}
-                          placeholder="0"
-                          min={0}
-                          max={TIME_CONSTANTS.HOURS_IN_DAY}
-                          step={0.5}
-                          size="small"
-                          sx={{ width: 75 }}
-                          disabled={saving || success}
-                        />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: { xs: '1 1 100%', sm: '0 0 auto' }, justifyContent: { xs: 'space-between', sm: 'flex-start' } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: { xs: 1, sm: '0 0 auto' } }}>
+                          <NumberInput
+                            value={formData[category.key]}
+                            onChange={(value) => handleChange(category.key, value)}
+                            placeholder="0"
+                            min={0}
+                            max={TIME_CONSTANTS.HOURS_IN_DAY}
+                            step={0.5}
+                            size="small"
+                            sx={{
+                              flex: { xs: 1, sm: '0 0 auto' },
+                              width: { xs: '100%', sm: 90 },
+                              '& .MuiInputBase-root': {
+                                minHeight: { xs: 48, sm: 40 }
+                              }
+                            }}
+                            disabled={saving || success}
+                          />
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', fontWeight: 500 }}>
+                            h
+                          </Typography>
+                        </Box>
                         {formData[category.key] && parseFloat(formData[category.key]) > 0 && (
                           <IconButton
                             size="small"
                             onClick={() => handleChange(category.key, '')}
                             disabled={saving || success}
-                            sx={{ color: 'error.main' }}
+                            sx={{
+                              color: 'error.main',
+                              minWidth: { xs: 44, sm: 34 },
+                              minHeight: { xs: 44, sm: 34 }
+                            }}
                           >
-                            <X size={18} />
+                            <X size={20} />
                           </IconButton>
                         )}
                       </Box>
@@ -1025,46 +1222,48 @@ const TrackerDayPage = () => {
               : 'text.primary',
           }}
         >
-          <CardContent>
+          <CardContent sx={{ px: 'clamp(12px, 3vw, 16px)', py: 'clamp(12px, 3vw, 16px)' }}>
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 mb: 2,
+                gap: 1,
+                flexWrap: 'wrap'
               }}
             >
-              <Typography variant="h6">Celkem dnes</Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              <Typography variant="h6" sx={{ fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>Celkem dnes</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, fontSize: 'clamp(1.5rem, 5vw, 2.125rem)' }}>
                 {formatHours(totalHours)} / {TIME_CONSTANTS.HOURS_IN_DAY} hod
               </Typography>
             </Box>
 
             {/* Work vs Personal breakdown */}
-            <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+            <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, mb: 2, flexWrap: 'wrap' }}>
               <Box>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   Práce
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
                   {formatHours(workHours)}h
                 </Typography>
               </Box>
               {trackPersonalTime && (
                 <Box>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                     Osobní život
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
                     {formatHours(personalHours)}h
                   </Typography>
                 </Box>
               )}
               <Box>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   Zbývá
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
                   {formatHours(TIME_CONSTANTS.HOURS_IN_DAY - totalHours)}h
                 </Typography>
               </Box>
@@ -1075,7 +1274,7 @@ const TrackerDayPage = () => {
               // VALIDATION ERROR - always show
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AlertTriangle size={16} color="white" />
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2" sx={{ color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   Pozor! Den má pouze {TIME_CONSTANTS.HOURS_IN_DAY} hodin. Zkontrolujte prosím své údaje.
                 </Typography>
               </Box>
@@ -1083,7 +1282,7 @@ const TrackerDayPage = () => {
               // EXTREME ALERT - show immediately (even on day 1)
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AlertTriangle size={16} color="white" />
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2" sx={{ color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   KRITICKY! Spíte méně než 5 hodin - vysoké riziko vyhoření!
                 </Typography>
               </Box>
@@ -1091,7 +1290,7 @@ const TrackerDayPage = () => {
               // EXTREME ALERT - show immediately (even on day 1)
               <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AlertTriangle size={16} color="white" />
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2" sx={{ color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                   KRITICKY! Pracujete více než 12 hodin - riziko vyhoření!
                 </Typography>
               </Box>
@@ -1100,14 +1299,14 @@ const TrackerDayPage = () => {
               sleepHours < 6 && sleepHours > 0 ? (
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <AlertTriangle size={16} color="white" />
-                  <Typography variant="body2" sx={{ color: 'white' }}>
+                  <Typography variant="body2" sx={{ color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                     Pozor! Spíte méně než 6 hodin - riziko vyhoření!
                   </Typography>
                 </Box>
               ) : workHours > 10 ? (
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <AlertTriangle size={16} color="white" />
-                  <Typography variant="body2" sx={{ color: 'white' }}>
+                  <Typography variant="body2" sx={{ color: 'white', fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' }}>
                     Hodně práce dnes ({formatHours(workHours)}h). Najděte si čas na odpočinek!
                   </Typography>
                 </Box>

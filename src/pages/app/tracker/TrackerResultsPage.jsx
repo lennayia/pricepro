@@ -56,6 +56,10 @@ const TrackerResultsPage = () => {
   const { selectedWeekStart } = useWeek();
   const theme = useTheme();
   const chartColors = getChartColors(theme.palette.mode);
+
+  // Read timeframe from localStorage (set in TrackerDayPage)
+  const timeframe = localStorage.getItem('tracker_timeframe') || 'week';
+
   const [weekData, setWeekData] = useState([]);
   const [billableCategoryKeys, setBillableCategoryKeys] = useState(['billable_work']);
   const [scalableCategoryKeys, setScalableCategoryKeys] = useState([]);
@@ -130,16 +134,35 @@ const TrackerResultsPage = () => {
 
       try {
         setLoading(true);
-        const weekDates = getWeekDatesForWeek(selectedWeekStart);
+
+        // Calculate dates based on selected timeframe
+        const getDatesForTimeframe = (startDate, timeframe) => {
+          const days = {
+            'week': 7,
+            '2weeks': 14,
+            '3weeks': 21,
+            'month': 30
+          }[timeframe];
+
+          const dates = [];
+          for (let i = 0; i < days; i++) {
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + i);
+            dates.push(date.toISOString().split('T')[0]);
+          }
+          return dates;
+        };
+
+        const dates = getDatesForTimeframe(selectedWeekStart, timeframe);
         const entries = await getTimeEntries(user.id);
 
-        // Filter to current week and transform to chart format
+        // Filter to current timeframe and transform to chart format
         const currentWeekEntries = entries.filter(entry =>
-          weekDates.includes(entry.date)
+          dates.includes(entry.date)
         );
 
         // Transform database format to chart format
-        const transformedData = weekDates.map(date => {
+        const transformedData = dates.map(date => {
           const entry = currentWeekEntries.find(e => e.date === date);
           const dayName = formatDayName(date);
 
@@ -204,7 +227,7 @@ const TrackerResultsPage = () => {
     };
 
     loadWeekData();
-  }, [user, selectedWeekStart]);
+  }, [user, selectedWeekStart, timeframe]);
 
   // Calculate totals
   const totals = allCategoryKeys.reduce((acc, key) => {
@@ -213,6 +236,28 @@ const TrackerResultsPage = () => {
   }, {});
 
   const totalHours = Object.values(totals).reduce((sum, val) => sum + val, 0);
+
+  // Timeframe-specific settings
+  const minFilledDaysThreshold = {
+    'week': 5,
+    '2weeks': 10,
+    '3weeks': 15,
+    'month': 20
+  }[timeframe];
+
+  const timeframeTitle = {
+    'week': 'Výsledky za týden',
+    '2weeks': 'Výsledky za 2 týdny',
+    '3weeks': 'Výsledky za 3 týdny',
+    'month': 'Výsledky za měsíc'
+  }[timeframe];
+
+  const timeframeDays = {
+    'week': 7,
+    '2weeks': 14,
+    '3weeks': 21,
+    'month': 30
+  }[timeframe];
 
   // Calculate hours by category type based on user settings
   const billableHours = billableCategoryKeys.reduce((sum, key) => sum + (totals[key] || 0), 0);
@@ -460,14 +505,14 @@ const TrackerResultsPage = () => {
       <WeekNavigation />
 
       <Stack spacing={1} sx={{ mb: 4 }}>
-        <Typography variant="h4">Výsledky za týden</Typography>
+        <Typography variant="h4">{timeframeTitle}</Typography>
         <Typography color="text.secondary">
-          Přehled vašeho času za vybraný týden.
+          Přehled vašeho času za vybrané období. (Období můžete změnit v trackeru)
         </Typography>
       </Stack>
 
       {/* Completion Status */}
-      {completedDays < TIME_CONSTANTS.DAYS_IN_WEEK && (
+      {completedDays < timeframeDays && (
         <Alert
           severity="warning"
           sx={{
@@ -481,10 +526,10 @@ const TrackerResultsPage = () => {
           }}
         >
           <Typography sx={{ color: 'inherit' }}>
-            <strong>Vyplněno {completedDays}/{TIME_CONSTANTS.DAYS_IN_WEEK} dní</strong>
+            <strong>Vyplněno {completedDays}/{timeframeDays} dní</strong>
           </Typography>
           <Typography variant="body2" sx={{ color: 'inherit' }}>
-            Pro přesnější přehled doporučujeme vyplnit celý týden.{' '}
+            Pro přesnější přehled doporučujeme vyplnit celé období.{' '}
             <Link to="/app/tracker" style={{ color: 'inherit', fontWeight: 600 }}>
               Pokračovat ve vyplňování
             </Link>
@@ -920,8 +965,8 @@ const TrackerResultsPage = () => {
         </Grid>
       </Grid>
 
-      {/* Personalized Recommendations - pouze po 5+ vyplněných dnech */}
-      {filledDaysCount >= 5 && (() => {
+      {/* Personalized Recommendations - pouze po dostatečném počtu vyplněných dnů */}
+      {filledDaysCount >= minFilledDaysThreshold && (() => {
         const recommendations = generateRecommendations({ avgSleep, avgWork, avgPersonal, avgFamily });
         if (recommendations.length === 0) return null;
 
@@ -952,8 +997,8 @@ const TrackerResultsPage = () => {
         );
       })()}
 
-      {/* Insight Card - pouze po 5+ vyplněných dnech */}
-      {filledDaysCount >= 5 && biggestTimeSink.value > 0 && (
+      {/* Insight Card - pouze po dostatečném počtu vyplněných dnů */}
+      {filledDaysCount >= minFilledDaysThreshold && biggestTimeSink.value > 0 && (
         <Card
           sx={{
             mb: 4,

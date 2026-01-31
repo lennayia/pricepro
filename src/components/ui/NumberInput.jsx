@@ -66,40 +66,42 @@ function NumberInput({
       disabled={disabled}
       fullWidth={fullWidth}
       InputProps={{
+        startAdornment: (
+          <InputAdornment position="start" sx={{ ml: -1 }}>
+            <IconButton
+              size="small"
+              onClick={handleDecrement}
+              disabled={disabled || parseFloat(value) <= min}
+              sx={{
+                padding: { xs: '8px', sm: '4px' },
+                minWidth: { xs: 44, sm: 28 },
+                minHeight: { xs: 44, sm: 28 },
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <Minus size={16} />
+            </IconButton>
+          </InputAdornment>
+        ),
         endAdornment: (
-          <InputAdornment position="end" sx={{ gap: 0, mr: -1.5 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.1 }}>
-              <IconButton
-                size="small"
-                onClick={handleIncrement}
-                disabled={disabled || parseFloat(value) >= max}
-                sx={{
-                  padding: '1px',
-                  minWidth: 16,
-                  minHeight: 14,
-                  '&:hover': {
-                    bgcolor: 'action.hover',
-                  },
-                }}
-              >
-                <Plus size={10} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={handleDecrement}
-                disabled={disabled || parseFloat(value) <= min}
-                sx={{
-                  padding: '1px',
-                  minWidth: 16,
-                  minHeight: 14,
-                  '&:hover': {
-                    bgcolor: 'action.hover',
-                  },
-                }}
-              >
-                <Minus size={10} />
-              </IconButton>
-            </Box>
+          <InputAdornment position="end" sx={{ mr: -1 }}>
+            <IconButton
+              size="small"
+              onClick={handleIncrement}
+              disabled={disabled || parseFloat(value) >= max}
+              sx={{
+                padding: { xs: '8px', sm: '4px' },
+                minWidth: { xs: 44, sm: 28 },
+                minHeight: { xs: 44, sm: 28 },
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <Plus size={16} />
+            </IconButton>
           </InputAdornment>
         ),
         inputProps: { min, max, step },
