@@ -303,6 +303,184 @@ Toto přímo ovlivňuje správnost doporučené hodinovky pro OSVČ v ČR. Bez s
 
 ---
 
+## 🎯 NOVÉ KOEFICIENTY - Změna z násobení na sčítání
+
+### Současný stav (NÁSOBENÍ):
+```javascript
+const coefficients = experience × specialization × portfolio × demand;
+// Příklad: 1.2 × 1.3 × 1.1 × 1.15 = 1.9734 (navýšení o 97%)
+```
+
+### Nový stav (SČÍTÁNÍ):
+```javascript
+const coefficients = 1 + experience + breadth + education + portfolio + demand;
+// Příklad: 1 + 0.3 + 0.2 + 0.2 + 0.15 + 0.2 = 2.05 (navýšení o 105%)
+```
+
+**Důvod změny:** Sčítání je intuitivnější a lépe kontrolovatelné. Násobení vytváří příliš velké nárůsty při kombinaci více faktorů.
+
+---
+
+### Nové kategorie a hodnoty koeficientů:
+
+#### 1. 💼 Zkušenosti v oboru
+- 0-2 roky: **+0%**
+- 3-5 let: **+30%**
+- 6-10 let: **+50%**
+- 10+ let: **+70%**
+
+#### 2. 📦 Šíře nabídky
+*(Nahrazuje původní "Generalista vs. Specialista")*
+- Úzká nabídka (1-2 služby): **+0%**
+- Střední nabídka (3-4 služby): **+20%**
+- Široká nabídka (komplexní řešení, 5+ služeb): **+30%**
+- Ultra-specializace (jediný v ČR, unikátní): **+50%**
+
+**Důvod změny:** Generalista i specialista mají výhody. Generalista = "5v1" (levnější než 5 lidí), Specialista = expert (unikátní znalost). Nová kategoria lépe reflektuje realitu.
+
+#### 3. 🎓 Kvalifikace a vzdělání
+*(NOVÁ kategorie)*
+- Žádné formální vzdělání v oboru: **+0%**
+- Kurzy a workshopy: **+10%**
+- Certifikace v oboru: **+20%**
+- VŠ vzdělání v oboru: **+25%**
+- VŠ + specializované certifikace: **+35%**
+
+**Důvod přidání:** Vzdělání je důležité zejména v regulovaných oborech (koučování, terapie, IT, účetnictví).
+
+#### 4. 🏆 Portfolio a reference
+- Žádné nebo málo: **+0%**
+- Nějaké reference: **+15%**
+- Silné portfolio a prokázané výsledky: **+30%**
+
+#### 5. 📈 Poptávka po vašich službách
+- Malá poptávka: **+0%**
+- Střední poptávka: **+20%**
+- Velká poptávka: **+40%**
+- Mám čekačku (vybírám si klienty): **+50%**
+
+---
+
+### Maximální možný koeficient:
+**70% + 50% + 35% + 30% + 50% = +235%** (celkem 3.35×)
+
+---
+
+### UI implementace: Accordiony
+
+**Design:**
+```
+┌──────────────────────────────────────────────────┐
+│ 🎯 TRŽNÍ HODNOTA - Váš tržní koeficient          │
+│                                                  │
+│ ▼ Zkušenosti v oboru              [+30%] ✓      │
+│   ○ 0-2 roky (+0%)                               │
+│   ● 3-5 let (+30%)                               │
+│   ○ 6-10 let (+50%)                              │
+│   ○ 10+ let (+70%)                               │
+│                                                  │
+│ ▶ Šíře nabídky                    [+0%]          │
+│                                                  │
+│ ▶ Kvalifikace a vzdělání          [+0%]          │
+│                                                  │
+│ ▶ Portfolio a reference           [+0%]          │
+│                                                  │
+│ ▶ Poptávka po službách            [+0%]          │
+│                                                  │
+├──────────────────────────────────────────────────┤
+│ 📊 Váš celkový tržní koeficient: +30%            │
+│                                                  │
+│ Minimální hodinovka: 915 Kč/h                    │
+│ S tržním koeficientem: 915 + 275 = 1 190 Kč/h   │
+└──────────────────────────────────────────────────┘
+```
+
+**Features:**
+- První accordion defaultně otevřený, ostatní zavřené
+- Vedle názvu accordionu zobrazit aktuální výběr (+30%)
+- Live update celkového koeficientu při každé změně
+- Dole živý přepočet: základ + (základ × koeficient) = výsledná hodinovka
+- Radio buttons pro výběr (pouze jedna možnost na kategorii)
+
+**Soubory k úpravě:**
+- `/src/pages/app/calculator/CalculatorPage.jsx`
+- Upravit konstanta arrays (experienceOptions, atd.)
+- Změnit výpočet z násobení na sčítání
+- UI refaktoring na Accordion komponenty (Material-UI)
+
+---
+
+### Porovnání starých vs. nových koeficientů
+
+**Příklad: Zkušený specialista s referencemi a střední poptávkou**
+
+| | Staré (násobení) | Nové (sčítání) |
+|---|---|---|
+| Zkušenosti | 1.2 | +30% |
+| Specializace/Šíře | 1.3 | +50% (ultra-spec.) |
+| Vzdělání | — | +20% (certifikace) |
+| Portfolio | 1.1 | +15% |
+| Poptávka | 1.15 | +20% |
+| **Celkem** | **1.9734** (+97%) | **2.35** (+135%) |
+
+**Rozdíl:** Nový systém dává vyšší koeficient (+38%), ale je transparentnější a srozumitelnější pro uživatele.
+
+---
+
+## 📝 NOVÝ VÝPOČET ODVODŮ - Oprava vzorce
+
+### Současný stav (ŠPATNĚ):
+```javascript
+const taxes = subtotal * 0.15; // Jen 15% daně
+return subtotal + taxes;
+```
+
+### Správný stav:
+```javascript
+const netCosts = housing + living + business + savings; // Čistý příjem na život
+const businessCosts = parseFloat(businessCosts) || 0;   // Náklady na podnikání (extra)
+const subtotal = netCosts + businessCosts;
+
+// Odvody: 15% z celku (půlka z 30%) NEBO minimálně 10 000 Kč/měsíc
+const monthlyBillable = getMonthlyBillableHours();
+const contributionsByPercent = subtotal * 0.15;
+const contributionsByMinimum = 10000;
+const contributions = Math.max(contributionsByPercent, contributionsByMinimum);
+
+const grossIncome = subtotal + contributions;
+return grossIncome;
+```
+
+**Proč 15% a ne 30%?**
+- Odvody OSVČ se počítají z **poloviny příjmů** (paušální výdaje 60% nebo skutečné výdaje)
+- 30% odvody z poloviny = 15% z celku
+- Ale MINIMÁLNĚ 10 000 Kč/měsíc (fixní zálohy na zdravotní + sociální)
+
+**Příklad:**
+- Čistý příjem: 50 000 Kč
+- Podnikání: 20 000 Kč
+- **Celkem: 70 000 Kč**
+- Odvody: 70 000 × 0.15 = 10 500 Kč (> 10 000 Kč min.)
+- **Hrubý příjem: 80 500 Kč**
+
+---
+
+## 🔧 VÝPOČET B - Odstranit OSVČ koeficient
+
+### Současný stav (ŠPATNĚ):
+```javascript
+const hourlyWithOSVC = baseHourly * OSVC_COEFFICIENT; // 291 × 1.3 = 378 Kč/h
+```
+
+### Správný stav:
+```javascript
+const hourlyWithOSVC = baseHourly; // 291 Kč/h (BEZ koeficientu!)
+```
+
+**Důvod:** Průměrná hrubá mzda už odvody obsahuje. OSVČ koeficient se aplikuje POUZE ve výpočtu A (na odvody), ne ve výpočtu B.
+
+---
+
 ## ✅ Hotové
 
 - ✅ Přidat client_id do projects tabulky (FK na clients)
